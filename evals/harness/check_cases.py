@@ -6,6 +6,7 @@
 - case ids are unique across all files (a case moves between files, it is
   never copied);
 - every expected citation exists in the index and is in force;
+- `clarification_expected` is true exactly for `needs_clarification` cases;
 - prints the spread by category, language and domain per file, so the M4
   targets (EVALS.md §1 step 4) are easy to follow.
 
@@ -53,6 +54,14 @@ def citation_problems(cases: Iterable[Case], status: Status) -> list[str]:
     return out
 
 
+def label_problems(cases: Iterable[Case]) -> list[str]:
+    return [
+        f"{c.id}: clarification_expected is {c.clarification_expected} for category {c.category}"
+        for c in cases
+        if c.clarification_expected != (c.category == "needs_clarification")
+    ]
+
+
 def spread(cases: list[Case]) -> str:
     def fmt(counter: Counter[str]) -> str:
         return ", ".join(f"{k} {v}" for k, v in sorted(counter.items()))
@@ -92,6 +101,8 @@ def main(argv: list[str] | None = None) -> int:
             files[path] = load_cases(path)
         except ValueError as exc:
             errors.append(str(exc))
+    for cases in files.values():
+        errors += label_problems(cases)
     if not args.files:  # ids are unique across the whole dataset tree
         errors += [f"duplicate id {i} in {w}" for i, w in duplicate_ids(files).items()]
     if args.index.is_file():

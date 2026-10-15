@@ -3,7 +3,13 @@ from __future__ import annotations
 from pathlib import Path
 
 from evals.harness.cases import Case
-from evals.harness.check_cases import case_files, citation_problems, duplicate_ids, spread
+from evals.harness.check_cases import (
+    case_files,
+    citation_problems,
+    duplicate_ids,
+    label_problems,
+    spread,
+)
 
 
 def case(cid: str, cites: tuple[tuple[str, str], ...] = (), **kw: object) -> Case:
@@ -50,3 +56,16 @@ def test_spread_counts() -> None:
     assert "answerable 1, out_of_scope 1" in out
     assert "de 1, fr 1" in out
     assert "smoke 1, verified 0" in out
+
+
+def test_label_problems() -> None:
+    ok = [case("a"), case("b", category="needs_clarification", clarification_expected=True)]
+    assert label_problems(ok) == []
+    bad = [
+        case("c", category="needs_clarification"),
+        case("d", clarification_expected=True),
+    ]
+    assert label_problems(bad) == [
+        "c: clarification_expected is False for category needs_clarification",
+        "d: clarification_expected is True for category answerable",
+    ]
