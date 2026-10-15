@@ -1,0 +1,79 @@
+name: eval-full
+
+# Full eval (golden + every draft batch + adversarial) when a PR gets the
+# `full-eval` label (docs/EVALS.md §3). No hard gate: the report is posted as
+# a PR comment to follow the trend; the label is removed afterwards so it can
+# be added again. Costs roughly CHF 10-15 per run (EVALS.md §4).
+
+on:
+  pull_request:
+    types: [labeled]
+
+permissions:
+  contents: read
+  id-token: write # GitHub OIDC token for Workload Identity Federation
+  pull-requests: write # comment the report, remove the label
+
+concurrency:
+  group: eval-full-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  full:
+    if: github.event.label.name == 'full-eval' && vars.GCP_WIF_PROVIDER != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    env:
+      GOOGLE_CLOUD_PROJECT: ${{ vars.GCP_PROJECT }}
+      GOOGLE_CLOUD_LOCATION: europe-west6
+      GOOGLE_GENAI_USE_ENTERPRISE: "TRUE"
+      NAV_PROFILE: ${{ vars.FULL_PROFILE || 'default' }}
+      GH_TOKEN: ${{ github.token }}
+      PR: ${{ github.event.pull_request.number }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          version: "0.13.1"
+          enable-cache: true
+
+      - name: Install deps (locked)
+        run: uv sync --all-packages --locked
+
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_CI_SA }}
+
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
+
+      - name: Fetch the published index (sha256-checked)
+        run: uv run python -m scripts.ci_index fetch
+
+      - name: Full answer eval
+        run: >-
+          uv run python -m evals.harness.answer_eval --dataset all+adversarial
+          --name full --out ci-reports ${{ vars.FULL_ARGS }}
+
+      - name: Comment the report on the PR
+        if: always()
+        run: |
+          run_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          report=$(ls ci-reports/*-full*.md 2>/dev/null | head -1)
+          if [[ -z "$report" ]]; then
+            printf 'Full eval failed before writing a report: %s\n' "$run_url" > comment.md
+          else
+            # Everything above the per-case table; the full report is in the artifact.
+            sed '/^## Cases/,$d' "$report" > comment.md
+            printf '\nPer-case results: artifact `eval-full-reports` of %s\n' "$run_url" >> comment.md
+          fi
+          gh pr comment "$PR" --body-file comment.md
+          gh pr edit "$PR" --remove-label full-eval || true
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: eval-full-reports
+          path: ci-reports/
+          if-no-files-found: ignore

@@ -1,0 +1,84 @@
+name: eval-smoke
+
+# Retrieval eval + the 20-case answer smoke eval + gates (docs/EVALS.md §3).
+# Costs money (model calls), so it runs only on ready (non-draft) PRs that
+# change what the agent does, and only once WIF is configured (GCP_* repo
+# variables, `make gcp-wif`). Each run logs its cost in the job summary.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - "agents/**"
+      - "mcp_server/**"
+      - "ingest/**"
+      - "evals/harness/**"
+      - "evals/datasets/**"
+      - "evals/baselines.yaml"
+      - "evals/ci_index.json"
+      - "evals/pricing.yaml"
+      - "pyproject.toml"
+      - "*/pyproject.toml"
+      - "uv.lock"
+      - ".github/workflows/eval-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # GitHub OIDC token for Workload Identity Federation
+
+concurrency:
+  group: eval-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  smoke:
+    if: >-
+      vars.GCP_WIF_PROVIDER != '' &&
+      (github.event_name == 'workflow_dispatch' || !github.event.pull_request.draft)
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      GOOGLE_CLOUD_PROJECT: ${{ vars.GCP_PROJECT }}
+      GOOGLE_CLOUD_LOCATION: europe-west6
+      GOOGLE_GENAI_USE_ENTERPRISE: "TRUE"
+      NAV_PROFILE: ${{ vars.CI_PROFILE || 'default' }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: astral-sh/setup-uv@1c37ad07a6a961277cf70c0d37d6f313000f5884 # v10.3.0
+        with:
+          version: "0.13.1"
+          enable-cache: true
+
+      - name: Install deps (locked)
+        run: uv sync --all-packages --locked
+
+      - uses: google-github-actions/auth@7c6bc770dae815cd3e89ee6cdf493a5fab2cc093 # v3.0.0
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_CI_SA }}
+
+      - uses: google-github-actions/setup-gcloud@aa5489c8933f4cc7a4f7d45035b3b1440c9c10db # v3.0.1
+
+      - name: Fetch the published index (sha256-checked)
+        run: uv run python -m scripts.ci_index fetch
+
+      - name: Retrieval eval
+        run: uv run python -m evals.harness.retrieval_eval --out ci-reports
+
+      - name: Answer smoke eval (20 cases)
+        run: uv run python -m evals.harness.answer_eval --smoke --out ci-reports ${{ vars.SMOKE_ARGS }}
+
+      - name: Gates
+        run: >-
+          uv run python -m evals.harness.gate
+          --retrieval ci-reports/*-retrieval.json
+          --answers ci-reports/*-smoke*.json
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        if: always()
+        with:
+          name: eval-smoke-reports
+          path: ci-reports/
+          if-no-files-found: ignore

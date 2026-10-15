@@ -7,7 +7,7 @@ UV ?= uv
 todo = @echo "make $@: not implemented yet (lands in $(1), see docs/PLAN.md)" >&2; exit 1
 
 .PHONY: help setup lint fmt test check smoke-gemini gcp-setup gcp-budget gcp-wif \
-        resolve ingest spotcheck fixtures index index-e4 eval-retrieval mcp-dev mcp-coldstart agent-dev \
+        resolve ingest spotcheck fixtures index index-e4 publish-index eval-retrieval mcp-dev mcp-coldstart agent-dev \
         eval-smoke eval-full review-golden check-cases \
         deploy-mcp deploy-agent deploy-web
 
@@ -63,6 +63,9 @@ index: ## Embed (cached by content; billable on a cold cache) + build data/index
 
 index-e4: ## E4 experiment index: every tokenizer and vector space (billable on a cold cache)
 	$(UV) run python -m ingest.index --experiment
+
+publish-index: ## Upload data/index.sqlite for CI (by sha256) + write evals/ci_index.json (commit it)
+	$(UV) run python -m scripts.ci_index publish
 
 eval-retrieval: ## Retrieval eval of the served config (E4=1: the whole E4 grid) -> evals/reports/
 	$(UV) run python -m evals.harness.retrieval_eval $(if $(E4),--e4 --index data/index_e4.sqlite --latency 20)
