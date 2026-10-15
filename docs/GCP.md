@@ -77,18 +77,38 @@ manage. A public demo without a cap is the main financial risk.
 
 ## 4. Deploy recipes (verify the flags against current docs)
 
-### MCP server → Cloud Run
+### MCP server → Cloud Run (done in M2)
 
 ```bash
-# Image contains index.sqlite (built by `make index`), like zuri-sunny's baked DB.
-gcloud run deploy swiss-law-mcp --source mcp_server --region $REGION \
-  --service-account swiss-nav-mcp@$PROJECT_ID.iam.gserviceaccount.com \
-  --allow-unauthenticated --min-instances 0 --max-instances 2 \
-  --memory 1Gi --cpu 1 --concurrency 40 --timeout 60
+make index        # data/index.sqlite (embeddings come from the cache when warm)
+make deploy-mcp   # infra/deploy_mcp.sh: build, push, deploy, smoke /health (DRY_RUN=1)
 ```
 
-- Public and read-only by design (ADR-003). Rate-limit `search_law` in-app.
-- The MCP endpoint path is `/mcp` (Streamable HTTP).
+`infra/deploy_mcp.sh` builds `mcp_server/Dockerfile` **from the repo root**
+(the image needs `ingest/eid.py` and `data/index.sqlite`; a whitelist
+`Dockerfile.dockerignore` keeps the context small), tags it with the commit,
+pushes to `europe-west6-docker.pkg.dev/$PROJECT_ID/swiss-nav/swiss-nav-mcp`
+with a short-lived token (no docker credential helper is installed; it logs
+out after the push), then:
+
+```bash
+gcloud run deploy swiss-nav-mcp --image … --region europe-west6 \
+  --service-account swiss-nav-mcp@$PROJECT_ID.iam.gserviceaccount.com \
+  --allow-unauthenticated --min-instances 0 --max-instances 2 \
+  --cpu 1 --memory 1Gi --concurrency 40 --timeout 60 --cpu-boost \
+  --execution-environment gen2 \
+  --set-env-vars GOOGLE_CLOUD_PROJECT=$PROJECT_ID --labels app=swiss-nav,commit=<sha>
+```
+
+- URL (2026-10-15): `https://swiss-nav-mcp-mdyqt5hgsq-oa.a.run.app`, MCP at
+  `/mcp`, health at **`/health`**. Cloud Run answers `/healthz` itself with
+  404 (paths ending in "z" are reserved; verified).
+- Public and read-only by design (ADR-003). `search_law` is rate-limited per
+  client IP in-app (30/min, burst 10); max 2 instances caps the rest.
+- Logs are structured JSON; they carry a salted hash instead of the client
+  IP and no query text (`LOG_QUERIES=1` to opt in for debugging).
+- gen2, not the default gen1: see ADR-017 for the cold-start measurements.
+- Claude Code: `claude mcp add --scope user --transport http swiss-law <url>/mcp`.
 
 ### Agent → Agent Runtime
 

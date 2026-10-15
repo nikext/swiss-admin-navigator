@@ -130,6 +130,11 @@ Parsing rules (all verified on the full 2026-10-15 corpus, implemented in
   and AIG use own headings (6,518 articles). OR and ZGB use marginal levels
   (`<level fedlex:role="marginal">`) instead, and we take the innermost one.
   Otherwise it's null, and the section heading is only in `heading_path`.
+- **`heading_eids`** (added in M2): the container eIds parallel to
+  `heading_path` (`part_2/tit_8/chap_3`), for `get_toc` paths. An annex
+  `doc` has no eId and gets its articles' scope (`annex_I`). Fedlex reuses a
+  few container eIds (ZGB Schlusstitel has two `lvl_I_ter`; EN ZGB has
+  shifted ones; 14 cases in 2026-10-15): the TOC suffixes them `~2`.
 - **Footnotes:** `<authorialNote>` appears in bodies **and inside `<num>` and
   `<heading>`** of articles and containers (e.g. "Achter Titel: *Fassung
   gemäss …*"). Strip them from every text field and keep them in `notes`.
@@ -150,7 +155,11 @@ Parsing rules (all verified on the full 2026-10-15 corpus, implemented in
   the DBG Art. 36 tax tariff); whitespace normalised.
 - **Abbreviations:** each XML's `FRBRname/@shortForm` per language is
   authoritative and used for the record's `abbr`. All DE/FR/IT abbreviations
-  in `acts.yaml` matched it on 2026-10-15. EN ones: Cst., CC, FADP, SCA, RHA.
+  in `acts.yaml` matched it on 2026-10-15. Every file lists **all**
+  languages' titles (`@value`) and abbreviations, including EN ones for acts
+  without EN text (AIG: FNA, OR: CO). `make ingest` writes them per act to
+  `data/acts.json`; `acts.yaml` adds optional `aliases` people still write
+  (AuG, LEtr, nDSG, SCC, FNIA). Romansh abbreviations (DO, CCS) are not used.
 
 ## 4. Pipeline (M1–M2)
 
@@ -184,6 +193,8 @@ acts.yaml ─▶ resolve (SPARQL) ─▶ manifest.lock.json ─▶ download XML 
      "heading_path": ["Zweite Abteilung: Die einzelnen Vertragsverhältnisse",
                       "Achter Titel: Die Miete", "Dritter Abschnitt: Kündigungsschutz …",
                       "A. Anfechtbarkeit der Kündigung", "II. Kündigung durch den Vermieter"],
+     "heading_eids": ["part_2", "part_2/tit_8", "part_2/tit_8/chap_3",
+                      "part_2/tit_8/chap_3/lvl_A", "part_2/tit_8/chap_3/lvl_A/lvl_II"],
      "text": "1 Die Kündigung durch den Vermieter ist insbesondere anfechtbar, wenn sie ausgesprochen wird:\na. weil der Mieter …",
      "paragraphs": [{"eid": "art_271_a/para_1", "num": "1", "text": "Die Kündigung … wird:\na. weil …"}],
      "notes": ["Eingefügt durch Ziff. I des BG vom …"],
@@ -195,32 +206,43 @@ acts.yaml ─▶ resolve (SPARQL) ─▶ manifest.lock.json ─▶ download XML 
    }
    ```
 
-4. **chunk**: in law, the **article is the natural unit**, and most articles are
-   short. One chunk per article. Split only very long articles at paragraph
-   boundaries (threshold ~1,200 tokens) and keep `eid` pointing at the
-   paragraph. Prepend `abbr + label + heading_path` to the embedded text
-   ("contextual chunk header"). Measure the effect in evals.
-5. **embed** with the profile's embedding model (`gemini-embedding-2@eu`;
-   `gemini-embedding-001` is the only one served in europe-west6, see
-   ADR-013). Verify the task-type parameters
-   (`RETRIEVAL_DOCUMENT` / `RETRIEVAL_QUERY`) and the dimensionality options in
-   M2. Batch the calls, cache by content hash, and record the model ID in the
-   index metadata.
-6. **index**: one SQLite file `index.sqlite` with
-   - `articles` table (all fields above)
-   - `articles_fts`: FTS5 full-text index, one per language column, or a
-     `lang` filter. German compounds hurt token-based BM25 (`Kündigungsschutz`
-     vs `Kündigung`), so evaluate `tokenize='trigram'` against `unicode61` in
-     M2 and keep whichever retrieval eval prefers.
-   - `vectors`: sqlite-vec virtual table (or a plain float32 blob plus numpy at
-     load time; the corpus is small, ~30k chunks). Decide in M2 by
-     measurement.
-   - `toc`: tree of levels and articles per act and language, for the
-     `get_toc` tool.
-   - `abbreviations`: every DE/FR/IT abbreviation mapped to its SR. Used by
-     `resolve_citation`. Seed it from `acts.yaml`; the FRBRname `shortForm` in
-     each XML is authoritative.
-   - `meta`: as_of, consolidation dates, embedding model, build git sha.
+4. **chunk** (`ingest/chunk.py`, M2): the article is the unit. One chunk per
+   in-force article; articles over `MAX_CHARS` = 4,800 chars (~1,200 tokens
+   at a conservative 4 chars/token; Gemini averages ~4.5–5 on this text) are
+   split at paragraph boundaries, and a single oversized paragraph (BV
+   Art. 197: one 11k-char "paragraph" of numbered transitional provisions) at
+   line boundaries. Each piece keeps the eId of the paragraph it starts in
+   (`anchor`). 2026-10-15: **17,310 chunks** from 17,243 in-force records; 42
+   articles split into 109 pieces; reassembly is lossless. Contextual header:
+   `<abbr> <label>: <heading> — <act title> › <heading path>` (one line, no
+   `|`). It helps every retriever (E4, ADR-016).
+5. **embed** (`ingest/embed.py`, M2): the profile's embedding model
+   (`gemini-embedding-2@eu`). It **ignores `task_type` and fuses multi-text
+   requests**, so the task goes into the text (`title: <header> | text:
+   <chunk>`; queries `task: search result | query: <q>`), one text per
+   request, 16 in flight (17,310 requests in ~260 s, 0–4 retries). Vectors are
+   stored at full 3072 dims in `data/embed_cache.sqlite` (gitignored) keyed by
+   content; index-time dims are Matryoshka truncations. ADR-015.
+6. **index** (`ingest/index.py`, `make index`): one SQLite file
+   `data/index.sqlite` (135 MB, built in 2 s from a warm cache):
+   - `articles`: every record (all statuses), JSON columns for lists.
+   - `chunks`: the retrieval units; `rowid` is shared with the FTS table and
+     the vector rows.
+   - `fts_unicode61`: contentless FTS5 over (header, body),
+     `unicode61 remove_diacritics 2`. Only the fallback retriever (E4:
+     trigram was not significantly better and is 42 MB larger).
+   - `vector_spaces`: one row per space with the whole float32 matrix as one
+     blob plus the aligned rowids: one read at startup, then numpy (17k × 768
+     dot products take ~1 ms; no ANN index or sqlite-vec needed).
+   - `toc`: (sr, lang, node, parent, ord, kind, title, label), built from
+     `heading_eids`/`heading_path` in document order.
+   - `acts`, `abbreviations`: from `data/acts.json` + `acts.yaml` aliases;
+     the build fails if two acts share an abbreviation.
+   - `meta`: as_of, build time and git sha, counts, chunking, default
+     tokenizer/mode/space, and per vector space: model, location, input
+     format, query template, dims, header on/off, tokens embedded.
+   `make index-e4` builds `data/index_e4.sqlite` (771 MB) with both
+   tokenizers and three full-size spaces for experiment E4.
 
 ## 5. Freshness
 
@@ -240,9 +262,10 @@ acts.yaml ─▶ resolve (SPARQL) ─▶ manifest.lock.json ─▶ download XML 
 - In-force text length (characters): p50 431, p95 1,636, p99 2,894, max
   30,996 (FZA Art. 10 FR, transitional quotas with tables). A few articles
   need M2's paragraph-level chunking.
-- Status: 17,243 in force, 1,066 repealed, 87 omitted. Vectors for the
-  in-force records: × 768 dims × float32 ≈ 53 MB (3072 dims ≈ 212 MB); decide
-  the dimensionality in M2.
+- Status: 17,243 in force, 1,066 repealed, 87 omitted.
+- Index (M2): 17,310 chunks; 768-dim float32 vectors 53 MB (3072 dims would
+  be 213 MB); `index.sqlite` 135 MB in total. Embedding the corpus once with
+  headers: 3.90M tokens (gemini-embedding-2), ≈ USD 0.78.
 - `make ingest` from a warm cache takes ~3 s; `make resolve` ~1 min (SPARQL
   plus 74 polite downloads).
 

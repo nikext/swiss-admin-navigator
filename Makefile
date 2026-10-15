@@ -12,7 +12,7 @@ todo = @echo "make $@: not implemented yet (lands in $(1), see docs/PLAN.md)" >&
         deploy-mcp deploy-agent deploy-web
 
 help: ## List targets
-	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-14s %s\n", $$1, $$2}'
+	@grep -E '^[a-z0-9-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-14s %s\n", $$1, $$2}'
 
 setup: ## Install Python 3.12 + all workspace deps (locked) and the git hooks
 	$(UV) sync --all-packages --locked

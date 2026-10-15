@@ -200,3 +200,82 @@ ZGB shows up as a stats diff on the next `make resolve`. We lose 10 of 18,406
 records (9 unofficial EN, 1 repealed IT range), and every answer stays
 citable to the right number. Verified by `make spotcheck` against Fedlex's
 HTML manifestation (DATA.md §7).
+
+### ADR-015: Embedding input formats come from the profile; vectors are cached at full size
+**Status:** accepted (2026-10-15, M2)
+**Context:** DATA.md assumed `task_type` (RETRIEVAL_DOCUMENT / RETRIEVAL_QUERY)
+for the embedding model. A live probe (2026-10-15) showed that
+`gemini-embedding-2@eu` **accepts `task_type` but ignores it** (identical
+vectors), and that a request with several texts returns **one fused
+vector**, not one per text. Google's docs for this model describe task
+instructions in the text instead: `task: search result | query: …` for
+queries and `title: … | text: …` for documents. `gemini-embedding-001`
+(the only embedding model served in europe-west6) honours `task_type`,
+batches, and returns unnormalised vectors below 3072 dims.
+**Decision:** The profile's embedding role gets `input_format:
+instruction | task_type` (default `instruction`; `EMBEDDING_INPUT_FORMAT`
+overrides it). `ingest/embed.py` sends one text per request for
+`instruction` models and batches `task_type` ones. Vectors are requested at
+full size (3072), L2-normalised, and cached in `data/embed_cache.sqlite` by
+sha256 of (model, format, kind, title, text). Smaller dimensions are
+Matryoshka truncations made at index time; verified: truncating the 3072
+vector to 768 and re-normalising equals the API's own 768-dim output
+(cosine 1.000). Every vector space records model, location, input format,
+query template and dims in the index `meta`, and the MCP server embeds
+queries from that record, so it needs no model ID (ADR-008) and can never
+query an index with the wrong model.
+**Consequences:** Rebuilding an index from cached vectors costs nothing and
+takes seconds (`make index`: 2 s). Costs measured for M2 (USD 0.20/1M
+tokens for emb-2, 0.15 for emb-001, third-party price trackers; Google's
+page did not render): emb-2 with headers 3.90M tokens, without headers
+2.51M, emb-001 with headers 3.81M: about **USD 1.85** in total, 13 min.
+
+### ADR-016: search_law is dense retrieval; BM25 is only the fallback (E4)
+**Status:** accepted (2026-10-15, M2). Revises the "hybrid (BM25 + vectors)"
+assumption in AGENTS.md §2 and the README.
+**Context:** Experiment E4 (EVALS.md §4) on `retrieval.jsonl`: 102 queries
+(55 everyday questions + 47 harder ones: long-tail articles, keyword style,
+EN questions about acts without EN text), DE 29 / EN 32 / FR 23 / IT 18, 114
+expected articles. Report: `evals/reports/2026-10-15-c756c89-e4-retrieval.md`.
+Recall@8 (95% bootstrap CI) and MRR:
+
+| config | R@8 | MRR |
+|---|---|---|
+| BM25 unicode61 / trigram (headers) | 48.5 / 51.0 | 0.35 / 0.33 |
+| **dense gemini-embedding-2, headers, 768 dims** | **98.5 (96.1–100)** | **0.881** |
+| dense emb-2, headers, 3072 dims | 99.0 | 0.890 |
+| dense emb-2, no headers, 768 dims | 97.1 | 0.841 |
+| dense gemini-embedding-001@europe-west6, 768 dims | 96.6 | 0.861 |
+| hybrid RRF (equal weights) trigram + emb-2 768 | 84.8 | 0.541 |
+| hybrid RRF, BM25 weight 0.25 | 96.6 | 0.709 |
+
+Paired differences in recall@8: hybrid − dense **−13.7 (−20.6…−7.4)**;
+3072 − 768 dims +0.5 (0…+1.5); headers on − off +1.5 (0…+3.4) dense, +6.9
+(+2.9…+11.8) BM25 trigram; emb-2 − emb-001 +2.0 (0…+4.4); trigram −
+unicode61 +2.5 (−1.0…+6.4). Uncached query-embedding latency from Zürich:
+emb-2@eu p50 153 ms, emb-001@europe-west6 p50 151 ms.
+**Decision:**
+- `search_law` serves **dense** retrieval with gemini-embedding-2@eu over
+  chunks with contextual headers, at **768 dims** (3072 buys +0.5 points for
+  4× the vectors). Results are unique articles (chunks and language versions
+  collapse).
+- BM25 stays in the index (FTS5 **unicode61**, 82 MB vs 124 MB for trigram,
+  1 ms vs 5 ms, no significant quality difference) as the **fallback** when
+  the query embedding fails. `SEARCH_MODE=hybrid|bm25` remains for
+  experiments (E3).
+- Contextual headers stay on (they help every retriever).
+- gemini-embedding-001 in Zürich is not worth the quality loss: the agent
+  model already runs on `eu` (ADR-013), so in-country query embedding would
+  not keep user questions in Switzerland, and it was not faster.
+- The M2 target "recall@8 ≥ 0.85" is met with room; the CI gate becomes
+  "recall@8 on retrieval.jsonl must not drop more than 2 points below the
+  committed baseline (98.5)" (EVALS.md §3).
+**Consequences:** Why hybrid lost here: questions are written in everyday
+words while the law uses its own vocabulary, and English questions match
+the unofficial EN ZGB/BV lexically, so the BM25 list is mostly noise that
+equal-weight RRF lets displace good dense hits. Caveats, stated in the
+report: the queries and their expected articles were drafted by the same
+author (Claude), checked against article text but not by Nikola; dense is
+near the ceiling, so the set must grow harder (target 200) before it can
+separate dense variants. Re-run E4 (`make eval-retrieval E4=1`) when the
+set grows or the embedding model changes.

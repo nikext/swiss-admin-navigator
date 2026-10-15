@@ -9,7 +9,7 @@ All in `evals/datasets/`, versioned in git.
 
 | Set | Size (target) | Purpose |
 |---|---|---|
-| `retrieval.jsonl` | 200 queries | Retrieval only: query → expected `(sr, eid)` set. Cheap; runs on every PR. |
+| `retrieval.jsonl` | 200 queries (102 on 2026-10-15) | Retrieval only: query → expected `(sr, eid)` set, matched per article regardless of language. 55 everyday + 47 `difficulty: hard` queries, DE/EN/FR/IT; expected eIds checked against the article text (drafted by Claude, not yet reviewed by Nikola). Cheap; runs on every PR. `make eval-retrieval`. |
 | `golden.jsonl` | 150 cases | End-to-end QA, human-verified. **Gold.** |
 | `silver.jsonl` | 300–500 cases | LLM-generated from articles, spot-checked. Used for broad regression, never for headline claims. |
 | `multiturn.evalset.json` | 25 sessions | Clarification behaviour and memory use (ADK evalset format, user simulation). |
@@ -95,7 +95,7 @@ human-labelled subset.
 
 | When | What | Gate |
 |---|---|---|
-| Every PR | unit tests, `retrieval.jsonl`, 20-case golden smoke (Flash only) | Recall@8 must not drop by more than 2 pts. Quote fidelity 100%. Hallucinated citations 0. |
+| Every PR | unit tests, `retrieval.jsonl`, 20-case golden smoke (Flash only) | Recall@8 must not drop by more than 2 pts below the committed baseline (98.5 on 102 queries, M2). Quote fidelity 100%. Hallucinated citations 0. |
 | PR label `full-eval` | full golden + adversarial on the default config | Posts a report comment on the PR. No hard gate. Track the trend. |
 | Manual / before release | full matrix (§4) | Updates the README results table. |
 
@@ -109,8 +109,8 @@ cost.
 |---|---|---|
 | E1 | Which model, at what cost? | `gemini-3.8-flash` vs `gemini-3.5-flash-lite` vs `gemini-3.1-pro-preview` vs Claude (Model Garden) vs **Apertus 1.5 8B** (self-hosted) |
 | E2 | Single agent vs multi-agent | `navigator_v1` vs `navigator_v2` (same model) |
-| E3 | Does tree navigation help? | hybrid search only vs hybrid + `get_toc` |
-| E4 | Retrieval ablation | BM25 vs dense vs hybrid (RRF); trigram vs unicode61 tokenizer; with vs without contextual chunk headers |
+| E3 | Does tree navigation help? | `search_law` only vs `search_law` + `get_toc` |
+| E4 | Retrieval ablation | BM25 vs dense vs hybrid (RRF, weighted); trigram vs unicode61; with vs without contextual headers; dims 256–3072; emb-2@eu vs emb-001@europe-west6. **Done in M2:** dense emb-2 + headers + 768 dims wins (R@8 98.5, MRR 0.881; hybrid −13.7). ADR-016, `evals/reports/2026-10-15-c756c89-e4-retrieval.md`. |
 | E5 | Cross-lingual robustness | Same questions in EN/DE/FR/IT: does quality drop for EN given that EN source texts are mostly missing? |
 | E6 | Verifier value | v1 with vs without citation_verifier: hallucinated citations, latency, cost |
 | E7 | Model Armor | Injection block rate vs false positives on golden |

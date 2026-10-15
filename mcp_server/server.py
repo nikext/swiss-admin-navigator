@@ -291,7 +291,9 @@ def build_server(app: App) -> MCPServer:
 
 
 def configure_logging(json_logs: bool) -> None:
-    handler = logging.StreamHandler(sys.stdout if json_logs else sys.stderr)
+    # stderr always: in stdio mode stdout is the MCP channel, and Cloud Run parses
+    # structured JSON from stderr as well.
+    handler = logging.StreamHandler(sys.stderr)
     if json_logs:
         handler.setFormatter(JsonFormatter())
     else:
