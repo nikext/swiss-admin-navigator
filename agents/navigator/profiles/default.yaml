@@ -3,13 +3,13 @@
 # Live-checked 2026-10-15 with ADC: none of these models is served in
 # europe-west6 or any single EU region for this project. `eu` (processing
 # within EU member states, which excludes Switzerland) serves agent and
-# embedding. The preview judge is served only on `global`.
-# Re-check with `make smoke-gemini`.
+# embedding. The judge runs on `global`, where the judge study measured it.
+# Judge choice: ADR-023 (judge study 2026-10-15). Re-check with `make smoke-gemini`.
 agent:
   model: gemini-3.8-flash
   location: eu
 judge:
-  model: gemini-3.1-pro-preview
+  model: gemini-3.8-flash
   location: global
 embedding:
   model: gemini-embedding-2
