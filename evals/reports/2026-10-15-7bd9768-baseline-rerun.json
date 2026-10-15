@@ -1,0 +1,1051 @@
+{
+ "name": "baseline-rerun",
+ "run_at": "2026-10-15T22:31:41+00:00",
+ "git_sha": "7bd9768",
+ "summary": {
+  "cases": 2,
+  "errors": 0,
+  "quote_fidelity": {
+   "verbatim": 7,
+   "quotes": 10,
+   "rate": 0.7,
+   "ci95": [
+    0.25,
+    1.0
+   ]
+  },
+  "hallucinated_citations": {
+   "count": 0,
+   "citations": 10,
+   "rate": 0.0,
+   "ci95": [
+    0.0,
+    0.0
+   ]
+  },
+  "not_in_force_citations": 0,
+  "unchecked_citations": 0,
+  "first_draft": {
+   "citations": 10,
+   "quotes": 10,
+   "problems": {
+    "paragraph": 3,
+    "quote": 3
+   },
+   "cases_sent_back": 1
+  },
+  "verification": {
+   "degraded": 1,
+   "passed": 1
+  },
+  "dropped_citations": 0,
+  "required_recall": {
+   "mean": 0.5,
+   "ci95": [
+    0.0,
+    1.0
+   ],
+   "n": 2
+  },
+  "precision_expected": {
+   "mean": 0.25,
+   "ci95": [
+    0.0,
+    0.5
+   ],
+   "n": 2
+  },
+  "behaviour_det": {
+   "mean": 1.0,
+   "ci95": [
+    1.0,
+    1.0
+   ],
+   "n": 2
+  },
+  "lang_match": {
+   "mean": 1.0,
+   "ci95": [
+    1.0,
+    1.0
+   ],
+   "n": 2
+  },
+  "groundedness": {
+   "mean": 0.6666666666666666,
+   "ci95": [
+    0.3333333333333333,
+    1.0
+   ],
+   "n": 2
+  },
+  "key_facts": {
+   "mean": 0.8333333333333333,
+   "ci95": [
+    0.6666666666666666,
+    1.0
+   ],
+   "n": 2
+  },
+  "must_not_violations": 0,
+  "behaviour": {
+   "mean": 1.0,
+   "ci95": [
+    1.0,
+    1.0
+   ],
+   "n": 2
+  },
+  "precision_judged": {
+   "mean": 0.875,
+   "ci95": [
+    0.75,
+    1.0
+   ],
+   "n": 2
+  },
+  "latency_s": {
+   "p50": 55.71,
+   "p95": 260.34
+  },
+  "tool_calls_mean": 12.5,
+  "model_calls_mean": 14.0,
+  "tokens_mean": {
+   "prompt": 257277.5,
+   "cached": 189896.5,
+   "output": 2274.0,
+   "thoughts": 15058.5
+  },
+  "cost_per_answer": {
+   "usd": 0.129775,
+   "chf": 0.1064155,
+   "p95_chf": 0.17690679999999998
+  },
+  "run_cost_chf": {
+   "agent": 0.212831,
+   "judge": 0.017507819999999997
+  },
+  "by": {
+   "category": {
+    "answerable": {
+     "n": 2,
+     "behaviour": 1.0,
+     "groundedness": 0.6666666666666666,
+     "key_facts": 0.8333333333333333,
+     "lang_match": 1.0
+    }
+   },
+   "lang": {
+    "en": {
+     "n": 1,
+     "behaviour": 1.0,
+     "groundedness": 1.0,
+     "key_facts": 0.6666666666666666,
+     "lang_match": 1.0
+    },
+    "it": {
+     "n": 1,
+     "behaviour": 1.0,
+     "groundedness": 0.3333333333333333,
+     "key_facts": 1.0,
+     "lang_match": 1.0
+    }
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "residence-15",
+   "lang": "it",
+   "category": "answerable",
+   "domain": "residence",
+   "error": null,
+   "status": "degraded",
+   "rounds": 2,
+   "first_draft": {
+    "citations": 4,
+    "quotes": 4,
+    "problems": {
+     "paragraph": 3,
+     "quote": 3
+    }
+   },
+   "dropped": [],
+   "repairs": [
+    "[2] non-existent paragraph removed",
+    "[3] non-existent paragraph removed",
+    "[4] non-existent paragraph removed"
+   ],
+   "citations": 4,
+   "quotes": 4,
+   "verbatim": 1,
+   "hallucinated": 0,
+   "not_in_force": 0,
+   "unchecked": 0,
+   "required_recall": 0.0,
+   "precision_expected": 0.0,
+   "behaviour_det": true,
+   "detected_lang": "it",
+   "lang_ok": true,
+   "tool_calls": 20,
+   "tools": {
+    "list_acts": 1,
+    "search_law": 4,
+    "get_article": 10,
+    "resolve_citation": 3,
+    "get_toc": 2
+   },
+   "usage": {
+    "model_calls": 22,
+    "prompt": 471140,
+    "cached": 366236,
+    "output": 3099,
+    "thoughts": 26126
+   },
+   "latency_s": 260.34,
+   "cost_usd": 0.21574,
+   "groundedness": 0.3333333333333333,
+   "key_facts": 1.0,
+   "must_not_violations": 0,
+   "behaviour_judge": true,
+   "behaviour_ok": true,
+   "precision_judged": 0.75,
+   "answer": {
+    "language": "it",
+    "answer_markdown": "In qualità di cittadino italiano (UE) con un contratto di lavoro a tempo indeterminato, il permesso rilasciato dipende dal luogo in cui stabilisci la residenza:\n\n1. **Se ti trasferisci a vivere in Svizzera**:\n   Ricevi un **permesso di dimora UE/AELS** (noto comunemente come **permesso B**) [1]. Poiché il contratto è a tempo indeterminato (durata uguale o superiore a un anno), il permesso ha una validità di **5 anni** ed è automaticamente rinnovabile per periodi di almeno 5 anni [2].\n\n2. **Se mantieni la residenza in Italia (frontaliere)**:\n   Se risiedi in Italia e rientri regolarmente al tuo domicilio di norma ogni giorno o almeno una volta alla settimana [3], ricevi un **permesso per frontalieri UE/AELS** (noto come **permesso G**) [1]. Per un impiego di durata pari o superiore a un anno, questo permesso viene rilasciato per una durata di **5 anni** ed è rinnovabile per periodi di almeno 5 anni purché continui a esercitare un'attività economica [4].",
+    "citations": [
+     {
+      "ref": "1",
+      "sr": "142.203",
+      "article": "Art. 4",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "it",
+      "quote": "Ai cittadini dell’UE e dell’AELS è rilasciato, giusta le disposizioni dell’Accordo sulla libera circolazione delle persone o della Convenzione AELS, un permesso di soggiorno di breve durata UE/AELS, un permesso di dimora UE/AELS o un permesso per frontalieri UE/AELS.",
+      "translation": null,
+      "abbr": "OLCP",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2002/261/it#art_4",
+      "as_of": "2026-01-01"
+     },
+     {
+      "ref": "2",
+      "sr": "0.142.112.681",
+      "article": "Art. 6",
+      "paragraph": null,
+      "letter": null,
+      "quote_lang": "it",
+      "quote": "Il lavoratore dipendente cittadino di una parte contraente (in appresso denominato lavoratore dipendente) che occupa un impiego di durata uguale o superiore a un anno al servizio di un datore di lavoro dello Stato ospitante riceve una carta di soggiorno della durata di almeno 5 anni a decorrere dalla data del rilascio, automaticamente rinnovabile per almeno 5 anni.",
+      "translation": null,
+      "abbr": "ALC",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2002/243/it#annex_I/lvl_u1/lvl_II/art_6",
+      "as_of": "2020-12-15"
+     },
+     {
+      "ref": "3",
+      "sr": "0.142.112.681",
+      "article": "Art. 7",
+      "paragraph": null,
+      "letter": null,
+      "quote_lang": "it",
+      "quote": "Il lavoratore dipendente frontaliero è un cittadino di una parte contraente che ha la sua residenza sul territorio di una parte contraente e che esercita un’attività retribuita sul territorio dell’altra parte contraente e ritorna al luogo del proprio domicilio di norma ogni giorno, o almeno una volta alla settimana.",
+      "translation": null,
+      "abbr": "ALC",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2002/243/it#annex_I/lvl_u1/lvl_II/art_7",
+      "as_of": "2020-12-15"
+     },
+     {
+      "ref": "4",
+      "sr": "0.142.112.681",
+      "article": "Art. 7",
+      "paragraph": null,
+      "letter": null,
+      "quote_lang": "it",
+      "quote": "Tuttavia, l’autorità competente dello Stato d’impiego può rilasciare al lavoratore frontaliero dipendente una carta speciale valida per almeno cinque anni o per la durata dell’impiego, se questa è superiore a tre mesi o inferiore a un anno. Tale carta viene rinnovata per almeno cinque anni purché il lavoratore frontaliero dimostri di esercitare un’attività economica.",
+      "translation": null,
+      "abbr": "ALC",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2002/243/it#annex_I/lvl_u1/lvl_II/art_7",
+      "as_of": "2020-12-15"
+     }
+    ],
+    "clarifying_question": null,
+    "cantonal_note": "La gestione delle domande e il rilascio dei titoli di soggiorno spettano alle autorità cantonali e comunali. Chi si trasferisce in Svizzera deve registrarsi presso l'ufficio controllo abitanti del proprio Comune di residenza entro 14 giorni dall'arrivo; per i frontalieri la procedura è gestita tramite il datore di lavoro o presso l'ufficio cantonale della migrazione competente.",
+    "follow_up_questions": [
+     "Quali documenti devo presentare al Comune svizzero per ottenere il permesso B?",
+     "Come funziona il ricongiungimento familiare per i familiari al seguito con permesso B?",
+     "Quali sono le differenze nell'imposizione fiscale tra il permesso B e il permesso G da frontaliere?"
+    ],
+    "confidence": "low",
+    "out_of_scope": false,
+    "verification": {
+     "status": "degraded",
+     "rounds": [
+      {
+       "citations": 4,
+       "quotes": 4,
+       "problems": [
+        {
+         "ref": "2",
+         "kind": "paragraph",
+         "message": "SR 0.142.112.681 Art. 6 has no paragraph 1; it has no numbered paragraphs (omit paragraph)."
+        },
+        {
+         "ref": "2",
+         "kind": "quote",
+         "message": "[2] the quote is not verbatim in the IT text of SR 0.142.112.681 Art. 6. Copy it character for character from get_article (mark omissions with …), or drop the claim."
+        },
+        {
+         "ref": "3",
+         "kind": "paragraph",
+         "message": "SR 0.142.112.681 Art. 7 has no paragraph 1; it has no numbered paragraphs (omit paragraph)."
+        },
+        {
+         "ref": "3",
+         "kind": "quote",
+         "message": "[3] the quote is not verbatim in the IT text of SR 0.142.112.681 Art. 7. Copy it character for character from get_article (mark omissions with …), or drop the claim."
+        },
+        {
+         "ref": "4",
+         "kind": "paragraph",
+         "message": "SR 0.142.112.681 Art. 7 has no paragraph 2; it has no numbered paragraphs (omit paragraph)."
+        },
+        {
+         "ref": "4",
+         "kind": "quote",
+         "message": "[4] the quote is not verbatim in the IT text of SR 0.142.112.681 Art. 7. Copy it character for character from get_article (mark omissions with …), or drop the claim."
+        }
+       ]
+      },
+      {
+       "citations": 4,
+       "quotes": 4,
+       "problems": [
+        {
+         "ref": "2",
+         "kind": "paragraph",
+         "message": "SR 0.142.112.681 annex_I/lvl_u1/lvl_II/art_6 has no paragraph 1; it has paragraphs ['(1)', '(2)', '(3)', '(4)', '(5)', '(6)', '(7)']."
+        },
+        {
+         "ref": "3",
+         "kind": "paragraph",
+         "message": "SR 0.142.112.681 annex_I/lvl_u1/lvl_II/art_7 has no paragraph 1; it has paragraphs ['(1)', '(2)', '(3)']."
+        },
+        {
+         "ref": "4",
+         "kind": "paragraph",
+         "message": "SR 0.142.112.681 annex_I/lvl_u1/lvl_II/art_7 has no paragraph 2; it has paragraphs ['(1)', '(2)', '(3)']."
+        }
+       ]
+      }
+     ],
+     "dropped": [],
+     "repairs": [
+      "[2] non-existent paragraph removed",
+      "[3] non-existent paragraph removed",
+      "[4] non-existent paragraph removed"
+     ]
+    },
+    "notice": "Unofficial. Not legal advice. Sources: Fedlex (fedlex.admin.ch)."
+   },
+   "raw_final": null,
+   "tool_trace": [
+    {
+     "name": "list_acts",
+     "args": {}
+    },
+    {
+     "name": "search_law",
+     "args": {
+      "sr": [
+       "142.203",
+       "0.142.112.681",
+       "142.20"
+      ],
+      "lang": "it",
+      "query": "permesso dimora tempo indeterminato durata cinque anni"
+     }
+    },
+    {
+     "name": "search_law",
+     "args": {
+      "lang": "it",
+      "sr": [
+       "0.142.112.681",
+       "142.203"
+      ],
+      "query": "lavoratore subordinato permesso soggiorno contratto durata almeno un anno cinque anni"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "it",
+      "sr": "0.142.112.681",
+      "article": "annex_I/lvl_u1/lvl_II/art_6"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "article": "art_4",
+      "lang": "it",
+      "sr": "142.203"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "it",
+      "article": "art_6",
+      "sr": "142.203"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "it",
+      "sr": "0.142.112.681",
+      "article": "annex_I/lvl_u1/lvl_II/art_7"
+     }
+    },
+    {
+     "name": "resolve_citation",
+     "args": {
+      "text": "Art. 6 allegato I ALC, Art. 7 allegato I ALC, Art. 4 OLCP"
+     }
+    },
+    {
+     "name": "resolve_citation",
+     "args": {
+      "text": "Art. 6 ALC"
+     }
+    },
+    {
+     "name": "search_law",
+     "args": {
+      "lang": "it",
+      "query": "permesso dimora durata cinque anni lavoratore indeterminato",
+      "sr": [
+       "142.203",
+       "142.201",
+       "142.20"
+      ]
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "0.142.112.681",
+      "lang": "it",
+      "article": "all. I art. 6"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "article": "art_6",
+      "sr": "0.142.112.681",
+      "lang": "it"
+     }
+    },
+    {
+     "name": "resolve_citation",
+     "args": {
+      "text": "Art. 6 allegato I ALC"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "0.142.112.681",
+      "lang": "it",
+      "article": "Art. 6 Allegato I"
+     }
+    },
+    {
+     "name": "search_law",
+     "args": {
+      "sr": [
+       "142.203",
+       "142.201"
+      ],
+      "query": "\"cinque anni\" UE AELS dimora frontalieri",
+      "lang": "it"
+     }
+    },
+    {
+     "name": "get_toc",
+     "args": {
+      "depth": 2,
+      "sr": "0.142.112.681",
+      "lang": "it"
+     }
+    },
+    {
+     "name": "get_toc",
+     "args": {
+      "lang": "it",
+      "depth": 2,
+      "sr": "142.203"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "it",
+      "article": "art_2",
+      "sr": "142.20"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "article": "annex_I/lvl_u1/lvl_II/art_7",
+      "lang": "it",
+      "sr": "0.142.112.681"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "article": "art_7",
+      "sr": "0.142.112.681",
+      "lang": "it"
+     }
+    }
+   ],
+   "citation_checks": [
+    {
+     "ref": "1",
+     "sr": "142.203",
+     "article": "Art. 4",
+     "quote_lang": "it",
+     "eid": "art_4",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "2",
+     "sr": "0.142.112.681",
+     "article": "Art. 6",
+     "quote_lang": "it",
+     "eid": "art_6",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": false,
+     "text": null
+    },
+    {
+     "ref": "3",
+     "sr": "0.142.112.681",
+     "article": "Art. 7",
+     "quote_lang": "it",
+     "eid": "art_7",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": false,
+     "text": null
+    },
+    {
+     "ref": "4",
+     "sr": "0.142.112.681",
+     "article": "Art. 7",
+     "quote_lang": "it",
+     "eid": "art_7",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": false,
+     "text": null
+    }
+   ],
+   "judgement": {
+    "claims": [
+     {
+      "claim": "Se ti trasferisci a vivere in Svizzera, ricevi un permesso di dimora UE/AELS (noto comunemente come permesso B).",
+      "refs": [
+       "1"
+      ],
+      "supported": "yes"
+     },
+     {
+      "claim": "Poiché il contratto di lavoro è a tempo indeterminato (durata uguale o superiore a un anno), il permesso ha una validità di 5 anni ed è automaticamente rinnovabile per periodi di almeno 5 anni.",
+      "refs": [
+       "2"
+      ],
+      "supported": "no"
+     },
+     {
+      "claim": "Il lavoratore frontaliero è chi risiede in Italia e rientra regolarmente al proprio domicilio di norma ogni giorno o almeno una volta alla settimana.",
+      "refs": [
+       "3"
+      ],
+      "supported": "no"
+     },
+     {
+      "claim": "Se mantieni la residenza in Italia come frontaliere, ricevi un permesso per frontalieri UE/AELS (permesso G).",
+      "refs": [
+       "1"
+      ],
+      "supported": "yes"
+     },
+     {
+      "claim": "Per un impiego di durata pari o superiore a un anno, il permesso per frontalieri viene rilasciato per una durata di 5 anni ed è rinnovabile per periodi di almeno 5 anni purché continui a esercitare un'attività economica.",
+      "refs": [
+       "4"
+      ],
+      "supported": "no"
+     },
+     {
+      "claim": "Chi si trasferisce in Svizzera deve registrarsi presso l'ufficio controllo abitanti del proprio Comune di residenza entro 14 giorni dall'arrivo.",
+      "refs": [],
+      "supported": "no"
+     }
+    ],
+    "key_facts": [
+     {
+      "fact": "a worker from an EU/EFTA state with an employment contract of at least one year (or indefinite) receives a residence permit valid for at least five years",
+      "verdict": "stated"
+     },
+     {
+      "fact": "the permit is extended automatically by at least five years",
+      "verdict": "stated"
+     }
+    ],
+    "must_not": [
+     {
+      "item": "says an EU citizen needs a quota or labour-market test for this permit",
+      "violated": false
+     }
+    ],
+    "behaviour_ok": true,
+    "behaviour_note": "The assistant directly answers the question distinguishing residency scenarios and provides the required durations without asking clarifying questions.",
+    "irrelevant_refs": [
+     "2"
+    ]
+   }
+  },
+  {
+   "id": "general-01",
+   "lang": "en",
+   "category": "answerable",
+   "domain": "general",
+   "error": null,
+   "status": "passed",
+   "rounds": 1,
+   "first_draft": {
+    "citations": 6,
+    "quotes": 6,
+    "problems": {}
+   },
+   "dropped": [],
+   "repairs": [],
+   "citations": 6,
+   "quotes": 6,
+   "verbatim": 6,
+   "hallucinated": 0,
+   "not_in_force": 0,
+   "unchecked": 0,
+   "required_recall": 1.0,
+   "precision_expected": 0.5,
+   "behaviour_det": true,
+   "detected_lang": "en",
+   "lang_ok": true,
+   "tool_calls": 5,
+   "tools": {
+    "search_law": 2,
+    "get_article": 2,
+    "list_acts": 1
+   },
+   "usage": {
+    "model_calls": 6,
+    "prompt": 43415,
+    "cached": 13557,
+    "output": 1449,
+    "thoughts": 3991
+   },
+   "latency_s": 55.71,
+   "cost_usd": 0.04381,
+   "groundedness": 1.0,
+   "key_facts": 0.6666666666666666,
+   "must_not_violations": 0,
+   "behaviour_judge": true,
+   "behaviour_ok": true,
+   "precision_judged": 1.0,
+   "answer": {
+    "language": "en",
+    "answer_markdown": "Under the Swiss Data Protection Act, you have a statutory right of access. You can find out what information a company holds about you by submitting an access request directly to the company (the data controller) asking whether personal data concerning you is being processed [1].\n\n### What information must be provided?\nThe company must provide the information necessary for you to assert your rights and ensure transparent data processing [2]. In all cases, this includes:\n- The processed personal data itself;\n- The purpose of the processing;\n- The retention period (or criteria used to determine it);\n- Available details on the origin of the data if not collected directly from you;\n- The controller's contact information and the recipients or categories of recipients if the data has been disclosed [2].\n\n### Does the company have to answer?\nYes. The controller is obligated to respond, as a rule within 30 days [3] and free of charge [4] (exceptions to the fee rule may apply if the effort is disproportionate) [4].\n\n### Can the company refuse?\nA private controller may refuse, restrict, or defer access only on specific grounds—such as when a formal law requires it (e.g. professional secrecy), when overriding interests of third parties require it, or if your request is manifestly unfounded or vexatious [5]. If the company refuses, restricts, or delays access, it must state the reasons [6].",
+    "citations": [
+     {
+      "ref": "1",
+      "sr": "235.1",
+      "article": "Art. 25",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Jede Person kann vom Verantwortlichen Auskunft darüber verlangen, ob Personendaten über sie bearbeitet werden.",
+      "translation": "Any person may request information from the controller as to whether personal data concerning them is being processed.",
+      "abbr": "DSG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2022/491/de#art_25",
+      "as_of": "2025-07-07"
+     },
+     {
+      "ref": "2",
+      "sr": "235.1",
+      "article": "Art. 25",
+      "paragraph": "2",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Die betroffene Person erhält diejenigen Informationen, die erforderlich sind, damit sie ihre Rechte nach diesem Gesetz geltend machen kann und eine transparente Datenbearbeitung gewährleistet ist.",
+      "translation": "The data subject receives the information required in order to assert their rights under this Act and to ensure transparent data processing.",
+      "abbr": "DSG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2022/491/de#art_25",
+      "as_of": "2025-07-07"
+     },
+     {
+      "ref": "3",
+      "sr": "235.1",
+      "article": "Art. 25",
+      "paragraph": "7",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Die Auskunft wird in der Regel innerhalb von 30 Tagen erteilt.",
+      "translation": "The information is generally provided within 30 days.",
+      "abbr": "DSG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2022/491/de#art_25",
+      "as_of": "2025-07-07"
+     },
+     {
+      "ref": "4",
+      "sr": "235.1",
+      "article": "Art. 25",
+      "paragraph": "6",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Der Verantwortliche muss kostenlos Auskunft erteilen. Der Bundesrat kann Ausnahmen vorsehen, namentlich wenn der Aufwand unverhältnismässig ist.",
+      "translation": "The controller must provide the information free of charge. The Federal Council may provide for exceptions, in particular if the effort required is disproportionate.",
+      "abbr": "DSG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2022/491/de#art_25",
+      "as_of": "2025-07-07"
+     },
+     {
+      "ref": "5",
+      "sr": "235.1",
+      "article": "Art. 26",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Der Verantwortliche kann die Auskunft verweigern, einschränken oder aufschieben, wenn:\na. ein Gesetz im formellen Sinn dies vorsieht, namentlich um ein Berufsgeheimnis zu schützen;\nb. dies aufgrund überwiegender Interessen Dritter erforderlich ist; oder\nc. das Auskunftsgesuch offensichtlich unbegründet ist, namentlich wenn es einen datenschutzwidrigen Zweck verfolgt, oder offensichtlich querulatorisch ist.",
+      "translation": "The controller may refuse, restrict or defer the provision of information if: a. a formal enactment so provides, in particular to protect professional secrecy; b. this is required due to overriding interests of third parties; or c. the request for information is manifestly unfounded, in particular if it pursues a purpose contrary to data protection, or is manifestly vexatious.",
+      "abbr": "DSG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2022/491/de#art_26",
+      "as_of": "2025-07-07"
+     },
+     {
+      "ref": "6",
+      "sr": "235.1",
+      "article": "Art. 26",
+      "paragraph": "4",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Der Verantwortliche muss angeben, weshalb er die Auskunft verweigert, einschränkt oder aufschiebt.",
+      "translation": "The controller must state why they are refusing, restricting or deferring the provision of information.",
+      "abbr": "DSG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2022/491/de#art_26",
+      "as_of": "2025-07-07"
+     }
+    ],
+    "clarifying_question": null,
+    "cantonal_note": null,
+    "follow_up_questions": [
+     "What legal remedies are available if a company ignores my access request or refuses without valid grounds?",
+     "How can I request that a company delete or correct my personal data?",
+     "Under what specific circumstances can a company charge a fee for answering an access request?"
+    ],
+    "confidence": "high",
+    "out_of_scope": false,
+    "verification": {
+     "status": "passed",
+     "rounds": [
+      {
+       "citations": 6,
+       "quotes": 6,
+       "problems": []
+      }
+     ],
+     "dropped": [],
+     "repairs": []
+    },
+    "notice": "Unofficial. Not legal advice. Sources: Fedlex (fedlex.admin.ch)."
+   },
+   "raw_final": null,
+   "tool_trace": [
+    {
+     "name": "search_law",
+     "args": {
+      "lang": "de",
+      "query": "Auskunftsrecht Personendaten Verantwortlicher",
+      "sr": [
+       "235.1"
+      ]
+     }
+    },
+    {
+     "name": "search_law",
+     "args": {
+      "lang": "de",
+      "query": "Auskunft Frist kostenlos Gebühr",
+      "sr": [
+       "235.1"
+      ]
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "article": "25",
+      "sr": "235.1",
+      "lang": "de"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "de",
+      "sr": "235.1",
+      "article": "26"
+     }
+    },
+    {
+     "name": "list_acts",
+     "args": {}
+    }
+   ],
+   "citation_checks": [
+    {
+     "ref": "1",
+     "sr": "235.1",
+     "article": "Art. 25",
+     "quote_lang": "de",
+     "eid": "art_25",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "2",
+     "sr": "235.1",
+     "article": "Art. 25",
+     "quote_lang": "de",
+     "eid": "art_25",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "3",
+     "sr": "235.1",
+     "article": "Art. 25",
+     "quote_lang": "de",
+     "eid": "art_25",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "4",
+     "sr": "235.1",
+     "article": "Art. 25",
+     "quote_lang": "de",
+     "eid": "art_25",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "5",
+     "sr": "235.1",
+     "article": "Art. 26",
+     "quote_lang": "de",
+     "eid": "art_26",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "6",
+     "sr": "235.1",
+     "article": "Art. 26",
+     "quote_lang": "de",
+     "eid": "art_26",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    }
+   ],
+   "judgement": {
+    "claims": [
+     {
+      "claim": "Under the Swiss Data Protection Act, a person can find out what information a company holds about them by submitting an access request directly to the controller asking whether personal data concerning them is being processed.",
+      "refs": [
+       "1"
+      ],
+      "supported": "yes"
+     },
+     {
+      "claim": "The company must provide the information necessary for the data subject to assert their rights and ensure transparent data processing.",
+      "refs": [
+       "2"
+      ],
+      "supported": "yes"
+     },
+     {
+      "claim": "In all cases, the information provided must include the processed personal data itself, the purpose of processing, the retention period (or criteria used to determine it), available details on data origin if not collected directly from the data subject, the controller's contact details, and the recipients or categories of recipients if data has been disclosed.",
+      "refs": [
+       "2"
+      ],
+      "supported": "yes"
+     },
+     {
+      "claim": "The controller must provide the information as a rule within 30 days.",
+      "refs": [
+       "3"
+      ],
+      "supported": "yes"
+     },
+     {
+      "claim": "The controller must provide the information free of charge, with potential exceptions if the effort required is disproportionate.",
+      "refs": [
+       "4"
+      ],
+      "supported": "yes"
+     },
+     {
+      "claim": "A private controller may refuse, restrict, or defer access on specific grounds, including where a formal law provides for it (e.g. professional secrecy), where overriding interests of third parties require it, or if the request is manifestly unfounded or vexatious.",
+      "refs": [
+       "5"
+      ],
+      "supported": "yes"
+     },
+     {
+      "claim": "If the controller refuses, restricts, or defers access, it must state the reasons.",
+      "refs": [
+       "6"
+      ],
+      "supported": "yes"
+     }
+    ],
+    "key_facts": [
+     {
+      "fact": "anyone can ask the controller whether personal data about them is processed",
+      "verdict": "stated"
+     },
+     {
+      "fact": "the answer must include at least the controller's identity and contact details, the data itself, the purpose, the retention period, and where relevant the source and the recipients",
+      "verdict": "stated"
+     },
+     {
+      "fact": "the information must be given free of charge, as a rule within 30 days, and the right cannot be waived in advance",
+      "verdict": "missing"
+     }
+    ],
+    "must_not": [
+     {
+      "item": "says companies may charge a fee for every access request",
+      "violated": false
+     }
+    ],
+    "behaviour_ok": true,
+    "behaviour_note": "The assistant directly answers the question with legal citations and without asking clarifying questions.",
+    "irrelevant_refs": []
+   }
+  }
+ ],
+ "meta": {
+  "dataset": {
+   "spec": "golden",
+   "files": [
+    "evals/datasets/golden.jsonl"
+   ],
+   "sha": "283079d403c1",
+   "verified": true,
+   "verified_cases": 2,
+   "verified_by": [
+    "claude-opus-5-5"
+   ]
+  },
+  "selection": {
+   "smoke": false,
+   "ids": "residence-15,general-01",
+   "limit": null,
+   "category": null
+  },
+  "profile": {
+   "name": "default",
+   "agent": {
+    "model": "gemini-3.8-flash",
+    "location": "eu",
+    "thinking": null
+   },
+   "judge": {
+    "model": "gemini-3.8-flash",
+    "location": "global",
+    "thinking": null
+   },
+   "embedding": {
+    "model": "gemini-embedding-2",
+    "location": "eu",
+    "input_format": "instruction"
+   }
+  },
+  "system_prompt_sha": "766534f90f94",
+  "judge_prompt_sha": "d83d68626291",
+  "judged": true,
+  "adk": "2.12.0",
+  "output_mode": "native schema + tools",
+  "mcp": {
+   "url": "local (started by the harness)",
+   "health": {
+    "status": "ok",
+    "as_of": "2026-10-15",
+    "index_built": "2026-10-15T10:38:41+00:00",
+    "index_sha": "c756c89",
+    "records": 18396,
+    "chunks": 17310,
+    "embedding": {
+     "model": "gemini-embedding-2",
+     "location": "eu",
+     "dims": 768
+    },
+    "uptime_s": 260.7
+   }
+  },
+  "pricing": {
+   "as_of": "2026-10-15",
+   "usd_to_chf": 0.82
+  },
+  "judge_usage": {
+   "model_calls": 2,
+   "prompt": 8343,
+   "cached": 0,
+   "output": 1259,
+   "thoughts": 2766
+  }
+ }
+}

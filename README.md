@@ -6,11 +6,12 @@ Fedlex.**
 
 A multilingual, citation-grounded agent built on **Gemini Enterprise Agent
 Platform** (ADK, Agent Runtime, Memory Bank), with a public **MCP server**
-for Swiss federal law. It is measured by a human-verified eval suite and
-benchmarked against the Swiss open model **Apertus**.
+for Swiss federal law. It is measured by a 150-case golden eval suite
+(checked against the article text by Claude Opus 5.5; not yet human-verified)
+and will be benchmarked against the Swiss open model **Apertus**.
 
 > 🚧 **Status: in development.** See [docs/PLAN.md](docs/PLAN.md) for progress.
-> Results tables will appear here as milestones land.
+> Baseline results (M4) are below; later milestones add model comparisons.
 
 > ⚠️ **Unofficial. Not legal advice.** This project is not affiliated with the
 > Swiss Confederation or any canton. Law texts come from
@@ -63,9 +64,28 @@ Decision log: [docs/DECISIONS.md](docs/DECISIONS.md)
 
 ## Results
 
-_Coming in M4/M9: golden-set accuracy, citation fidelity, and cost/latency per
-model (Gemini, Claude via Model Garden, self-hosted Apertus)._
-Methodology: [docs/EVALS.md](docs/EVALS.md)
+**Baseline, `navigator_v1` (M4, 2026-10-15).** Agent `gemini-3.8-flash@eu`,
+judge `gemini-3.8-flash@global`, Fedlex as of 2026-10-01. Golden set: 150
+cases, DE/EN/FR/IT, 5 domains, model-verified (ADR-024). 95% bootstrap CIs.
+
+| metric | golden (150) |
+|---|---|
+| quote fidelity (quotes verbatim in the cited article) | **99.4%** (539/542; the 3 misses are one treaty-annex case, [#6](https://github.com/nikext/swiss-admin-navigator/issues/6)) |
+| hallucinated citations | **0** of 542 |
+| required-citation recall | 96.5 (93.3–99.2) |
+| groundedness (judge, claims supported by the cited text) | 78.6 (74.9–82.4) |
+| key-fact coverage (judge) | 95.5 (92.9–97.7) |
+| behaviour (asks / answers / points to the canton / declines as expected) | 98.0 (95.3–100) |
+| answer in the user's language | 100 |
+| cost per answer / latency | CHF 0.038 / p50 41 s, p95 104 s |
+
+Adversarial set (50 fake articles, prompt injections, impersonation; drafted,
+not verified): quote fidelity 100%, 0 hallucinated citations, behaviour 96.
+Multi-turn (25 simulated conversations via ADK user simulation; drafted, not
+verified): 25/25 passed, rubric score 0.97.
+Judge: picked by agreement with labelled answers (ADR-023). CI runs the
+20-case smoke set with hard gates on every ready PR.
+Reports: [`evals/reports/`](evals/reports/) · methodology: [docs/EVALS.md](docs/EVALS.md)
 
 ## Repository layout (target)
 

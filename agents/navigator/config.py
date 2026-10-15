@@ -11,6 +11,11 @@ query: ..."; gemini-embedding-2 ignores `task_type` and fuses a multi-text
 request into one vector), `task_type` passes RETRIEVAL_QUERY/RETRIEVAL_DOCUMENT
 (gemini-embedding-001). Verified live on 2026-10-15, see ADR-015.
 
+The agent and judge roles take an optional `thinking` level (`minimal`, `low`,
+`medium`, `high`; unset = the model's default). It maps to Gemini's
+`thinking_level` and to Claude's `effort` (minimal → low), so cost experiments
+can lower it per run (M4).
+
 The profile is chosen by `NAV_PROFILE` (default: `default`). Single fields can
 be overridden per run with `<ROLE>_<FIELD>` (e.g. `AGENT_MODEL`,
 `JUDGE_LOCATION`, `EMBEDDING_INPUT_FORMAT`), which is how eval experiments swap
@@ -42,6 +47,12 @@ class ModelRef:
 
 
 INPUT_FORMATS = ("instruction", "task_type")
+THINKING_LEVELS = ("minimal", "low", "medium", "high")
+
+
+@dataclass(frozen=True)
+class LlmRef(ModelRef):
+    thinking: str | None = None  # None: the model's default
 
 
 @dataclass(frozen=True)
@@ -52,8 +63,8 @@ class EmbeddingRef(ModelRef):
 @dataclass(frozen=True)
 class Profile:
     name: str
-    agent: ModelRef
-    judge: ModelRef
+    agent: LlmRef
+    judge: LlmRef
     embedding: EmbeddingRef
 
     def as_dict(self) -> dict[str, Any]:
@@ -63,8 +74,12 @@ class Profile:
 ROLES = tuple(f.name for f in fields(Profile) if f.name != "name")
 _REF_KEYS = {f.name for f in fields(ModelRef)}
 # Optional keys per role, with the dataclass default when absent.
-_OPTIONAL_KEYS = {"embedding": {"input_format"}}
-_REF_TYPES: dict[str, type[ModelRef]] = {"embedding": EmbeddingRef}
+_OPTIONAL_KEYS = {"agent": {"thinking"}, "judge": {"thinking"}, "embedding": {"input_format"}}
+_REF_TYPES: dict[str, type[ModelRef]] = {
+    "agent": LlmRef,
+    "judge": LlmRef,
+    "embedding": EmbeddingRef,
+}
 
 
 def _keys_check(
@@ -111,4 +126,7 @@ def load_profile(
         refs[role] = _REF_TYPES.get(role, ModelRef)(**values)
     if refs["embedding"].input_format not in INPUT_FORMATS:
         raise ProfileError(f"{path}: embedding.input_format must be one of {INPUT_FORMATS}")
+    for role in ("agent", "judge"):
+        if refs[role].thinking not in (None, *THINKING_LEVELS):
+            raise ProfileError(f"{path}: {role}.thinking must be one of {THINKING_LEVELS}")
     return Profile(name=name, **refs)

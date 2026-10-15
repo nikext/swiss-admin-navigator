@@ -492,3 +492,195 @@ unverified settlement agreement as fact.
   adversarial-01. Its first draft used Art. 999 OR, which exists (bill of
   exchange law). The agent said so and quoted it; the case now uses
   Art. 271z OR.
+
+### ADR-020: Golden set: Claude drafts in batches, Nikola verifies in a CLI; adversarial and silver stay unverified
+**Status:** accepted (2026-10-15, M4)
+**Context:** M4 needs 150 human-verified golden cases (EVALS.md §1), and
+only Nikola may verify them (CLAUDE.md). Agreed on 2026-10-15: all 150 are
+verified before M4 closes, through a local review tool.
+**Decision:**
+- Claude drafts every case from the article text read from the index
+  (`ingest`-built SQLite), never from memory, in topic batches of 24
+  (`evals/datasets/drafts/batch-NN.jsonl`, 6 per language). New batches are new
+  files, so drafting never rewrites a file that is under review.
+- `make check-cases` validates schema, ids unique across all case files,
+  expected citations that exist and are in force, and
+  `clarification_expected` matching the category (it caught housing-20).
+- `make review-golden` shows each draft with the full text of every expected
+  citation (any language on `t`), key facts, must_not and notes (M3 disputes
+  are flagged); `a` stamps `verified_by`/`verified_on` and moves the case to
+  `golden.jsonl`, `e` edits it as JSON with validation, `r` moves it to
+  `drafts/rejected.jsonl` with the reason. Every decision is an atomic write.
+- Until all are verified the harness runs golden + all draft batches
+  (`--dataset all`); the 20 smoke cases stay complete wherever they live, and
+  reports say how many cases are verified.
+- `golden.lock.json` pins a hash of every cited article's text; check-cases
+  flags golden cases whose law changed (EVALS.md §1 step 5).
+- `adversarial.jsonl` (50) and `silver.jsonl` (352, LLM-generated, spot-checked
+  30/30) use the same schema but are not verified and never back headline
+  numbers; the full eval runs adversarial next to golden.
+**Consequences:** The 150 drafts hit the target spread exactly (90/22/15/13/10;
+38/38/37/37). Headline numbers wait for the review (~8-12 h of Nikola's time).
+Clarification cases are the contested label (social-05): the review decides
+whether a complete branching answer counts as good behaviour.
+
+### ADR-021: CI eval gates: WIF, a published index, deterministic gates, smoke only on ready PRs
+**Status:** accepted (2026-10-15, M4); active once `make gcp-wif` has run and the
+`GCP_*` repository variables are set.
+**Context:** EVALS.md §3 asks for retrieval + a 20-case smoke on every PR with
+gates on recall, quote fidelity and hallucinated citations, and a full eval on
+a label. CI has no index (gitignored build artefact, 135 MB), no keys, and a
+CHF 0.50 per-run goal against CHF 0.70 measured for the agent alone.
+**Decision:**
+- Auth by Workload Identity Federation (`infra/wif.sh`): pool
+  `swiss-nav-github`, OIDC provider limited to `nikext/swiss-admin-navigator`,
+  allowed to impersonate `swiss-nav-ci@` only.
+- The index is published to `gs://<project>-swiss-nav/index/<sha256[:16]>/`
+  (`make publish-index`); the committed pointer `evals/ci_index.json` carries
+  the full sha256, and CI refuses a file that does not match.
+- `eval-smoke.yml`: check-cases, retrieval eval, 20-case answer smoke, then
+  `evals/harness/gate.py` against `evals/baselines.yaml`: recall@8 at most 2
+  points below 98.5, quote fidelity 100 % with at least one quote, 0
+  hallucinated citations, at most 1 agent error. Cost and p50 latency go to the
+  job summary. It runs on non-draft PRs that touch agent, MCP, ingest or eval
+  code, and skips until WIF is configured.
+- The gates are deterministic, so the CI smoke can run without the judge
+  (`SMOKE_ARGS` repo variable); judge scores at n=20 are too noisy to gate.
+- `eval-full.yml` on the `full-eval` label: golden + drafts + adversarial,
+  report above the per-case table as a PR comment, label removed afterwards.
+**Consequences:** About CHF 0.70 per smoke run at the served (default) thinking
+level, above the 0.50 goal; low thinking would cost 0.46 but changes the agent
+under test (EVALS.md §3 table), so it is decided on golden, not for CI's sake.
+Docs-only and draft PRs cost nothing. A new index needs `make publish-index` in
+the same PR.
+
+### ADR-022: Multi-turn eval through ADK AgentEvaluator with a rubric judge
+**Status:** accepted (2026-10-15, M4)
+**Context:** EVALS.md asks for `adk eval` with user simulation on
+`multiturn.evalset.json`. Checked in google-adk 2.12.0: the `multi_turn_*_v1`
+metrics delegate to the managed Vertex evaluation service (needs
+`google-cloud-aiplatform[evaluation]` and a supported region);
+`rubric_based_multi_turn_trajectory_quality_v1` is an ADK LLM judge; both the
+user simulator and ADK's judges are built from model names on
+`GOOGLE_CLOUD_LOCATION`, which is europe-west6 here (no Gemini, ADR-013).
+**Decision:**
+- `google-adk[eval]` in the evals package only (the agent package stays lean).
+- `evals/harness/multiturn.py` builds the EvalConfig from the profile: simulator
+  = agent model (thinking low), rubric judge = judge model, 1 sample, both on
+  the judge's location set for this process; the agent keeps its own location.
+- Per-case rubrics in the evalset; they must have type `TRAJECTORY_QUALITY`
+  (ADK filters case rubrics by the evaluator's type, silently).
+- The MCP URL is fixed before anything imports `agents.navigator`, because the
+  package builds `root_agent` at import (two failed trial runs taught this).
+- Results come from ADK's own results manager (`EvalSetResult`), and the
+  report keeps every rubric verdict with the judge's rationale and transcript.
+**Consequences:** Trial on mt-01 and mt-22: 2/2 passed, 7/7 rubrics, 3 turns each,
+agent CHF 0.07 per conversation (simulator and judge extra). The `multi_turn_*`
+metrics stay unused until there is a reason to pay for the managed service.
+
+### ADR-023: Judge choice for CI and the baseline: Gemini 3.8 Flash
+**Status:** accepted (2026-10-15, M4); the plan below was carried out, results at the end
+**Context:** The M3 judge (`gemini-3.1-pro-preview@global`) costs about
+CHF 0.03 per answer and is the same family as the agent. Claude in Model
+Garden was agreed as a candidate on 2026-10-15, but the project has zero quota
+for every Claude model (`429 global_online_prediction_requests_per_base_model`,
+base model anthropic-claude-haiku) until the models are enabled.
+**Plan:** Nikola labels the 30 M3 answers; `make judge-study` grades them with
+Gemini Pro (twice, for test-retest noise), 3.8 Flash and 3.5 Flash-Lite and,
+once enabled, Claude Haiku 5.5 and Sonnet 5.5. Pick the cheapest judge whose
+agreement with the human labels is not materially worse than the best one
+(groundedness MAE, kappa on behaviour and key facts), prefer a different
+family at equal agreement, record the numbers here, and set it in the profile.
+**Study** (30 M3 answers vs the 30 labels of ADR-024; Claude still 429;
+`evals/reports/2026-10-15-78b0f29-judge-study.md`, CHF 2.0):
+
+| judge | CHF/answer | p50 s | grounded MAE | fully-grounded κ | key facts | behaviour acc / κ | 429s |
+|---|---|---|---|---|---|---|---|
+| 3.1 Pro (run 1) | 0.029 | 28 | 0.11 | 0.53 | 100 | 93 / 0.00 | 3 |
+| 3.1 Pro (run 2) | 0.029 | 43 | 0.11 | 0.36 | 100 | 97 / 0.65 | 1 |
+| **3.8 Flash** | **0.006** | **10** | **0.10** | **0.71** | 100 | **100 / 1.00** | 0 |
+| 3.5 Flash-Lite | 0.002 | 2 | 0.10 (bias +0.10) | 0.10 | 100 | 97 / 0.65 | 0 |
+
+**Decision:** `gemini-3.8-flash@global` (`profiles/default.yaml`). It agrees
+with the labels at least as well as Pro on every metric at a fifth of the cost
+and was never rate-limited. Flash-Lite ranks answers poorly (Spearman ρ 0.28
+vs 0.68).
+**Consequences:** the judge is the agent's own model, so self-preference is
+possible; the deterministic gates do not depend on it. Pro disagrees with
+itself (κ 0.53 vs 0.36), so a few points of agreement are noise at n=30. When
+the Claude quota arrives, rerun the study; a Claude judge can only be picked
+against human labels (ADR-024). The judge client does not retry 429s yet.
+
+### ADR-024: Golden review and judge labels delegated to Claude; clarification labels follow system-prompt rule 1
+**Status:** accepted (2026-10-15, M4)
+**Context:** ADR-020 and CLAUDE.md had Nikola verify all 150 golden cases and
+label the 30 judge-study answers. On 2026-10-15 Nikola asked Claude to do both
+itself and continue. Reviewing the drafts also showed that 16 of the 22
+`needs_clarification` labels contradicted rule 1 of the agent's own system
+prompt ("ask … if the answer would differ substantially and you cannot cover
+both cases in two short sentences … Do not ask when you can cover both cases
+briefly").
+**Decision:**
+1. Claude (Opus 5.5) reviewed every draft against the full cited article text
+   (the `make review-golden` rendering) and applied the decisions through the
+   review tool's `Store`. Every case carries `verified_by: claude-opus-5-5`;
+   nothing is recorded as Nikola's. Reports and the README call the set
+   **model-verified**, not human-verified.
+2. Outcome: 150 accepted, 0 rejected. 16 relabelled (point 3); work-18 edited
+   (DE/FR "without night-work supplements" vs IT "oltre agli eventuali
+   supplementi", so the key fact no longer fixes how supplements count);
+   social-17 edited (a key fact relied on OAMal 100, which is not an expected
+   citation). Disputes: social-05 stays `needs_clarification` (the answer needs
+   contribution months, age, children and the allowances already drawn);
+   adversarial-01 stays as labelled. Every fake article was re-checked with
+   `resolve_citation` (271z OR, 257z CO, 336z CO, 16z LCR: `exists: false`).
+3. Labelling rule: a case is `needs_clarification` only if a fact the question
+   omits changes the answer materially **and** a correct general answer does
+   not fit in two short sentences. Otherwise it is `answerable`, with a
+   `must_not` against presenting one branch as if it applied to the user.
+   Relabelled to answerable: housing-20, work-22, work-23, residence-20, -22,
+   -23, -24, -25, social-20, -21, -22, -23, tax-10, tax-12, mobility-06,
+   mobility-08. Kept: social-05, residence-01, residence-07, residence-21,
+   social-24, mobility-07.
+4. Judge labels: Claude labelled the 30 M3 answers (`labeled_by:
+   claude-opus-5-5`) without seeing any judge verdict, using the rubric of
+   `prompts/judge.md` (a claim with no ref is `no`; claims the prompt tells
+   judges to skip, such as office pointers or "Art. X does not exist", are
+   `yes` so they are not penalised).
+**Consequences:**
+- Headline numbers are measured against a model-verified reference. A human
+  spot check by Nikola (say 20 random cases via `make review-golden` on a copy)
+  would upgrade this to "model-verified, human spot-checked" and is
+  recommended before the numbers are used outside the repo.
+- Judge agreement is agreement with Claude's labels. Claude judges (Haiku,
+  Sonnet; 429 until the quota request is granted) share a model family with
+  the labeller, so their agreement is not comparable with Gemini's; they are
+  not picked as judge unless a human relabels.
+- Spread is now answerable 106, clarification 6, cantonal 15, out of scope 13,
+  adversarial 10. Six clarification cases give wide uncertainty on that
+  category; drafting more is a follow-up.
+- The thinking-level decision (EVALS.md §3) is judged with this rule: a short
+  branching answer is fine where rule 1 allows it.
+
+### ADR-025: Served agent thinking level stays at the model default
+**Status:** accepted (2026-10-15, M4)
+**Context:** On the 20 smoke cases, thinking `low` was a third cheaper and
+p50 22 s vs 38 s, but it stopped asking clarifying questions (EVALS.md §3).
+The stored answers of each level were re-graded with the chosen judge
+(ADR-023) against the final golden definitions (ADR-024):
+
+| agent thinking | CHF/answer | p50 s | groundedness | key facts | behaviour |
+|---|---|---|---|---|---|
+| default | 0.035 | 38 | 0.76 | 100 | 20/20 |
+| medium | 0.034 | 38 | 0.86 | 100 | 20/20 |
+| low | 0.023 | 22 | 0.91 | 100 | 18/20 |
+
+(`evals/reports/2026-10-15-7bd9768-rejudge-smoke-think-{default,medium,low}.md`)
+**Decision:** keep the default. Low fails exactly the two smoke cases where
+rule 1 says to ask (residence-01, residence-07: the answer depends on
+nationality and permit), and asking there is a product requirement. Medium
+buys nothing over default on cost or latency.
+**Consequences:** low is the obvious cost lever for M9 (E1) once the prompt
+makes it ask reliably; its higher groundedness comes from shorter answers with
+fewer uncited side remarks, which is worth copying into the prompt for every
+level. n=20, so the groundedness gaps are indicative only.

@@ -10,11 +10,12 @@ All in `evals/datasets/`, versioned in git.
 | Set | Size (target) | Purpose |
 |---|---|---|
 | `retrieval.jsonl` | 200 queries (102 on 2026-10-15) | Retrieval only: query → expected `(sr, eid)` set, matched per article regardless of language. 55 everyday + 47 `difficulty: hard` queries, DE/EN/FR/IT; expected eIds checked against the article text (drafted by Claude, not yet reviewed by Nikola). Cheap; runs on every PR. `make eval-retrieval`. |
-| `golden.jsonl` | 150 cases (0 verified on 2026-10-15) | End-to-end QA, human-verified. **Gold.** Until it exists the harness runs `drafts/golden.jsonl`: 30 cases drafted by Claude from the article text in M3 (DE 8, EN 8, FR 7, IT 7; 20 answerable, 3 clarification, 3 cantonal, 2 out of scope, 2 adversarial; 20 tagged `smoke`), `verified_by: null`, waiting for Nikola. |
-| `silver.jsonl` | 300–500 cases | LLM-generated from articles, spot-checked. Used for broad regression, never for headline claims. |
-| `multiturn.evalset.json` | 25 sessions | Clarification behaviour and memory use (ADK evalset format, user simulation). |
-| `adversarial.jsonl` | 50 cases | Prompt injection, fake article numbers, out-of-scope, requests for individual legal advice, attempts to make it impersonate an official authority. |
-| `memory.jsonl` | 20 cases | Memory recall, opt-out respected, sensitive facts **not** stored. |
+| `golden.jsonl` | 150 cases | End-to-end QA. **Gold.** Drafted by Claude in M4 (the 30 M3 drafts plus five batches of 24: housing; work; residence/citizenship/registration; social insurance; tax/mobility/data protection) and **model-verified** by Claude Opus 5.5 against the article text on 2026-10-15 at Nikola's request (`verified_by: claude-opus-5-5`, ADR-024); not human-verified. Spread: answerable 106, clarification 6, cantonal 15, out of scope 13, adversarial 10 (clarification labels follow system-prompt rule 1, ADR-024); DE 38, EN 38, FR 37, IT 37; 20 tagged `smoke` (5 per language). Text lock: `golden.lock.json`. |
+| `silver.jsonl` | 352 cases | LLM-generated from single articles (`make silver`, profile agent model, thinking low; 410 articles sampled by per-act quotas, 54 skipped as not resident-facing, 4 rejected for naming the article; CHF 0.33). Spot check of 30: key facts supported 30/30. Used for broad regression, never for headline claims. |
+| `multiturn.evalset.json` | 25 sessions | ADK EvalSet with user simulation (`make eval-multiturn`): clarification then answer (12), follow-ups (6), language switches (3), pushback and out of scope (4); per-case rubrics. Memory cases come with M7. Drafted, not verified. |
+| `adversarial.jsonl` | 50 cases | Golden schema. Fake articles/paragraphs/acts (12), prompt injection direct and inside quoted e-mails, contracts, letters and fake tool output (12), impersonation (6), individual advice and acting for the user (8), unlawful requests (4), false premises and pressure (8). Drafted by Claude, not verified; part of the full eval, not of headline numbers. |
+| `memory.jsonl` | 20 cases | Memory recall, opt-out respected, sensitive facts **not** stored (M7). |
+| `judge_labels.jsonl` | 30 answers | Labels of the 30 M3 answers for the judge-agreement study, by Claude Opus 5.5 at Nikola's request, blind to judge verdicts (`labeled_by: claude-opus-5-5`, ADR-024). `make label-answers` adds human labels. |
 
 ### Golden case schema
 
@@ -48,13 +49,27 @@ are errors).
 2. For each question, find the governing articles yourself through Fedlex
    (the MCP server's `get_toc` helps) and write `expected_citations` and
    `key_facts` **from the article text**.
-3. Use an LLM to *propose* candidates. A human (Nikola) confirms each one
-   against the article text and sets `verified_by`. Unverified cases go to
-   `silver`.
+3. Use an LLM to *propose* candidates. A reviewer confirms each one against
+   the article text and sets `verified_by` (Nikola by default; for M4 he
+   delegated the review to Claude, ADR-024). Unverified cases go to `silver`.
 4. Spread: 5 domains × 4 languages, with roughly 60% answerable, 15%
    clarification, 10% cantonal pointer, 15% out-of-scope/adversarial.
-5. Re-check `as_of` when the corpus lock changes. A CI job flags golden cases
-   whose cited articles changed text between builds.
+   Label `needs_clarification` only where system-prompt rule 1 says to ask:
+   the missing fact changes the answer and a correct general answer does not
+   fit in two short sentences (ADR-024).
+5. Re-check `as_of` when the corpus lock changes. `make check-cases` (also in
+   eval-smoke) flags golden cases whose cited articles changed text since
+   `golden.lock.json` (sha256 per cited article over all languages);
+   `--update-lock` rewrites the lock in the PR that verifies cases or rebuilds
+   the index.
+
+**Workflow (M4, ADR-020).** Claude drafts cases from the article text in
+batches (`drafts/batch-NN.jsonl`, new batches are new files so drafting never
+rewrites a file under review); `make check-cases` validates schema, unique ids,
+existing in-force expected citations and the clarification label;
+`make review-golden` shows each draft with the full cited article text and
+moves it to `golden.jsonl` on the reviewer's key press (edit and reject
+included).
 
 ## 2. Metrics
 
@@ -85,8 +100,13 @@ ADK criteria available in the pinned version (verified list from adk.dev,
 `tool_trajectory_avg_score` and the response-match criteria do **not** work with
 user simulation.
 
-**Approach:** use ADK `adk eval` / `AgentEvaluator` for multi-turn and rubric
-criteria (M4). Single-turn cases run through the custom harness
+**Approach:** ADK `AgentEvaluator` for multi-turn (`evals/harness/multiturn.py`,
+ADR-022): an LLM-backed user simulator, navigator_v1 over a local MCP server,
+and `rubric_based_multi_turn_trajectory_quality_v1` (an ADK LLM judge; per-case
+rubrics must have type `TRAJECTORY_QUALITY` or ADK silently drops them). The
+EvalConfig is built from the profile; simulator and judge run on the judge's
+endpoint location. The `multi_turn_*_v1` metrics call the managed Vertex
+evaluation service and are not used. Single-turn cases run through the custom harness
 `evals/harness/answer_eval.py` (built in M3, ADR-019): it runs the agent with
 the local ADK runner against its own MCP server, re-checks every final
 citation over MCP itself, asks the judge, and writes
@@ -98,7 +118,13 @@ headline numbers.
 **Judge hygiene:** pin the judge model and prompt. Judge with a different model
 family than the one under test where possible (e.g. Claude via Model Garden
 judging Gemini answers, and vice versa). Report judge agreement on a 30-case
-human-labelled subset.
+human-labelled subset: `make label-answers` (Nikola grades each claim of the
+reference split with verdicts hidden, plus key facts, must_not, behaviour),
+then `make judge-study JUDGES=...` re-grades the same stored answers with each
+candidate (`model@location[:thinking]`, Gemini or Claude) and reports MAE,
+bias and Spearman of groundedness, kappa on "fully grounded", key facts and
+behaviour, cost and latency; `--from` re-scores without model calls. The judge
+prompt no longer counts "Art. X does not exist" as a claim (M4).
 
 ## 3. Gates (CI)
 
@@ -109,10 +135,36 @@ human-labelled subset.
 | Manual / before release | full matrix (§4) | Updates the README results table. |
 
 CI auth: GitHub Actions → GCP via **Workload Identity Federation** (no JSON
-keys). Spend cap: the smoke eval should cost under CHF 0.50 per run. Log the
-cost. **Measured in M3:** about CHF 1.4 per smoke run (agent 0.75, judge
-0.66; ADR-019), so M4 has to bring it down: a cheaper CI judge validated
-against the human labels, a lower thinking level, or fewer CI cases.
+keys; `make gcp-wif`). The index comes from the project bucket by sha256
+(`evals/ci_index.json`, `make publish-index`). Workflows: `eval-smoke.yml`
+(check-cases, retrieval, 20-case smoke, gates via `evals/harness/gate.py` and
+`evals/baselines.yaml`; ready PRs that touch agent, MCP, ingest or eval code)
+and `eval-full.yml` (label `full-eval`; golden + adversarial; comments
+the report). Both skip until the `GCP_*` repo variables exist. The gates are
+deterministic, so the smoke needs no judge (`SMOKE_ARGS=--no-judge`, set as a
+repo variable). **Live since 2026-10-15** (WIF pool `swiss-nav-github`, repo
+variables `GCP_PROJECT`, `GCP_WIF_PROVIDER`, `GCP_CI_SA`, `SMOKE_ARGS`): first
+run on PR #5 passed every gate, 20/20 cases, quote fidelity 65/65, 0
+hallucinated, CHF 0.67, about 6 minutes.
+
+Spend cap: the smoke eval should cost under CHF 0.50 per run. Log the cost.
+**Measured in M3:** about CHF 1.4 per smoke run (agent 0.75, judge 0.66;
+ADR-019). **Measured in M4 (20 smoke cases, agent only, no judge):**
+
+| agent thinking | CHF/answer | run | p50 / p95 s | thoughts | behaviour rule | req. recall |
+|---|---|---|---|---|---|---|
+| default (M3 run 3e7e603) | 0.035 | 0.70 | 38 / 82 | 3.6k | 20/20 | 1.00 |
+| medium | 0.034 | 0.68 | 38 / 103 | 4.0k | 20/20 | 1.00 |
+| low | 0.023 | 0.46 | 22 / 34 | 0 | 18/20 | 0.96 |
+
+Reports: `evals/reports/2026-10-15-0990ecd-smoke-think-{low,medium}-drafts.json`
+(answers stored, not yet judged).
+
+Low thinking is a third cheaper and much faster, but the agent then gives
+branching answers instead of asking (residence-01, residence-07). Re-graded
+with the chosen judge on the final golden definitions: groundedness default
+0.76, medium 0.86, low 0.91; key facts 100% each; behaviour 20/20, 20/20,
+18/20. The served level stays at the default (ADR-025).
 
 ## 4. Experiments (README material)
 

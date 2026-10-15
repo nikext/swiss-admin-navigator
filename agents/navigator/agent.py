@@ -16,8 +16,9 @@ from google.adk.agents import LlmAgent
 from google.adk.agents.readonly_context import ReadonlyContext
 from google.adk.models import Gemini
 from google.adk.tools.mcp_tool import McpToolset, StreamableHTTPConnectionParams
+from google.genai import types
 
-from .config import ModelRef, load_profile
+from .config import LlmRef, load_profile
 from .contract import DraftAnswer
 from .verifier import CitationVerifier, compact_tool_result
 
@@ -33,7 +34,15 @@ def instruction(_: ReadonlyContext) -> str:
     return PROMPT
 
 
-def build_agent(mcp_url: str = MCP_URL, model: ModelRef = profile.agent) -> LlmAgent:
+def generate_config(model: LlmRef) -> types.GenerateContentConfig | None:
+    """The profile's thinking level, if any (unset = the model's default)."""
+    if model.thinking is None:
+        return None
+    level = types.ThinkingLevel(model.thinking.upper())
+    return types.GenerateContentConfig(thinking_config=types.ThinkingConfig(thinking_level=level))
+
+
+def build_agent(mcp_url: str = MCP_URL, model: LlmRef = profile.agent) -> LlmAgent:
     """navigator_v1 against one MCP server. The eval harness builds its own."""
     toolset = McpToolset(
         connection_params=StreamableHTTPConnectionParams(url=mcp_url, timeout=15),
@@ -50,6 +59,7 @@ def build_agent(mcp_url: str = MCP_URL, model: ModelRef = profile.agent) -> LlmA
             model=model.model, client_kwargs={"enterprise": True, "location": model.location}
         ),
         instruction=instruction,
+        generate_content_config=generate_config(model),
         tools=[toolset],
         output_schema=DraftAnswer,
         before_model_callback=verifier.before_model,

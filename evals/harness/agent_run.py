@@ -33,11 +33,19 @@ class Usage:
     thoughts: int = 0
 
     def add(self, meta: types.GenerateContentResponseUsageMetadata) -> None:
+        self.add_counts(
+            prompt=meta.prompt_token_count or 0,
+            cached=meta.cached_content_token_count or 0,
+            output=meta.candidates_token_count or 0,
+            thoughts=meta.thoughts_token_count or 0,
+        )
+
+    def add_counts(self, prompt: int, cached: int = 0, output: int = 0, thoughts: int = 0) -> None:
         self.model_calls += 1
-        self.prompt += meta.prompt_token_count or 0
-        self.cached += meta.cached_content_token_count or 0
-        self.output += meta.candidates_token_count or 0
-        self.thoughts += meta.thoughts_token_count or 0
+        self.prompt += prompt
+        self.cached += cached
+        self.output += output
+        self.thoughts += thoughts
 
 
 @dataclass

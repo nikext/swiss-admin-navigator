@@ -11,7 +11,8 @@ what was verified. Update the status table in the same PR.
 | M1 | Corpus pipeline: Fedlex → `articles.jsonl` | ✅ done | #2. 23 acts, 18,396 records; spot-check vs Fedlex HTML 10/10 + 100/100 (DATA.md §6–7, ADR-014) |
 | M2 | Index + swiss-law MCP server (local → Cloud Run) | ✅ done | #3. E4: dense R@8 98.5 on 102 queries, hybrid −13.7 (ADR-016); public at https://swiss-nav-mcp-mdyqt5hgsq-oa.a.run.app/mcp; cold start 2.07 s instance / 2.64 s first response / 3.89 s first search result (ADR-017) |
 | M3 | `navigator_v1` single agent (local) + eval harness v0 | ✅ done | #4. On 30 **draft** cases: quote fidelity 108/108, hallucinated citations 0, groundedness 80.7, behaviour 93.3, CHF 0.036 and p50 35 s per answer (ADR-018/019). Drafts await Nikola's verification → golden |
-| M4 | Golden set (150) + CI eval gates | ⬜ todo | |
+| M4 | Golden set (150) + CI eval gates | ✅ done | #5. Golden 150 (model-verified by Claude at Nikola's request, ADR-024): quote fidelity 99.4% (539/542, misses = treaty-annex citation bug #6), hallucinated 0, req. recall 96.5, groundedness 78.6, key facts 95.5, behaviour 98.0, CHF 0.038 and p50 41 s per answer. Adversarial 50: fidelity 100%, behaviour 96. Multi-turn 25/25 (0.97). Judge `gemini-3.8-flash@global` (ADR-023), thinking stays default (ADR-025). CI eval-smoke live via WIF (CHF 0.67/run). M4 spend ≈ CHF 15 of 25 |
+|  | *Follow-ups from M4* | | Nikola spot-checks ~20 golden cases (ADR-024); rerun the judge study with Claude once the quota is granted (needs human labels); only 6 clarification cases, draft more; fix annex citations (#6); judge client retries on 429.
 | M5 | Deploy to Agent Runtime + Sessions + tracing | ⬜ todo | |
 | M6 | Web UI + BFF on Cloud Run | ⬜ todo | |
 | M7 | Memory Bank (opt-in) + memory evals | ⬜ todo | |

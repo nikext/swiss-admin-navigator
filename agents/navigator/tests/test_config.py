@@ -6,7 +6,7 @@ from agents.navigator.config import (
     PROFILES_DIR,
     ROLES,
     EmbeddingRef,
-    ModelRef,
+    LlmRef,
     Profile,
     ProfileError,
     load_profile,
@@ -60,13 +60,13 @@ def test_name_resolution_order(profiles: Path) -> None:
 def test_env_overrides_single_fields(profiles: Path) -> None:
     env = {"AGENT_MODEL": "model-x", "JUDGE_LOCATION": "eu", "EMBEDDING_MODEL": ""}
     p = load_profile(env=env, profiles_dir=profiles)
-    assert p.agent == ModelRef(model="model-x", location="eu")
-    assert p.judge == ModelRef(model="model-j", location="eu")
+    assert p.agent == LlmRef(model="model-x", location="eu")
+    assert p.judge == LlmRef(model="model-j", location="eu")
     assert p.embedding.model == "model-e"  # empty env var does not override
     assert p.as_dict() == {
         "name": "default",
-        "agent": {"model": "model-x", "location": "eu"},
-        "judge": {"model": "model-j", "location": "eu"},
+        "agent": {"model": "model-x", "location": "eu", "thinking": None},
+        "judge": {"model": "model-j", "location": "eu", "thinking": None},
         "embedding": {"model": "model-e", "location": "eu", "input_format": "instruction"},
     }
 
@@ -107,4 +107,20 @@ def test_unknown_profile_lists_available(profiles: Path) -> None:
 def test_malformed_profiles_are_rejected(profiles: Path, content: str, message: str) -> None:
     (profiles / "default.yaml").write_text(content)
     with pytest.raises(ProfileError, match=message):
+        load_profile(env={}, profiles_dir=profiles)
+
+
+def test_thinking_level_is_optional_validated_and_overridable(profiles: Path) -> None:
+    assert load_profile(env={}, profiles_dir=profiles).agent.thinking is None
+    text = GOOD.replace("  location: eu\njudge:", "  location: eu\n  thinking: low\njudge:")
+    (profiles / "default.yaml").write_text(text)
+    p = load_profile(env={}, profiles_dir=profiles)
+    assert (p.agent.thinking, p.judge.thinking) == ("low", None)
+    assert load_profile(env={"JUDGE_THINKING": "high"}, profiles_dir=profiles).judge.thinking == (
+        "high"
+    )
+    with pytest.raises(ProfileError, match=r"agent\.thinking must be one of"):
+        load_profile(env={"AGENT_THINKING": "max"}, profiles_dir=profiles)
+    (profiles / "default.yaml").write_text(GOOD + "  thinking: low\n")  # embedding has none
+    with pytest.raises(ProfileError, match="unknown keys"):
         load_profile(env={}, profiles_dir=profiles)

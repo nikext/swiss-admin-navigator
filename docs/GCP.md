@@ -65,6 +65,31 @@ All five exist since 2026-10-15.
 | `swiss-nav-ci@` | GitHub Actions via WIF | `roles/aiplatform.user`, `roles/storage.objectAdmin` on the bucket |
 | `swiss-nav-apertus@` | Cloud Run GPU | none (no GCP API calls) |
 
+### CI: Workload Identity Federation and the published index (M4, ADR-021)
+
+`make gcp-wif` (`infra/wif.sh`, idempotent, `DRY_RUN=1`) creates the pool
+`swiss-nav-github` with an OIDC provider `github` that accepts only workflows
+of `nikext/swiss-admin-navigator`, and lets that repository impersonate
+`swiss-nav-ci@` (`roles/iam.workloadIdentityUser`). It prints the three
+repository variables the eval workflows read: `GCP_PROJECT`,
+`GCP_WIF_PROVIDER`, `GCP_CI_SA` (`gh variable set NAME --body VALUE`). Not run
+yet as of 2026-10-15.
+
+CI fetches the search index from `gs://$PROJECT_ID-swiss-nav/index/<sha256[:16]>/index.sqlite`
+(`make publish-index` uploads it and rewrites the pointer `evals/ci_index.json`;
+published 2026-10-15: `93a7652bc58106c8`, index as_of 2026-10-15, built from
+c756c89). Re-publish in the PR that rebuilds the index.
+
+### Claude in Model Garden (M4 judge candidate)
+
+Model Garden lists `claude-opus-5-5`, `claude-sonnet-5-5` and `claude-haiku-5-5`
+(`gcloud ai model-garden models list --model-filter=claude --billing-project …`),
+called with the bare model id through `AnthropicVertex` on `global` (or `eu`).
+On 2026-10-15 every call returned 429 `Quota exceeded for
+aiplatform.googleapis.com/global_online_prediction_requests_per_base_model`:
+the models must be enabled in the console (partner terms) and may need a quota
+request. europe-west6 returns 404 for all of them.
+
 ### Budget guardrail (done in M0)
 
 `make gcp-budget` (`infra/budget.sh`, idempotent by display name) created

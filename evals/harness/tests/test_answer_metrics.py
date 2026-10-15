@@ -18,7 +18,7 @@ from evals.harness.answer_metrics import (
     percentile,
     ratio_ci,
 )
-from evals.harness.cases import DRAFTS, Case, load_cases
+from evals.harness.cases import GOLDEN, Case, load_cases
 from evals.harness.judge import (
     EXPECTED_BEHAVIOUR,
     ClaimVerdict,
@@ -176,9 +176,10 @@ def test_cases_load_and_validate(tmp_path: Path) -> None:
         load_cases(path)
 
 
-def test_draft_dataset_is_valid_and_unverified() -> None:
-    cases = load_cases(DRAFTS)
-    assert len(cases) >= 30
+def test_golden_dataset_is_valid_and_verified() -> None:
+    cases = load_cases(GOLDEN)
+    assert len(cases) == 150
     assert sum(c.smoke for c in cases) == 20
-    assert all(c.verified_by is None for c in cases)  # only Nikola verifies (CLAUDE.md)
+    assert all(c.verified_by and c.verified_on for c in cases)  # ADR-024: model-verified
     assert {c.lang for c in cases} == {"de", "fr", "it", "en"}
+    assert all(c.clarification_expected == (c.category == "needs_clarification") for c in cases)

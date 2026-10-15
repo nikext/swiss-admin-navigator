@@ -6,9 +6,9 @@ UV ?= uv
 # Targets whose milestone has not landed yet fail loudly instead of pretending.
 todo = @echo "make $@: not implemented yet (lands in $(1), see docs/PLAN.md)" >&2; exit 1
 
-.PHONY: help setup lint fmt test check smoke-gemini gcp-setup gcp-budget \
-        resolve ingest spotcheck fixtures index index-e4 eval-retrieval mcp-dev mcp-coldstart agent-dev \
-        eval-smoke eval-full \
+.PHONY: help setup lint fmt test check smoke-gemini gcp-setup gcp-budget gcp-wif \
+        resolve ingest spotcheck fixtures index index-e4 publish-index eval-retrieval mcp-dev mcp-coldstart agent-dev \
+        eval-smoke eval-full eval-multiturn silver review-golden check-cases label-answers judge-study \
         deploy-mcp deploy-agent deploy-web
 
 help: ## List targets
@@ -39,6 +39,9 @@ smoke-gemini: ## One tiny call per profile model at its endpoint location (needs
 gcp-setup: ## Idempotent APIs, Artifact Registry, bucket, SAs (DRY_RUN=1 to preview)
 	bash infra/setup.sh
 
+gcp-wif: ## Workload Identity Federation for GitHub Actions -> swiss-nav-ci@ (DRY_RUN=1 to preview)
+	bash infra/wif.sh
+
 gcp-budget: ## Monthly budget alert at 50/90/100% (DRY_RUN=1 to preview)
 	bash infra/budget.sh
 
@@ -61,6 +64,9 @@ index: ## Embed (cached by content; billable on a cold cache) + build data/index
 index-e4: ## E4 experiment index: every tokenizer and vector space (billable on a cold cache)
 	$(UV) run python -m ingest.index --experiment
 
+publish-index: ## Upload data/index.sqlite for CI (by sha256) + write evals/ci_index.json (commit it)
+	$(UV) run python -m scripts.ci_index publish
+
 eval-retrieval: ## Retrieval eval of the served config (E4=1: the whole E4 grid) -> evals/reports/
 	$(UV) run python -m evals.harness.retrieval_eval $(if $(E4),--e4 --index data/index_e4.sqlite --latency 20)
 
@@ -76,8 +82,26 @@ agent-dev: ## adk web UI for the agents in agents/
 eval-smoke: ## 20-case smoke eval (agent + judge; billable, ~CHF 1) -> evals/reports/ (ARGS=...)
 	$(UV) run python -m evals.harness.answer_eval --smoke $(ARGS)
 
+eval-multiturn: ## 25 simulated conversations via ADK AgentEvaluator + rubric judge (billable, ~CHF 3; ARGS=...)
+	$(UV) run python -m evals.harness.multiturn $(ARGS)
+
 eval-full: ## Every case of golden (drafts until it exists); M4 adds adversarial.jsonl (ARGS=...)
 	$(UV) run python -m evals.harness.answer_eval $(ARGS)
+
+silver: ## Generate evals/datasets/silver.jsonl (~400 single-article cases; billable, < CHF 1; ARGS=--dry-run)
+	$(UV) run python -m evals.harness.silver $(ARGS)
+
+review-golden: ## Review drafted golden cases against the article text: accept/edit/reject (ARGS=...)
+	$(UV) run python -m evals.harness.review $(ARGS)
+
+label-answers: ## Human labels for the judge study: grade stored answers claim by claim (ARGS=...)
+	$(UV) run python -m evals.harness.label $(ARGS)
+
+judge-study: ## Grade stored answers with JUDGES=model@loc[:thinking],... vs human labels (billable; ARGS=--from F is free)
+	$(UV) run python -m evals.harness.judge_study $(if $(JUDGES),--judges $(JUDGES)) $(ARGS)
+
+check-cases: ## Schema, unique ids and expected citations of every eval case file (no model calls)
+	$(UV) run python -m evals.harness.check_cases $(ARGS)
 
 deploy-mcp: ## Build + push + Cloud Run deploy of the MCP server (ask first; DRY_RUN=1 to preview)
 	bash infra/deploy_mcp.sh
