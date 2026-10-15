@@ -33,13 +33,15 @@ COPY --from=deps /venv /venv
 COPY ingest/__init__.py ingest/eid.py ingest/
 COPY mcp_server/*.py mcp_server/
 COPY data/index.sqlite /app/index.sqlite
-RUN python -m compileall -q ingest mcp_server
 ENV PATH=/venv/bin:$PATH \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     INDEX_PATH=/app/index.sqlite \
     PORT=8080
+# The files the server imports, read in parallel at start (mcp_server/preload.py).
+RUN python -m compileall -q ingest mcp_server \
+ && python -m mcp_server.preload --write /app/preload.txt
 USER app
 EXPOSE 8080
 # HTTP on $PORT when K_SERVICE is set (Cloud Run); `--http` makes local `docker run` match.
-CMD ["python", "-m", "mcp_server.server", "--http", "--host", "0.0.0.0"]
+CMD ["python", "-m", "mcp_server.preload", "/app/preload.txt", "--http", "--host", "0.0.0.0"]

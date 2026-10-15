@@ -37,7 +37,7 @@ from pydantic import Field
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from mcp_server import IMPORT_T0
+from mcp_server import IMPORT_T0, STARTUP_PHASES
 from mcp_server.embedding import QueryEmbedder
 from mcp_server.search import Index, served_config
 from mcp_server.tools import DOMAINS, NOTICE, LawTools, ToolInputError
@@ -117,7 +117,10 @@ class App:
         # Startup phases in seconds, logged in the "ready" line (cold-start budget).
         # "imports": third-party + app imports. Interpreter start is not included;
         # Cloud Run's "Starting new instance" -> probe log lines give the full picture.
-        self.phases: dict[str, float] = {"imports": round(time.perf_counter() - IMPORT_T0, 3)}
+        self.phases: dict[str, float] = {
+            **STARTUP_PHASES,
+            "imports": round(time.perf_counter() - IMPORT_T0, 3),
+        }
         t = time.perf_counter()
 
         def phase(name: str) -> None:
