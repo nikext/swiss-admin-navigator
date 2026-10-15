@@ -7,8 +7,8 @@ from typing import Any
 
 import pytest
 
-from evals.harness.cases import Case, load_cases
-from evals.harness.review import Store, Style, draft_files, parse_edit, render, write_cases
+from evals.harness.cases import Case, draft_files, load_cases
+from evals.harness.review import Store, Style, parse_edit, render, write_cases
 
 
 def case(cid: str, **kw: Any) -> Case:
@@ -139,5 +139,5 @@ def test_render_flags_missing_article() -> None:
 def test_draft_files_skip_rejected_and_sort(tmp_path: Path) -> None:
     for name in ("batch-02.jsonl", "golden.jsonl", "rejected.jsonl", "batch-01.jsonl"):
         (tmp_path / name).write_text("", encoding="utf-8")
-    files = draft_files(tmp_path, tmp_path / "rejected.jsonl")
+    files = draft_files(tmp_path)
     assert [f.name for f in files] == ["golden.jsonl", "batch-01.jsonl", "batch-02.jsonl"]

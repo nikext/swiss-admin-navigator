@@ -1,0 +1,13 @@
+# Committed baselines for the CI gates (docs/EVALS.md §3; evals/harness/gate.py).
+# Move a baseline only in the PR that changes it, with the report that measured it.
+retrieval:
+  # served config (dense, gemini-embedding-2, 768 dims) on retrieval.jsonl, 102 queries:
+  # evals/reports/2026-10-15-c756c89-retrieval.md (M2, ADR-016)
+  recall_at_8: 0.9853
+  max_drop_pts: 2.0
+answers:
+  # 20-case smoke set; deterministic metrics only (judge scores are noisy at n=20: EVALS.md §4)
+  quote_fidelity_min: 1.0
+  hallucinated_max: 0
+  # agent errors (timeouts, no JSON) would hide citations from the two gates above
+  errors_max: 1

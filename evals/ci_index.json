@@ -1,0 +1,13 @@
+{
+ "uri": "gs://random-projects-509513-swiss-nav/index/93a7652bc58106c8/index.sqlite",
+ "sha256": "93a7652bc58106c844cabe571d3dfbdc6cf798ba258fd5ad45d18b7f5be5b1c1",
+ "bytes": 135270400,
+ "index": {
+  "as_of": "2026-10-15",
+  "git_sha": "c756c89",
+  "records": 18396,
+  "chunks": 17310,
+  "default_space": "dense"
+ },
+ "published": "2026-10-15T18:59:02+00:00"
+}

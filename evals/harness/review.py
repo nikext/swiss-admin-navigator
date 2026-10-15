@@ -33,9 +33,8 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-from evals.harness.cases import DRAFTS, GOLDEN, Case, load_cases
+from evals.harness.cases import DRAFTS, GOLDEN, REJECTED, Case, draft_files, load_cases
 
-REJECTED = DRAFTS.parent / "rejected.jsonl"
 LANGS = ("de", "fr", "it", "en")
 
 GetArticle = Callable[[str, str, str], dict[str, Any]]
@@ -207,13 +206,6 @@ def edit_in_editor(case: Case) -> str:
         Path(path).unlink()
 
 
-def draft_files(drafts_dir: Path, rejected: Path) -> list[Path]:
-    """Every drafts file: the M3 drafts (golden.jsonl), then batch-NN.jsonl in order.
-    New batches are new files, so drafting never rewrites a file under review."""
-    files = [p for p in drafts_dir.glob("*.jsonl") if p != rejected]
-    return sorted(files, key=lambda p: (p.name != "golden.jsonl", p.name))
-
-
 def review(
     items: list[tuple[Store, Case]], get_article: GetArticle, reviewer: str
 ) -> tuple[int, int]:
@@ -280,7 +272,7 @@ def main(argv: list[str] | None = None) -> int:
     from mcp_server.search import Index  # the index loads only for a real review
     from mcp_server.tools import LawTools
 
-    files = args.drafts or draft_files(DRAFTS.parent, args.rejected)
+    files = args.drafts or draft_files(DRAFTS.parent)
     stores = [Store(f, args.golden, args.rejected) for f in files]
     wanted = set(args.ids.split(",")) if args.ids else None
     items = [(s, c) for s in stores for c in s.pending() if wanted is None or c.id in wanted]

@@ -1,7 +1,8 @@
 """End-to-end answer eval of navigator_v1 (docs/EVALS.md §2-3).
 
     uv run python -m evals.harness.answer_eval --smoke          # make eval-smoke
-    uv run python -m evals.harness.answer_eval                  # every case in the dataset
+    uv run python -m evals.harness.answer_eval                  # golden + all draft batches
+    uv run python -m evals.harness.answer_eval --dataset all+adversarial   # the full eval
     uv run python -m evals.harness.answer_eval --ids work-01,housing-02 --no-judge
 
 Runs each case through the agent (local ADK runner), re-checks every final
@@ -46,7 +47,7 @@ from evals.harness.answer_metrics import (
     percentile,
     ratio_ci,
 )
-from evals.harness.cases import DRAFTS, Case, default_dataset, load_cases
+from evals.harness.cases import Case, Dataset, load_dataset
 from evals.harness.judge import (
     Judge,
     Judgement,
@@ -252,8 +253,10 @@ def render_markdown(report: dict[str, Any]) -> str:
     lines = [
         f"# Answer eval: {report['name']}",
         "",
-        f"- dataset: `{ds['path']}` ({s['cases']} cases, sha {ds['sha']})"
-        + ("" if ds["verified"] else " — **drafts, not human-verified: not a headline number**"),
+        f"- dataset: `{ds['spec']}` ({s['cases']} cases selected, "
+        f"{ds['verified_cases']} human-verified; sha {ds['sha']} over "
+        f"{', '.join(Path(f).name for f in ds['files'])})"
+        + ("" if ds["verified"] else " — **includes drafts: not a headline number**"),
         f"- agent: `{model_label(meta['profile']['agent'])}`, "
         f"prompt sha {meta['system_prompt_sha']}, google-adk {meta['adk']}, structured output "
         f"{meta['output_mode']}",
@@ -363,7 +366,9 @@ def render_markdown(report: dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
-async def evaluate(args: argparse.Namespace, cases: list[Case], url: str) -> dict[str, Any]:
+async def evaluate(
+    args: argparse.Namespace, dataset: Dataset, cases: list[Case], url: str
+) -> dict[str, Any]:
     root_agent = build_agent(url)
 
     pricing = yaml.safe_load(PRICING.read_text(encoding="utf-8"))
@@ -410,15 +415,16 @@ async def evaluate(args: argparse.Namespace, cases: list[Case], url: str) -> dic
     if judge is not None:
         judge_cost = cost_usd(profile.judge.model, judge.usage, pricing) or 0.0
         summary["run_cost_chf"]["judge"] = judge_cost * pricing["usd_to_chf"]
-    dataset = Path(args.dataset)
     return {
         "summary": summary,
         "cases": rows,
         "meta": {
             "dataset": {
-                "path": str(dataset),
-                "sha": sha(dataset),
-                "verified": dataset != DRAFTS and all(c.verified_by for c in cases),
+                "spec": dataset.spec,
+                "files": [str(f) for f in dataset.files],
+                "sha": dataset.sha,
+                "verified": all(c.verified_by for c in cases),
+                "verified_cases": sum(bool(c.verified_by) for c in cases),
             },
             "selection": {
                 "smoke": args.smoke,
@@ -446,7 +452,11 @@ async def evaluate(args: argparse.Namespace, cases: list[Case], url: str) -> dic
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
-    ap.add_argument("--dataset", default=None, help="default: golden.jsonl, else the drafts")
+    ap.add_argument(
+        "--dataset",
+        default="all",
+        help="all (golden + draft batches), golden, adversarial, a path; join with +",
+    )
     ap.add_argument("--smoke", action="store_true", help="only cases marked smoke")
     ap.add_argument("--ids", default=None, help="comma-separated case ids")
     ap.add_argument("--category", default=None)
@@ -458,8 +468,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--out", type=Path, default=REPORTS)
     args = ap.parse_args(argv)
     load_dotenv(".env")
-    args.dataset = args.dataset or str(default_dataset())
-    cases = select(load_cases(Path(args.dataset)), args)
+    dataset = load_dataset(args.dataset)
+    cases = select(dataset.cases, args)
     if not cases:
         raise SystemExit("no cases selected")
 
@@ -467,7 +477,7 @@ def main(argv: list[str] | None = None) -> int:
         url = args.mcp_url or stack.enter_context(
             local_server(Path("data/logs/eval-mcp-server.log"))
         )
-        report = asyncio.run(evaluate(args, cases, url))
+        report = asyncio.run(evaluate(args, dataset, cases, url))
 
     name = args.name or ("smoke" if args.smoke else "answers")
     if not report["meta"]["dataset"]["verified"]:

@@ -6,7 +6,7 @@ UV ?= uv
 # Targets whose milestone has not landed yet fail loudly instead of pretending.
 todo = @echo "make $@: not implemented yet (lands in $(1), see docs/PLAN.md)" >&2; exit 1
 
-.PHONY: help setup lint fmt test check smoke-gemini gcp-setup gcp-budget \
+.PHONY: help setup lint fmt test check smoke-gemini gcp-setup gcp-budget gcp-wif \
         resolve ingest spotcheck fixtures index index-e4 eval-retrieval mcp-dev mcp-coldstart agent-dev \
         eval-smoke eval-full review-golden check-cases \
         deploy-mcp deploy-agent deploy-web
@@ -38,6 +38,9 @@ smoke-gemini: ## One tiny call per profile model at its endpoint location (needs
 
 gcp-setup: ## Idempotent APIs, Artifact Registry, bucket, SAs (DRY_RUN=1 to preview)
 	bash infra/setup.sh
+
+gcp-wif: ## Workload Identity Federation for GitHub Actions -> swiss-nav-ci@ (DRY_RUN=1 to preview)
+	bash infra/wif.sh
 
 gcp-budget: ## Monthly budget alert at 50/90/100% (DRY_RUN=1 to preview)
 	bash infra/budget.sh
