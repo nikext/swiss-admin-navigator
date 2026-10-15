@@ -8,7 +8,7 @@ todo = @echo "make $@: not implemented yet (lands in $(1), see docs/PLAN.md)" >&
 
 .PHONY: help setup lint fmt test check smoke-gemini gcp-setup gcp-budget \
         resolve ingest spotcheck fixtures index index-e4 eval-retrieval mcp-dev mcp-coldstart agent-dev \
-        eval-smoke eval-full \
+        eval-smoke eval-full review-golden \
         deploy-mcp deploy-agent deploy-web
 
 help: ## List targets
@@ -78,6 +78,9 @@ eval-smoke: ## 20-case smoke eval (agent + judge; billable, ~CHF 1) -> evals/rep
 
 eval-full: ## Every case of golden (drafts until it exists); M4 adds adversarial.jsonl (ARGS=...)
 	$(UV) run python -m evals.harness.answer_eval $(ARGS)
+
+review-golden: ## Review drafted golden cases against the article text: accept/edit/reject (ARGS=...)
+	$(UV) run python -m evals.harness.review $(ARGS)
 
 deploy-mcp: ## Build + push + Cloud Run deploy of the MCP server (ask first; DRY_RUN=1 to preview)
 	bash infra/deploy_mcp.sh

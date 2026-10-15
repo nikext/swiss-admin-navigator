@@ -11,7 +11,7 @@ what was verified. Update the status table in the same PR.
 | M1 | Corpus pipeline: Fedlex → `articles.jsonl` | ✅ done | #2. 23 acts, 18,396 records; spot-check vs Fedlex HTML 10/10 + 100/100 (DATA.md §6–7, ADR-014) |
 | M2 | Index + swiss-law MCP server (local → Cloud Run) | ✅ done | #3. E4: dense R@8 98.5 on 102 queries, hybrid −13.7 (ADR-016); public at https://swiss-nav-mcp-mdyqt5hgsq-oa.a.run.app/mcp; cold start 2.07 s instance / 2.64 s first response / 3.89 s first search result (ADR-017) |
 | M3 | `navigator_v1` single agent (local) + eval harness v0 | ✅ done | #4. On 30 **draft** cases: quote fidelity 108/108, hallucinated citations 0, groundedness 80.7, behaviour 93.3, CHF 0.036 and p50 35 s per answer (ADR-018/019). Drafts await Nikola's verification → golden |
-| M4 | Golden set (150) + CI eval gates | ⬜ todo | |
+| M4 | Golden set (150) + CI eval gates | 🟨 in progress | Agreed 2026-10-15: all 150 golden cases verified by Nikola before M4 closes (`make review-golden`), M4 model spend capped at CHF 25, Claude on Model Garden enabled now as a judge candidate |
 | M5 | Deploy to Agent Runtime + Sessions + tracing | ⬜ todo | |
 | M6 | Web UI + BFF on Cloud Run | ⬜ todo | |
 | M7 | Memory Bank (opt-in) + memory evals | ⬜ todo | |
