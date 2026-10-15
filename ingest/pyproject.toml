@@ -4,7 +4,10 @@ version = "0.0.0"
 description = "Fedlex SPARQL + Akoma Ntoso XML -> articles.jsonl -> index.sqlite"
 requires-python = ">=3.12,<3.13"
 dependencies = [
+    "google-genai>=2.31.0",
     "httpx>=0.28.1",
     "lxml>=6",
+    "numpy>=2.3",
+    "python-dotenv>=1",
     "pyyaml>=6.0.3",
 ]

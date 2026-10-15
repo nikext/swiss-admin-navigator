@@ -3,4 +3,9 @@ name = "swiss-nav-mcp"
 version = "0.0.0"
 description = "swiss-law MCP server: read-only retrieval over Swiss federal law"
 requires-python = ">=3.12,<3.13"
-dependencies = []
+dependencies = [
+    "google-genai>=2.31.0",
+    "mcp==2.3.0",
+    "numpy>=2.3",
+    "uvicorn>=0.34",
+]
