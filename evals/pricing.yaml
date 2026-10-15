@@ -1,0 +1,32 @@
+# List prices in USD per 1M tokens, used to turn eval token counts into cost per answer.
+# Source: https://ai.google.dev/gemini-api/docs/pricing (paid tier, standard), page last
+# updated 2026-10-15. Google's Vertex AI pricing page does not render for our fetcher
+# (ADR-015); Vertex list prices for these models are assumed to be the same. Verify before
+# quoting costs outside this repo. Thinking tokens are billed as output.
+as_of: "2026-10-15"
+# Approximate: last quote found was 0.818 CHF per USD (2026-09-15). Reports state the rate.
+usd_to_chf: 0.82
+models:
+  gemini-3.8-flash:
+    input: 0.75
+    output: 3.75
+    cached_input: 0.075
+    note: introductory price until 2026-12-31; 1.50 / 7.50 / 0.15 from 2027-01-01
+  gemini-3.5-flash-lite:
+    input: 0.30
+    output: 2.50
+    cached_input: 0.03
+  gemini-3.1-pro-preview:
+    input: 2.00
+    output: 12.00
+    cached_input: 0.20
+    note: prompts up to 200k tokens (4.00 / 18.00 above)
+  gemini-4-argon:
+    input: 2.00
+    output: 10.00
+    cached_input: 0.10
+    note: until 2026-11-30; 4.00 / 20.00 / 0.20 from 2026-12-01
+  gemini-embedding-2:
+    input: 0.20
+  gemini-embedding-001:
+    input: 0.15

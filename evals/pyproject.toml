@@ -3,4 +3,14 @@ name = "swiss-nav-evals"
 version = "0.0.0"
 description = "Eval harness, datasets and reports"
 requires-python = ">=3.12,<3.13"
-dependencies = []
+dependencies = [
+    "google-adk==2.12.0",
+    "google-genai>=2.31.0",
+    "httpx>=0.28.1",
+    "langdetect==1.0.9",
+    "mcp==2.3.0",
+    "numpy>=2.3",
+    "pydantic>=2.14",
+    "python-dotenv>=1",
+    "pyyaml>=6.0.3",
+]

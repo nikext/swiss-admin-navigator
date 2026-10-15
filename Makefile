@@ -73,11 +73,11 @@ mcp-coldstart: ## Time connect + first searches against SWISS_LAW_MCP_URL (or UR
 agent-dev: ## adk web UI for the agents in agents/
 	$(UV) run adk web agents
 
-eval-smoke: ## 20-case smoke eval -> evals/reports/
-	$(call todo,M3)
+eval-smoke: ## 20-case smoke eval (agent + judge; billable, ~CHF 1) -> evals/reports/ (ARGS=...)
+	$(UV) run python -m evals.harness.answer_eval --smoke $(ARGS)
 
-eval-full: ## Full golden + adversarial eval
-	$(call todo,M4)
+eval-full: ## Every case of golden (drafts until it exists); M4 adds adversarial.jsonl (ARGS=...)
+	$(UV) run python -m evals.harness.answer_eval $(ARGS)
 
 deploy-mcp: ## Build + push + Cloud Run deploy of the MCP server (ask first; DRY_RUN=1 to preview)
 	bash infra/deploy_mcp.sh

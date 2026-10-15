@@ -56,6 +56,7 @@ Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 | MCP server as the retrieval boundary | Reusable by any MCP client, independently testable and deployable. |
 | SQLite baked into the image, not a vector DB | ~30k records don't justify a vector database's cost floor. |
 | Single agent first, multi-agent only if evals say so | Complexity has to earn its place. |
+| Citation verifier in code, not only in the prompt | Before an answer leaves the agent, every cited article is re-fetched and every quote substring-checked; a failing draft goes back once with the exact problems (ADR-018). |
 | Eval-gated CI | Quote fidelity 100% and zero hallucinated citations are hard gates. |
 
 Decision log: [docs/DECISIONS.md](docs/DECISIONS.md)

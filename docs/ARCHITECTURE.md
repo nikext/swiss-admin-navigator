@@ -108,19 +108,33 @@ it field by field.
       "as_of": "2026-10-01"
     }
   ],
+  "clarifying_question": null,
   "cantonal_note": "Deadlines to file with the conciliation authority are federal (OR Art. 273), but the competent office is cantonal: …",
   "follow_up_questions": ["…"],
   "confidence": "high | medium | low",
-  "out_of_scope": false
+  "out_of_scope": false,
+  "verification": {"status": "passed | passed_after_retry | degraded | unavailable",
+                   "rounds": [{"citations": 1, "quotes": 1, "problems": []}],
+                   "dropped": [], "repairs": []},
+  "notice": "Unofficial. Not legal advice. Sources: Fedlex (fedlex.admin.ch)."
 }
 ```
+
+As built in M3 (`agents/navigator/contract.py`, ADR-018), the model fills
+`DraftAnswer`: every field above except a citation's `abbr`, `url` and
+`as_of`, `verification` and `notice`. The verifier sets those from the
+fetched article. It also replaces each `quote` with the exact source span,
+and with `null` if the quote could not be verified after the retry.
+`clarifying_question` (one question, or null) was added in M3 so the
+clarification behaviour can be measured.
 
 Rules (enforced by the prompt, the verifier, and evals):
 
 1. **No claim without a citation.** Every legal statement maps to at least one
    `citations[]` entry that `get_article` confirmed exists.
 2. **Quotes are verbatim** from the stored article text. The verifier checks
-   them by substring match after whitespace normalisation.
+   them by substring match after normalising whitespace, apostrophes and
+   invisible characters (ADR-018).
 3. **The original language is authoritative.** A translation is labelled
    "unofficial translation".
 4. **Cantonal and communal questions** get the federal frame plus a pointer to

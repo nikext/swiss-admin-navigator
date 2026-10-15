@@ -10,7 +10,7 @@ All in `evals/datasets/`, versioned in git.
 | Set | Size (target) | Purpose |
 |---|---|---|
 | `retrieval.jsonl` | 200 queries (102 on 2026-10-15) | Retrieval only: query → expected `(sr, eid)` set, matched per article regardless of language. 55 everyday + 47 `difficulty: hard` queries, DE/EN/FR/IT; expected eIds checked against the article text (drafted by Claude, not yet reviewed by Nikola). Cheap; runs on every PR. `make eval-retrieval`. |
-| `golden.jsonl` | 150 cases | End-to-end QA, human-verified. **Gold.** |
+| `golden.jsonl` | 150 cases (0 verified on 2026-10-15) | End-to-end QA, human-verified. **Gold.** Until it exists the harness runs `drafts/golden.jsonl`: 30 cases drafted by Claude from the article text in M3 (DE 8, EN 8, FR 7, IT 7; 20 answerable, 3 clarification, 3 cantonal, 2 out of scope, 2 adversarial; 20 tagged `smoke`), `verified_by: null`, waiting for Nikola. |
 | `silver.jsonl` | 300–500 cases | LLM-generated from articles, spot-checked. Used for broad regression, never for headline claims. |
 | `multiturn.evalset.json` | 25 sessions | Clarification behaviour and memory use (ADK evalset format, user simulation). |
 | `adversarial.jsonl` | 50 cases | Prompt injection, fake article numbers, out-of-scope, requests for individual legal advice, attempts to make it impersonate an official authority. |
@@ -30,10 +30,15 @@ All in `evals/datasets/`, versioned in git.
   "key_facts": ["termination can be challenged", "deadline 30 days to the conciliation authority"],
   "must_not": ["claims termination is automatically void", "invents a cantonal form number"],
   "clarification_expected": false,
+  "smoke": true,
   "verified_by": "nikola", "verified_on": "2026-10-xx", "as_of": "2026-10-01",
   "notes": "Art. 271a para. 1 lit. a"
 }
 ```
+
+`smoke: true` marks the 20 cases of the PR smoke run (5 per language, all
+categories). The schema is enforced by `evals/harness/cases.py` (unknown keys
+are errors).
 
 ### How to build the golden set without being a lawyer
 
@@ -58,15 +63,15 @@ All in `evals/datasets/`, versioned in git.
 | **Retrieval recall@k / MRR** | deterministic | Expected eids found in `search_law` top-k. |
 | **Citation precision** | deterministic | Share of produced citations that exist **and** appear in `expected_citations`, or that an LLM judge rates as relevant. |
 | **Required-citation recall** | deterministic | Share of `required: true` citations produced. |
-| **Quote fidelity** | deterministic | Share of `quote` fields that are exact substrings of the stored article text (normalised whitespace). Target **100%**. |
+| **Quote fidelity** | deterministic | Share of `quote` fields that are exact substrings of the stored article text in `quote_lang`, pooled over citations. Normalised: whitespace, apostrophes (’ → '), soft hyphens and zero-width characters; an ellipsis splits a quote into parts that must occur in order (ADR-018). Target **100%**. Reported for final answers, plus the first-draft problems the verifier caught. |
 | **Hallucinated citation rate** | deterministic | Citations to non-existent SR/article combinations. Target **0**. |
-| **Groundedness** | LLM judge | Each claim in `answer_markdown` is supported by the cited text (claim-level, then averaged). ADK `hallucinations_v1` and/or a custom rubric. |
+| **Groundedness** | LLM judge | Each legal claim in `answer_markdown`/`cantonal_note` is supported by the full text of the articles it cites: yes 1, partly 0.5, no 0, averaged per answer (custom rubric, `evals/harness/prompts/judge.md`). Pointers to authorities and "it depends on" statements are not claims. |
 | **Key-fact coverage** | LLM judge | Share of `key_facts` stated correctly. |
 | **must_not violations** | LLM judge | Count. Target **0**. |
-| **Behaviour accuracy** | deterministic + judge | Correct category handling: asked when clarification was expected, declined out-of-scope, gave a cantonal pointer. |
-| **Language match** | deterministic | Answer language == question language (langdetect). |
+| **Behaviour accuracy** | deterministic + judge | Correct category handling. Rule: answerable = cites and does not ask; clarification = `clarifying_question` set; cantonal = `cantonal_note` set; out of scope = `out_of_scope`; adversarial = no hallucinated citation. A case counts only if the rule **and** the judge agree. |
+| **Language match** | deterministic | The `language` field and `langdetect` (seeded) on `answer_markdown` both equal the question language. |
 | **Safety** | ADK `safety_v1` | — |
-| **Cost / latency** | measured | Tokens → CHF per answer (price table in `evals/pricing.yaml`, dated). p50/p95 latency. Tool-call count. |
+| **Cost / latency** | measured | Tokens → CHF per answer (price table in `evals/pricing.yaml`, dated; cached input and thinking priced separately). p50/p95 latency. Model and tool-call counts. |
 
 ADK criteria available in the pinned version (verified list from adk.dev,
 2026-10-15): `tool_trajectory_avg_score`, `response_match_score`,
@@ -81,10 +86,14 @@ ADK criteria available in the pinned version (verified list from adk.dev,
 user simulation.
 
 **Approach:** use ADK `adk eval` / `AgentEvaluator` for multi-turn and rubric
-criteria. Write the citation and quote metrics as a small custom harness
-(`evals/harness/`) that calls the agent and parses the JSON answer contract.
-Both write to a common `evals/reports/<date>-<git-sha>-<config>.json` and a
-Markdown summary.
+criteria (M4). Single-turn cases run through the custom harness
+`evals/harness/answer_eval.py` (built in M3, ADR-019): it runs the agent with
+the local ADK runner against its own MCP server, re-checks every final
+citation over MCP itself, asks the judge, and writes
+`evals/reports/<date>-<git-sha>-<name>.json` plus a Markdown summary
+(headline table with CIs, verifier stats, cost and latency, per-case
+findings). Reports built on drafts are named `*-drafts` and say they are not
+headline numbers.
 
 **Judge hygiene:** pin the judge model and prompt. Judge with a different model
 family than the one under test where possible (e.g. Claude via Model Garden
@@ -101,7 +110,9 @@ human-labelled subset.
 
 CI auth: GitHub Actions → GCP via **Workload Identity Federation** (no JSON
 keys). Spend cap: the smoke eval should cost under CHF 0.50 per run. Log the
-cost.
+cost. **Measured in M3:** about CHF 1.4 per smoke run (agent 0.75, judge
+0.66; ADR-019), so M4 has to bring it down: a cheaper CI judge validated
+against the human labels, a lower thinking level, or fewer CI cases.
 
 ## 4. Experiments (README material)
 
