@@ -25,8 +25,10 @@ Produce:
    claims, meaning statements about what the law says, requires, allows or
    forbids, including conditions, deadlines, amounts and exceptions. Skip
    greetings, restatements of the question, statements of what the answer
-   depends on (in a clarifying answer), and pointers to the office, authority
-   or kind of help to contact; those are expected without a citation. For
+   depends on (in a clarifying answer), pointers to the office, authority or
+   kind of help to contact, and statements that an article or provision named
+   in the question does not exist or could not be found (the harness checks
+   article existence itself); those are expected without a citation. For
    each claim give the refs the answer attaches to it and `supported`:
    - `yes`: the text of those cited articles states it or directly entails it;
    - `partly`: part is supported and part is not, or it overgeneralises;

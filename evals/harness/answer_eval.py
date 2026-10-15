@@ -228,6 +228,12 @@ def summarize(rows: list[dict[str, Any]], judged: bool, judge_usage: Usage, pric
     return s
 
 
+def model_label(ref: dict[str, Any]) -> str:
+    """model@location, plus the thinking level when the profile sets one."""
+    label = f"{ref['model']}@{ref['location']}"
+    return label + (f", thinking {ref['thinking']}" if ref.get("thinking") else "")
+
+
 def fmt(x: float | None, digits: int = 1) -> str:
     return "–" if x is None else f"{100 * x:.{digits}f}"
 
@@ -248,11 +254,10 @@ def render_markdown(report: dict[str, Any]) -> str:
         "",
         f"- dataset: `{ds['path']}` ({s['cases']} cases, sha {ds['sha']})"
         + ("" if ds["verified"] else " — **drafts, not human-verified: not a headline number**"),
-        f"- agent: `{meta['profile']['agent']['model']}@{meta['profile']['agent']['location']}`, "
+        f"- agent: `{model_label(meta['profile']['agent'])}`, "
         f"prompt sha {meta['system_prompt_sha']}, google-adk {meta['adk']}, structured output "
         f"{meta['output_mode']}",
-        f"- judge: `{meta['profile']['judge']['model']}@{meta['profile']['judge']['location']}`, "
-        f"prompt sha {meta['judge_prompt_sha']}"
+        f"- judge: `{model_label(meta['profile']['judge'])}`, prompt sha {meta['judge_prompt_sha']}"
         if meta["judged"]
         else "- judge: off",
         f"- law: {meta['mcp']['url']} (index as_of {meta['mcp']['health'].get('as_of')}, "
