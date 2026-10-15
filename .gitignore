@@ -1,0 +1,41 @@
+# secrets / local config
+.env
+.env.*
+!.env.example
+*-key.json
+*credentials*.json
+application_default_credentials.json
+
+# corpus + build artefacts (rebuilt from corpus/manifest.lock.json)
+cache/
+data/
+*.sqlite
+*.sqlite-*
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+dist/
+build/
+*.egg-info/
+
+# node / web
+node_modules/
+web/.next/
+web/out/
+.vercel/
+
+# adk / local runs
+.adk/
+*.log
+
+# editors / OS
+.idea/
+.vscode/
+.DS_Store

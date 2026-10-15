@@ -1,0 +1,23 @@
+# Fedlex SPARQL endpoint: https://fedlex.data.admin.ch/sparqlendpoint
+# All downloadable files (per language and format) for ONE consolidation.
+#
+# Template tokens:
+#   {{CONSOLIDATION}}  e.g. https://fedlex.data.admin.ch/eli/cc/24/233_245_233/20260701
+#
+# Verified on 2026-10-15 with ZGB 20260701. Gotchas:
+#   - File names are NOT predictable. Some carry a "-2" or "-1" suffix
+#     (…-de-xml-2.xml) and some don't (…-en-xml.xml). Always take the URL from
+#     this query; never build it from a pattern.
+#   - Formats: xml (Akoma Ntoso 3.0), html, pdf-a, docx. We ingest xml only.
+
+PREFIX jolux: <http://data.legilux.public.lu/resource/ontology/jolux#>
+
+SELECT DISTINCT ?lang ?fmt ?file
+WHERE {
+  <{{CONSOLIDATION}}> jolux:isRealizedBy ?expr .
+  ?expr jolux:language ?lang ;
+        jolux:isEmbodiedBy ?man .
+  ?man jolux:userFormat ?fmt ;
+       jolux:isExemplifiedBy ?file .
+}
+ORDER BY ?lang ?fmt

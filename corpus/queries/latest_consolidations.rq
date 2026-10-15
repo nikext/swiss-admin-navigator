@@ -1,0 +1,53 @@
+# Fedlex SPARQL endpoint: https://fedlex.data.admin.ch/sparqlendpoint
+# For each SR number: the act that is IN FORCE today, its latest consolidation
+# applicable on {{AS_OF}}, and the languages that have an XML manifestation.
+#
+# Template tokens (substitute before sending):
+#   {{AS_OF}}    e.g. 2026-10-15
+#   {{SR_LIST}}  e.g. "142.20" "142.201" "220"
+#
+# Verified working on 2026-10-15 (≈5 s for 23 acts). Gotchas:
+#   - SR numbers are REUSED by repealed acts (142.20 = old ANAG and current AIG),
+#     so the inForceStatus filter is required. enforcement-status/0 = in force,
+#     enforcement-status/3 = repealed.
+#   - Consolidations dated in the future exist (scheduled amendments). Always cap
+#     at {{AS_OF}}.
+#   - The endpoint returns duplicate rows. Use DISTINCT or GROUP BY.
+
+PREFIX jolux: <http://data.legilux.public.lu/resource/ontology/jolux#>
+PREFIX skos:  <http://www.w3.org/2004/02/skos/core#>
+PREFIX xsd:   <http://www.w3.org/2001/XMLSchema#>
+
+SELECT ?sr ?act ?cons ?date ?abbr (GROUP_CONCAT(DISTINCT ?lc; separator=" ") AS ?xmlLangs)
+WHERE {
+  VALUES ?srWanted { {{SR_LIST}} }
+  ?act a jolux:ConsolidationAbstract ;
+       jolux:classifiedByTaxonomyEntry/skos:notation ?sr ;
+       jolux:inForceStatus <https://fedlex.data.admin.ch/vocabulary/enforcement-status/0> .
+  FILTER(STR(?sr) = ?srWanted)
+
+  OPTIONAL {
+    ?act jolux:isRealizedBy ?ae .
+    ?ae jolux:language <http://publications.europa.eu/resource/authority/language/DEU> ;
+        jolux:titleShort ?abbr .
+  }
+
+  ?cons a jolux:Consolidation ;
+        jolux:isMemberOf ?act ;
+        jolux:dateApplicability ?date .
+  FILTER(?date <= "{{AS_OF}}"^^xsd:date)
+  FILTER NOT EXISTS {
+    ?newer a jolux:Consolidation ;
+           jolux:isMemberOf ?act ;
+           jolux:dateApplicability ?d2 .
+    FILTER(?d2 > ?date && ?d2 <= "{{AS_OF}}"^^xsd:date)
+  }
+
+  ?cons jolux:isRealizedBy ?e .
+  ?e jolux:language ?lang ;
+     jolux:isEmbodiedBy ?m .
+  ?m jolux:userFormat <https://fedlex.data.admin.ch/vocabulary/user-format/xml> .
+  BIND(LCASE(STRAFTER(STR(?lang), "language/")) AS ?lc)
+}
+GROUP BY ?sr ?act ?cons ?date ?abbr
+ORDER BY ?sr
