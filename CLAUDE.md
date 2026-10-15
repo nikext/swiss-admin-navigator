@@ -135,3 +135,7 @@ skipped by default: `uv run pytest -m integration`.
 - PR review: Claude merges its own milestone PRs once CI is green and the
   milestone's "Done when" is verified. No human review required. Agreed
   2026-10-15.
+- M4 (agreed 2026-10-15): all 150 golden cases are verified by Nikola before
+  M4 closes, through `make review-golden`; M4 model spend is capped at CHF 25
+  (track it in the PR); Claude in Model Garden is enabled now as a judge
+  candidate (Nikola enables it in the console).
