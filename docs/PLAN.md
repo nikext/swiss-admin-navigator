@@ -9,9 +9,7 @@ what was verified. Update the status table in the same PR.
 |---|---|---|---|
 | M0 | Bootstrap: tooling, CI, GCP project | ✅ done | [#1](https://github.com/nikext/swiss-admin-navigator/pull/1). Gemini isn't served in europe-west6, so model endpoints are `eu`/`global` (ADR-013) |
 | M1 | Corpus pipeline: Fedlex → `articles.jsonl` | ✅ done | #2. 23 acts, 18,396 records; spot-check vs Fedlex HTML 10/10 + 100/100 (DATA.md §6–7, ADR-014) |
-| M2 | Index + swiss-law MCP server (local → Cloud Run) | 🟨 in progress | Branch `m2-index-mcp`, deployed at https://swiss-nav-mcp-mdyqt5hgsq-oa.a.run.app/mcp. E4: dense R@8 98.5 (ADR-016); cold start 4.15 s instance / 4.61 s first response (ADR-017) |
-
-**Next up (M2):** redeploy HEAD (`make deploy-mcp`: stdlib bytecode, no listen stream; ADR-017), wait ≥15 min idle, re-measure a cold session with `make mcp-coldstart URL=…/mcp` (initialize + first `search_law`; server phases from the `ready` log line) and fill ADR-017; set this row to ✅; open the PR (draft body: done-when, E4 table, deviations) and merge on green CI.
+| M2 | Index + swiss-law MCP server (local → Cloud Run) | ✅ done | #3. E4: dense R@8 98.5 on 102 queries, hybrid −13.7 (ADR-016); public at https://swiss-nav-mcp-mdyqt5hgsq-oa.a.run.app/mcp; cold start 2.07 s instance / 2.64 s first response / 3.89 s first search result (ADR-017) |
 | M3 | `navigator_v1` single agent (local) + eval harness v0 | ⬜ todo | |
 | M4 | Golden set (150) + CI eval gates | ⬜ todo | |
 | M5 | Deploy to Agent Runtime + Sessions + tracing | ⬜ todo | |

@@ -107,7 +107,9 @@ gcloud run deploy swiss-nav-mcp --image … --region europe-west6 \
   client IP in-app (30/min, burst 10); max 2 instances caps the rest.
 - Logs are structured JSON; they carry a salted hash instead of the client
   IP and no query text (`LOG_QUERIES=1` to opt in for debugging).
-- gen2, not the default gen1: see ADR-017 for the cold-start measurements.
+- gen2, not the default gen1, and the image preloads the files it imports:
+  cold start 2.1 s to ready, 3.9 s to a client's first search result
+  (ADR-017).
 - Claude Code: `claude mcp add --scope user --transport http swiss-law <url>/mcp`.
 
 ### Agent → Agent Runtime

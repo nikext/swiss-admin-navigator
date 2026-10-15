@@ -306,15 +306,48 @@ probe, 4.5 s of it in Python imports (~2,000 `.pyc` files; locally 1.0 s).
   breaker; while open, `search_law` answers from BM25 in < 10 ms and says
   `degraded`. Privacy: JSON logs carry a salted per-process client hash, no
   IP and no query text by default.
-**Measurements (2026-10-15):** gen1 deploy rollout 6.0 s (imports 4.5 s); gen2 4.1 s. A real scale-from-zero start on gen2 (log reason AUTOSCALING, 11:13 UTC): instance start -> probe OK **4.15 s** (imports 3.58, index + vectors 0.20, embedder 0.14); client-side first MCP response (initialize) **4.61 s**; first search_law +0.88 s (embedding client: token + TLS), total to the first search result 5.49 s. Second cold start (16:22 UTC, `make mcp-coldstart`, with a background embedding warm-up at startup): instance -> probe OK **5.31 s** (imports 4.49), initialize 5.81 s, first search_law +1.04 s (0.59 s server-side), first result **6.84 s**. Imports vary 3.6–4.5 s between instances. The warm-up did not help: Cloud Run throttles CPU outside requests, so it barely runs between the handshake and the first search. It was removed.
+- Startup: the image compiles the stdlib (the base image ships 42 `.pyc` for
+  686 modules, and the non-root user cannot write them) and records the ~760
+  files the server imports; `python -m mcp_server.preload` reads them with 32
+  threads before importing. On Cloud Run small files arrive lazily, one fetch
+  each, while big sequential reads are fast (53 MB of vectors in 0.1 s).
+- No `subscriptions/listen` (`MCPServer(subscriptions=False)`): the tool list
+  never changes, and the listen stream kept instances awake (below).
 
-Two findings from that run:
-- **The base image ships the stdlib without bytecode** (42 `.pyc` for 686 modules), and the non-root app user cannot write any, so every start recompiled asyncio, json, email, http… The Dockerfile now compiles the stdlib: server imports in the container drop from 0.83 s to 0.61 s (−27%; image +25 MB).
-- **Claude Code kept the service awake.** On the 2026-07-28 protocol `MCPServer` advertises `tools.listChanged` and serves `subscriptions/listen`, so each open Claude Code session held a listen POST until the 60 s request timeout, then re-listened ("Truncated response body" in the logs, every minute). Instances never scaled to zero while a session was open, and under request-based billing an instance with a request in flight is billed in full (~USD 2.3/day). The tool list never changes, so the server now passes `subscriptions=False` (no `listChanged`, no listen stream; unit-tested).
+**Measurements (2026-10-15).** gen1 rollout: 6.0 s to a passing probe (imports
+4.5 s); gen2: 4.1 s. Cold starts on gen2 after scale-to-zero, server phases
+from the `ready` log line, client times from `make mcp-coldstart` (from Zürich;
+initialize = first MCP response):
 
-COLDSTART_FINAL
+| start (UTC) | image | instance -> probe OK | imports | initialize | first search result |
+|---|---|---|---|---|---|
+| 11:13 autoscale | baseline | 4.15 s | 3.58 s | 4.61 s | 5.49 s |
+| 16:22 autoscale | + background embedding warm-up | 5.31 s | 4.49 s | 5.81 s | 6.84 s |
+| 16:31 rollout | + stdlib `.pyc`, warm-up removed | 5.11 s | 4.18 s | | |
+| 16:56 rollout | + preload | 2.53 s | 0.15 + 1.63 s | | |
+| **17:15 autoscale** | **served (144d3c1)** | **2.07 s** | **0.14 + 1.47 s** | **2.64 s** | **3.89 s** |
+
+The M2 target (cold start < 5 s) is met by the served image, from the
+client's point of view and including the first search. What did not work:
+the background warm-up of the embedding client (Cloud Run throttles CPU
+outside requests, so it barely ran between the handshake and the first
+search; removed), and the stdlib bytecode alone (0.83 -> 0.61 s imports in
+the container locally, but within noise on Cloud Run). The first
+`search_law` of an instance still pays ~0.9 s server-side for the embedding
+client's first token and TLS connection (warm: 0.17 s).
+
+**Claude Code kept the service awake.** On the 2026-07-28 protocol
+`MCPServer` advertised `tools.listChanged` and served `subscriptions/listen`
+by default. Each open Claude Code session held a listen POST until the 60 s
+request timeout and then re-listened ("Truncated response body" in the logs,
+every minute), so the service never scaled to zero while a session was open,
+and an instance with a request in flight is billed in full (~USD 2.3/day).
+Fixed with `subscriptions=False` (unit-tested: no `listChanged`); since then
+idle instances shut down after ~15 min.
+
 **Consequences:** Deploys need a local `data/index.sqlite` (rebuilt in
-seconds from the embedding cache, or ~USD 0.8 cold). The image is 560 MB
-uncompressed. If cold start becomes a problem: drop google-genai from the
-server (0.24 s of 0.99 s local import time) in favour of a plain REST call,
-or keep one warm instance (min 1, billed).
+seconds from the embedding cache, or ~USD 0.8 cold). The image is 585 MB
+uncompressed. `preload.txt` is regenerated at every build, so new imports are
+covered automatically. Further levers if cold start matters again: drop
+google-genai from the server for a plain REST call (fewer imports and a
+cheaper first embedding call), or keep one warm instance (min 1, billed).

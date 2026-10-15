@@ -4,7 +4,8 @@ On Cloud Run the server's imports took 4.2-4.5 s against 0.6 s in the same
 image locally, while the 53 MB of vectors load in 0.1-0.3 s: the image's files
 arrive lazily, and each of the ~750 small files an import opens waits on its
 own fetch. Reading them first with many threads overlaps those waits; the
-imports then come from the page cache.
+imports then come from the page cache. Measured on Cloud Run: preload 0.14 s
++ imports 1.5 s, instance ready in 2.1 s instead of 4.2-5.3 s.
 
     python -m mcp_server.preload --write LIST        # image build: record the files
     python -m mcp_server.preload LIST [server args]  # start: read them, run the server
