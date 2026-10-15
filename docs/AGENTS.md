@@ -125,9 +125,15 @@ flowchart TD
 
 ## 6. Models (config, not code)
 
-`agents/navigator/config.py` reads these from env vars or a YAML profile.
-Defaults below were taken from the Agent Platform locations page on
-2026-10-15. **Re-verify IDs in M0**, because model names churn monthly.
+`agents/navigator/config.py` loads `profiles/$NAV_PROFILE.yaml` (default
+`default`). `AGENT_MODEL`, `JUDGE_MODEL`, `EMBEDDING_MODEL` and
+`GOOGLE_CLOUD_LOCATION` override single fields for experiments, and eval
+reports record `Profile.as_dict()`. **Re-verified in M0 (2026-10-15)**
+against the Agent Platform locations page ("last updated 2026-10-14"): every
+model in the table below is listed for europe-west6. `gemini-3.1-pro-preview`
+is still labelled preview. `gemini-4-argon` is listed without a preview label.
+`make smoke-gemini` calls each profile model live with ADC. Model names churn
+monthly, so re-verify before each experiment run.
 
 | Role | Default | Alternatives for experiments |
 |---|---|---|

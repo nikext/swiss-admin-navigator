@@ -76,33 +76,44 @@ feature count.
 ## Environment (as of 2026-10-15)
 
 - Fedora Linux, bash. System Python 3.14 → use **uv** with Python 3.12
-  (ADR-009). uv is **not installed yet**: install it user-local in M0.
+  (ADR-009). uv 0.13.1 is installed user-local at `~/.local/bin/uv` (M0),
+  with uv-managed CPython 3.12.15.
 - Node 22, docker and podman both available, make.
 - `gh` is authenticated as `nikext` (scopes: repo, workflow).
-- gcloud default project `random-projects-509513` (hosts `zuri-sunny`). A
-  new project may be chosen in M0.
+- gcloud default project `random-projects-509513`, also the project for this
+  repo (see Session-agreed settings). It also hosts `zuri-sunny` and
+  `epoch-war`.
 - Regions: **europe-west6** (Zürich) for agent, MCP and web.
   **europe-west4** for Cloud Run GPU (none in Zürich).
 
 ## Commands
 
-Fill these in as they come to exist (M0 creates the Makefile):
+Targets marked (Mx) fail with a pointer until that milestone lands.
 
 ```bash
-make setup        # uv sync, pre-commit install
-make lint test    # ruff, pyright, pytest
-make ingest       # resolve + download + parse → data/articles.jsonl
-make index        # embed + build data/index.sqlite
-make mcp-dev      # run MCP server locally (stdio + http)
-make agent-dev    # adk web against local MCP
-make eval-smoke   # 20-case smoke eval → evals/reports/
-make eval-full    # full golden + adversarial
+make setup        # uv sync --all-packages --locked, pre-commit install
+make lint test    # ruff check + format check, pyright; pytest (unit only)
+make check        # lint + test + every pre-commit hook on all files (= CI)
+make fmt          # ruff --fix + ruff format
+make smoke-gemini # one tiny call per profile model in europe-west6 (ADC)
+make gcp-setup    # infra/setup.sh: APIs, AR, bucket, SAs (DRY_RUN=1 to preview)
+make gcp-budget   # infra/budget.sh: USD 37/month budget (exists already)
+make agent-dev    # adk web agents
+make ingest       # (M1) resolve + download + parse → data/articles.jsonl
+make index        # (M2) embed + build data/index.sqlite
+make mcp-dev      # (M2) run MCP server locally (stdio + http)
+make eval-smoke   # (M3) 20-case smoke eval → evals/reports/
+make eval-full    # (M4) full golden + adversarial
+make deploy-mcp | deploy-agent | deploy-web   # (M2/M5/M6, ask first)
 ```
+
+Integration tests (network/GCP) are marked `@pytest.mark.integration` and
+skipped by default: `uv run pytest -m integration`.
 
 ## Session-agreed settings
 
 - GCP project: `random-projects-509513` (the GCP.md §2 fallback; shared with
-  `zuri-sunny`, so prefix every resource with `swiss-nav` and label it
+  `zuri-sunny` and `epoch-war`, so prefix every resource with `swiss-nav` and label it
   `app=swiss-nav`). Agreed 2026-10-15.
 - PR review: Claude merges its own milestone PRs once CI is green and the
   milestone's "Done when" is verified. No human review required. Agreed

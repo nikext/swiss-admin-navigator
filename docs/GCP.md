@@ -23,10 +23,12 @@
 
 ## 2. Project
 
-- **Recommended:** a new project for clean billing and IAM, e.g.
-  `swiss-admin-navigator` (the user creates it and links billing).
-- **Fallback:** the existing `random-projects-509513` (already has billing and
-  hosts `zuri-sunny`).
+- **Chosen (2026-10-15): `random-projects-509513`.** It already has billing
+  and is **shared** with `zuri-sunny` and `epoch-war` (Cloud Run,
+  europe-west6). Everything this project creates is prefixed `swiss-nav` and
+  labelled `app=swiss-nav`, so it can be found and torn down without touching
+  the other apps (ADR-012). A dedicated project was the cleaner option, but the
+  user chose the existing one.
 - Config lives in `.env` (gitignored). `.env.example` is committed.
 
 ```bash
@@ -35,41 +37,43 @@ export REGION=europe-west6          # Zürich: agent, MCP, web
 export GPU_REGION=europe-west4      # Cloud Run GPUs are not offered in europe-west6
 ```
 
-## 3. One-time setup (`infra/setup.sh`, idempotent)
+## 3. One-time setup (`make gcp-setup` → `infra/setup.sh`, idempotent)
 
-```bash
-gcloud services enable \
-  aiplatform.googleapis.com cloudresourcemanager.googleapis.com \
-  run.googleapis.com artifactregistry.googleapis.com cloudbuild.googleapis.com \
-  secretmanager.googleapis.com firestore.googleapis.com \
-  cloudtrace.googleapis.com logging.googleapis.com monitoring.googleapis.com \
-  iamcredentials.googleapis.com sts.googleapis.com \
-  modelarmor.googleapis.com          # M10 only; verify service name
+Ran on 2026-10-15; a second run reported every resource as existing.
+`DRY_RUN=1 make gcp-setup` prints the commands without running them.
 
-gcloud artifacts repositories create swiss-nav --repository-format=docker \
-  --location=$REGION
-gcloud artifacts repositories create swiss-nav-gpu --repository-format=docker \
-  --location=$GPU_REGION             # M9
-
-gcloud storage buckets create gs://$PROJECT_ID-swiss-nav --location=$REGION \
-  --uniform-bucket-level-access      # index builds, eval reports, staging
-```
+- **APIs:** aiplatform, cloudresourcemanager, run, artifactregistry,
+  cloudbuild, secretmanager, firestore (API only, no database), cloudtrace,
+  logging, monitoring, iamcredentials, sts, billingbudgets.
+  `modelarmor.googleapis.com` is added in M10 (verify the service name then).
+- **Artifact Registry:** `swiss-nav` (docker, europe-west6). The GPU repo
+  `swiss-nav-gpu` (europe-west4) is added in M9.
+- **Bucket:** `gs://$PROJECT_ID-swiss-nav` (europe-west6, uniform access,
+  public access prevention enforced) for index builds, eval reports and
+  staging.
 
 ### Service accounts (least privilege)
 
+Names carry the `swiss-nav-` prefix because the project is shared (ADR-012).
+All five exist since 2026-10-15.
+
 | SA | Used by | Roles |
 |---|---|---|
-| `mcp-server@` | Cloud Run MCP | `roles/aiplatform.user` (query embeddings only) |
-| `navigator-agent@` | Agent Runtime | `roles/aiplatform.user`, `roles/cloudtrace.agent`, `roles/logging.logWriter`. Verify which identity Agent Runtime runs as and whether a custom SA is supported. |
-| `web@` | Cloud Run web | `roles/aiplatform.user` (to call `reasoningEngines:streamQuery`), `roles/datastore.user` |
-| `ci-evals@` | GitHub Actions via WIF | `roles/aiplatform.user`, `roles/storage.objectAdmin` on the bucket |
-| `apertus@` | Cloud Run GPU | none (no GCP API calls) |
+| `swiss-nav-mcp@` | Cloud Run MCP | `roles/aiplatform.user` (query embeddings only) |
+| `swiss-nav-agent@` | Agent Runtime | `roles/aiplatform.user`, `roles/cloudtrace.agent`, `roles/logging.logWriter`. Verify which identity Agent Runtime runs as and whether a custom SA is supported. |
+| `swiss-nav-web@` | Cloud Run web | `roles/aiplatform.user` (to call `reasoningEngines:streamQuery`), `roles/datastore.user` |
+| `swiss-nav-ci@` | GitHub Actions via WIF | `roles/aiplatform.user`, `roles/storage.objectAdmin` on the bucket |
+| `swiss-nav-apertus@` | Cloud Run GPU | none (no GCP API calls) |
 
-### Budget guardrail (do this in M0)
+### Budget guardrail (done in M0)
 
-Set a billing budget with alerts at 50/90/100% of **CHF 30/month**. The user
-does this in the console, or with `gcloud billing budgets create …` if the
-billing account permits. A public demo without a cap is the main financial risk.
+`make gcp-budget` (`infra/budget.sh`, idempotent by display name) created
+**"swiss-nav monthly (random-projects-509513)"** on 2026-10-15: **USD 37/month
+(≈ CHF 30)**, alerts at 50/90/100%, scoped to the project. The billing account
+is billed in USD, so the amount can't be set in CHF. The project is shared, so
+`zuri-sunny` and `epoch-war` spend counts towards it too. The billing account
+also has two older account-wide budgets ($20 and $50) that this repo doesn't
+manage. A public demo without a cap is the main financial risk.
 
 ## 4. Deploy recipes (verify the flags against current docs)
 
@@ -78,7 +82,7 @@ billing account permits. A public demo without a cap is the main financial risk.
 ```bash
 # Image contains index.sqlite (built by `make index`), like zuri-sunny's baked DB.
 gcloud run deploy swiss-law-mcp --source mcp_server --region $REGION \
-  --service-account mcp-server@$PROJECT_ID.iam.gserviceaccount.com \
+  --service-account swiss-nav-mcp@$PROJECT_ID.iam.gserviceaccount.com \
   --allow-unauthenticated --min-instances 0 --max-instances 2 \
   --memory 1Gi --cpu 1 --concurrency 40 --timeout 60
 ```
@@ -114,7 +118,7 @@ adk deploy agent_engine \
 
 ```bash
 gcloud run deploy swiss-nav-web --source web --region $REGION \
-  --service-account web@$PROJECT_ID.iam.gserviceaccount.com \
+  --service-account swiss-nav-web@$PROJECT_ID.iam.gserviceaccount.com \
   --allow-unauthenticated --min-instances 0 --max-instances 2 \
   --set-env-vars AGENT_RUNTIME_ID=…,REGION=$REGION \
   --set-secrets ACCESS_CODE=swiss-nav-access-code:latest
@@ -131,7 +135,7 @@ docker push …
 gcloud run deploy apertus --image $GPU_REGION-docker.pkg.dev/…/vllm-apertus:<tag> \
   --region $GPU_REGION --gpu 1 --gpu-type nvidia-l4 --no-gpu-zonal-redundancy \
   --cpu 8 --memory 32Gi --min-instances 0 --max-instances 1 \
-  --no-allow-unauthenticated --service-account apertus@… \
+  --no-allow-unauthenticated --service-account swiss-nav-apertus@… \
   --set-secrets HF_TOKEN=hf-token:latest \
   --args="vllm,serve,swiss-ai/Apertus-v1.5-8B,--max-model-len,32768,--gpu-memory-utilization,0.90,--chat-template-content-format,string,--enable-auto-tool-choice,--tool-call-parser,apertus"
 ```

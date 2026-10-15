@@ -103,3 +103,43 @@ wording. The UI, README and every answer carry "Unofficial. Not legal advice.
 Sources: Fedlex." The app links users to official offices for decisions.
 **Consequences:** No impersonation risk. This is a deliberate trust and safety
 point in the write-up.
+
+### ADR-011: Workspace members are virtual uv projects; code imports from the repo root
+**Status:** accepted (2026-10-15, M0)
+**Context:** ADR-009 calls for a uv workspace with `ingest`, `mcp_server`,
+`agents/navigator` and `evals`. The deployable units must stay
+self-contained directories: `adk deploy agent_engine agents/navigator`
+uploads only that folder, `adk web agents` discovers apps by subdirectory,
+and `gcloud run deploy --source mcp_server` builds from that folder. A
+src-layout package per member (`ingest/src/ingest/…`) would fight the paths
+the docs and the ADK tooling expect.
+**Decision:** Each member has a `pyproject.toml` without a `[build-system]`,
+so uv treats it as a virtual project. It declares that component's runtime
+deps, all members share one lockfile and one `.venv`, and nothing is built or
+installed. Code is imported from the repo root (`ingest.parse`,
+`agents.navigator.config`; pytest uses `pythonpath = ["."]`). A deploy gets
+its pinned requirements from `uv export --package <member> --no-dev`
+(verified: 48 pins for the navigator, with no editable line for the member).
+`agents/navigator` must not import from other repo dirs, because Agent
+Runtime gets only that folder. `google-adk` is pinned to **2.12.0**, the
+latest on PyPI on 2026-10-15, as the docs expected.
+**Consequences:** One `uv sync --all-packages --locked` sets everything up,
+and per-component dependency lists stay honest. Under `adk web`, the agent
+package is imported as `navigator`; tests and scripts import it as
+`agents.navigator`. Don't load both in one process.
+
+### ADR-012: Shared GCP project, `swiss-nav` prefix, budget in USD
+**Status:** accepted (2026-10-15, M0)
+**Context:** The user chose the existing `random-projects-509513` over a new
+project (GCP.md §2). It already runs `zuri-sunny` and `epoch-war`. Its
+billing account is billed in USD, and budget filters cover a whole project,
+not one app.
+**Decision:** Every resource is named `swiss-nav*` and labelled
+`app=swiss-nav`. That includes the service accounts (`swiss-nav-mcp@` and
+so on instead of the generic `web@` in the first draft of GCP.md). The
+CHF 30/month guardrail is a project-scoped budget of **USD 37** with alerts
+at 50/90/100%.
+**Consequences:** Teardown and cost attribution work by prefix or label. The
+budget also counts the other apps' spend, so an alert doesn't necessarily
+mean this project overspent. Check the billing report by label or service.
+Revisit with a dedicated project if spend attribution becomes a problem.

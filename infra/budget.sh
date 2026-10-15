@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Monthly budget alert at 50/90/100% (docs/GCP.md §3). Idempotent by display name.
 # The amount must be in the billing account's currency; the account linked to
-# the project is billed in USD, so CHF 30 is expressed as BUDGET_AMOUNT=35USD
+# the project is billed in USD, so CHF 30 is expressed as BUDGET_AMOUNT=37USD
 # by default (ADR-012). The budget covers the whole project, which is shared
 # with other apps, so their spend counts towards it too.
 #
@@ -13,7 +13,7 @@ if [[ -f .env ]]; then set -a; source .env; set +a; fi
 PROJECT_ID="${GOOGLE_CLOUD_PROJECT:?set GOOGLE_CLOUD_PROJECT in .env}"
 GCLOUD="${GCLOUD:-$(command -v gcloud || echo "$HOME/google-cloud-sdk/bin/gcloud")}"
 DRY_RUN="${DRY_RUN:-0}"
-BUDGET_AMOUNT="${BUDGET_AMOUNT:-35USD}"
+BUDGET_AMOUNT="${BUDGET_AMOUNT:-37USD}"
 NAME="swiss-nav monthly (${PROJECT_ID})"
 
 ACCOUNT="$("$GCLOUD" billing projects describe "$PROJECT_ID" --format='value(billingAccountName)')"
