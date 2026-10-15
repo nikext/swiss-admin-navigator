@@ -7,7 +7,8 @@ UV ?= uv
 todo = @echo "make $@: not implemented yet (lands in $(1), see docs/PLAN.md)" >&2; exit 1
 
 .PHONY: help setup lint fmt test check smoke-gemini gcp-setup gcp-budget \
-        resolve ingest spotcheck fixtures index mcp-dev agent-dev eval-smoke eval-full \
+        resolve ingest spotcheck fixtures index index-e4 eval-retrieval mcp-dev agent-dev \
+        eval-smoke eval-full \
         deploy-mcp deploy-agent deploy-web
 
 help: ## List targets
@@ -54,11 +55,17 @@ spotcheck: ## Compare random articles with Fedlex's HTML rendering (N=10)
 fixtures: ## Re-cut the parser test fixtures from the cached corpus
 	$(UV) run python -m ingest.tests.make_fixtures
 
-index: ## Embed + build data/index.sqlite
-	$(call todo,M2)
+index: ## Embed (cached by content; billable on a cold cache) + build data/index.sqlite
+	$(UV) run python -m ingest.index
 
-mcp-dev: ## Run the swiss-law MCP server locally
-	$(call todo,M2)
+index-e4: ## E4 experiment index: every tokenizer and vector space (billable on a cold cache)
+	$(UV) run python -m ingest.index --experiment
+
+eval-retrieval: ## Retrieval eval of the served config (E4=1: the whole E4 grid) -> evals/reports/
+	$(UV) run python -m evals.harness.retrieval_eval $(if $(E4),--e4 --index data/index_e4.sqlite --latency 20)
+
+mcp-dev: ## swiss-law MCP server on http://127.0.0.1:8080/mcp (STDIO=1: stdio)
+	$(UV) run python -m mcp_server.server $(if $(STDIO),,--http)
 
 agent-dev: ## adk web UI for the agents in agents/
 	$(UV) run adk web agents
