@@ -139,9 +139,13 @@ keys; `make gcp-wif`). The index comes from the project bucket by sha256
 (`evals/ci_index.json`, `make publish-index`). Workflows: `eval-smoke.yml`
 (check-cases, retrieval, 20-case smoke, gates via `evals/harness/gate.py` and
 `evals/baselines.yaml`; ready PRs that touch agent, MCP, ingest or eval code)
-and `eval-full.yml` (label `full-eval`; golden + drafts + adversarial; comments
+and `eval-full.yml` (label `full-eval`; golden + adversarial; comments
 the report). Both skip until the `GCP_*` repo variables exist. The gates are
-deterministic, so the smoke needs no judge (`SMOKE_ARGS=--no-judge`).
+deterministic, so the smoke needs no judge (`SMOKE_ARGS=--no-judge`, set as a
+repo variable). **Live since 2026-10-15** (WIF pool `swiss-nav-github`, repo
+variables `GCP_PROJECT`, `GCP_WIF_PROVIDER`, `GCP_CI_SA`, `SMOKE_ARGS`): first
+run on PR #5 passed every gate, 20/20 cases, quote fidelity 65/65, 0
+hallucinated, CHF 0.67, about 6 minutes.
 
 Spend cap: the smoke eval should cost under CHF 0.50 per run. Log the cost.
 **Measured in M3:** about CHF 1.4 per smoke run (agent 0.75, judge 0.66;
@@ -157,9 +161,10 @@ Reports: `evals/reports/2026-10-15-0990ecd-smoke-think-{low,medium}-drafts.json`
 (answers stored, not yet judged).
 
 Low thinking is a third cheaper and much faster, but the agent then gives
-branching answers instead of asking (residence-01, residence-07) and missed
-QStV 9 in tax-01. Whether to serve it is decided with the chosen judge on the
-full golden set (judge scores of these stored answers cost cents).
+branching answers instead of asking (residence-01, residence-07). Re-graded
+with the chosen judge on the final golden definitions: groundedness default
+0.76, medium 0.86, low 0.91; key facts 100% each; behaviour 20/20, 20/20,
+18/20. The served level stays at the default (ADR-025).
 
 ## 4. Experiments (README material)
 

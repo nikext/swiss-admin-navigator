@@ -578,8 +578,8 @@ user simulator and ADK's judges are built from model names on
 agent CHF 0.07 per conversation (simulator and judge extra). The `multi_turn_*`
 metrics stay unused until there is a reason to pay for the managed service.
 
-### ADR-023: Judge choice for CI and the baseline (proposed, pending the agreement study)
-**Status:** proposed (2026-10-15, M4)
+### ADR-023: Judge choice for CI and the baseline: Gemini 3.8 Flash
+**Status:** accepted (2026-10-15, M4); the plan below was carried out, results at the end
 **Context:** The M3 judge (`gemini-3.1-pro-preview@global`) costs about
 CHF 0.03 per answer and is the same family as the agent. Claude in Model
 Garden was agreed as a candidate on 2026-10-15, but the project has zero quota
@@ -591,6 +591,25 @@ once enabled, Claude Haiku 5.5 and Sonnet 5.5. Pick the cheapest judge whose
 agreement with the human labels is not materially worse than the best one
 (groundedness MAE, kappa on behaviour and key facts), prefer a different
 family at equal agreement, record the numbers here, and set it in the profile.
+**Study** (30 M3 answers vs the 30 labels of ADR-024; Claude still 429;
+`evals/reports/2026-10-15-78b0f29-judge-study.md`, CHF 2.0):
+
+| judge | CHF/answer | p50 s | grounded MAE | fully-grounded κ | key facts | behaviour acc / κ | 429s |
+|---|---|---|---|---|---|---|---|
+| 3.1 Pro (run 1) | 0.029 | 28 | 0.11 | 0.53 | 100 | 93 / 0.00 | 3 |
+| 3.1 Pro (run 2) | 0.029 | 43 | 0.11 | 0.36 | 100 | 97 / 0.65 | 1 |
+| **3.8 Flash** | **0.006** | **10** | **0.10** | **0.71** | 100 | **100 / 1.00** | 0 |
+| 3.5 Flash-Lite | 0.002 | 2 | 0.10 (bias +0.10) | 0.10 | 100 | 97 / 0.65 | 0 |
+
+**Decision:** `gemini-3.8-flash@global` (`profiles/default.yaml`). It agrees
+with the labels at least as well as Pro on every metric at a fifth of the cost
+and was never rate-limited. Flash-Lite ranks answers poorly (Spearman ρ 0.28
+vs 0.68).
+**Consequences:** the judge is the agent's own model, so self-preference is
+possible; the deterministic gates do not depend on it. Pro disagrees with
+itself (κ 0.53 vs 0.36), so a few points of agreement are noise at n=30. When
+the Claude quota arrives, rerun the study; a Claude judge can only be picked
+against human labels (ADR-024). The judge client does not retry 429s yet.
 
 ### ADR-024: Golden review and judge labels delegated to Claude; clarification labels follow system-prompt rule 1
 **Status:** accepted (2026-10-15, M4)
@@ -642,3 +661,26 @@ briefly").
   category; drafting more is a follow-up.
 - The thinking-level decision (EVALS.md §3) is judged with this rule: a short
   branching answer is fine where rule 1 allows it.
+
+### ADR-025: Served agent thinking level stays at the model default
+**Status:** accepted (2026-10-15, M4)
+**Context:** On the 20 smoke cases, thinking `low` was a third cheaper and
+p50 22 s vs 38 s, but it stopped asking clarifying questions (EVALS.md §3).
+The stored answers of each level were re-graded with the chosen judge
+(ADR-023) against the final golden definitions (ADR-024):
+
+| agent thinking | CHF/answer | p50 s | groundedness | key facts | behaviour |
+|---|---|---|---|---|---|
+| default | 0.035 | 38 | 0.76 | 100 | 20/20 |
+| medium | 0.034 | 38 | 0.86 | 100 | 20/20 |
+| low | 0.023 | 22 | 0.91 | 100 | 18/20 |
+
+(`evals/reports/2026-10-15-7bd9768-rejudge-smoke-think-{default,medium,low}.md`)
+**Decision:** keep the default. Low fails exactly the two smoke cases where
+rule 1 says to ask (residence-01, residence-07: the answer depends on
+nationality and permit), and asking there is a product requirement. Medium
+buys nothing over default on cost or latency.
+**Consequences:** low is the obvious cost lever for M9 (E1) once the prompt
+makes it ask reliably; its higher groundedness comes from shorter answers with
+fewer uncited side remarks, which is worth copying into the prompt for every
+level. n=20, so the groundedness gaps are indicative only.
