@@ -30,7 +30,7 @@ an explicit `tool_filter`.
 
 | Tool | Signature | Returns | Notes |
 |---|---|---|---|
-| `search_law` | `(query: str, lang: str \| None, sr: list[str] \| None, k: int = 8)` | `[{sr, abbr, label, eid, lang, heading_path, snippet, score, url, as_of}]` | Hybrid: FTS5 (BM25) + vector, fused with RRF. Excludes repealed articles by default. Cross-lingual: an EN query may retrieve DE/FR/IT text. |
+| `search_law` | `(query: str, lang: str \| None, sr: list[str] \| None, k: int = 8)` | `[{sr, abbr, label, eid, lang, heading_path, snippet, score, url, as_of}]` | Hybrid: FTS5 (BM25) + vector, fused with RRF. Returns only `status: in_force` articles by default (repealed and omitted are excluded, DATA.md §3). Cross-lingual: an EN query may retrieve DE/FR/IT text. |
 | `get_article` | `(sr: str, article: str, lang: str = "de")` | `{sr, abbr, label, lang, heading_path, text, paragraphs[], notes[], url, as_of, available_langs[]}` | `article` accepts `"271a"`, `"Art. 271a"` and `"art_271_a"`. Falls back to `de` when the requested language is missing and says so. |
 | `get_toc` | `(sr: str, lang: str = "de", path: str \| None = None, depth: int = 1)` | `{node, children: [{path, num, heading, kind: level\|article, label?}]}` | Tree navigation, so the agent can browse ("vectorless" / PageIndex-style retrieval). Measure whether it helps (EVALS.md exp. E3). |
 | `list_acts` | `(domain: str \| None = None)` | `[{sr, abbr{de,fr,it}, title, domain, langs, as_of}]` | Cheap orientation. |

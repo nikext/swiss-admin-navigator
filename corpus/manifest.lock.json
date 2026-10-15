@@ -1,0 +1,744 @@
+{
+  "as_of": "2026-10-15",
+  "acts": [
+    {
+      "sr": "101",
+      "abbr": {
+        "de": "BV",
+        "fr": "Cst.",
+        "it": "Cost."
+      },
+      "eli": "https://fedlex.data.admin.ch/eli/cc/1999/404",
+      "consolidation": "https://fedlex.data.admin.ch/eli/cc/1999/404/20240303",
+      "date": "2024-03-03",
+      "domain": [
+        "general"
+      ],
+      "files": {
+        "de": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1999/404/20240303/de/xml/fedlex-data-admin-ch-eli-cc-1999-404-20240303-de-xml-10.xml",
+          "sha256": "573c1a869c9f327f247f0f45b8bed10f5babb17c8228a306a0ee87f6b3929c8b",
+          "bytes": 536822
+        },
+        "fr": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1999/404/20240303/fr/xml/fedlex-data-admin-ch-eli-cc-1999-404-20240303-fr-xml-10.xml",
+          "sha256": "751cb139466e7ef91474545ef094a6cb55984c7d3180b180c6a89fbc02009773",
+          "bytes": 572193
+        },
+        "it": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1999/404/20240303/it/xml/fedlex-data-admin-ch-eli-cc-1999-404-20240303-it-xml-10.xml",
+          "sha256": "a7442daac5098a847d17422736b4ba9784c8f1f5a06138bc4d7af57f044a5620",
+          "bytes": 555049
+        },
+        "en": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1999/404/20240303/en/xml/fedlex-data-admin-ch-eli-cc-1999-404-20240303-en-xml-7.xml",
+          "sha256": "2349fec1a3bab7eafa1ebc1cbaa87867c9ec93573336ef1572942f9bb203c9fb",
+          "bytes": 386245
+        }
+      }
+    },
+    {
+      "sr": "210",
+      "abbr": {
+        "de": "ZGB",
+        "fr": "CC",
+        "it": "CC"
+      },
+      "eli": "https://fedlex.data.admin.ch/eli/cc/24/233_245_233",
+      "consolidation": "https://fedlex.data.admin.ch/eli/cc/24/233_245_233/20260701",
+      "date": "2026-07-01",
+      "domain": [
+        "general"
+      ],
+      "files": {
+        "de": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/24/233_245_233/20260701/de/xml/fedlex-data-admin-ch-eli-cc-24-233_245_233-20260701-de-xml-2.xml",
+          "sha256": "d0fe55605574de9403685c13836afb0db4212a4b88deb458cf2fe798c45bb694",
+          "bytes": 1564357
+        },
+        "fr": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/24/233_245_233/20260701/fr/xml/fedlex-data-admin-ch-eli-cc-24-233_245_233-20260701-fr-xml-2.xml",
+          "sha256": "ccd18b17071d37d75bcb84c861c2c0cae8c4c0904495ba0ec7a3883710461d84",
+          "bytes": 1624637
+        },
+        "it": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/24/233_245_233/20260701/it/xml/fedlex-data-admin-ch-eli-cc-24-233_245_233-20260701-it-xml-2.xml",
+          "sha256": "f34656b5e39d85d0cfc96a7ccde4b4b8916122284c7ac9b60ef42bb555eabdc7",
+          "bytes": 1543918
+        },
+        "en": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/24/233_245_233/20260701/en/xml/fedlex-data-admin-ch-eli-cc-24-233_245_233-20260701-en-xml.xml",
+          "sha256": "fde4a640fa5bbb324eade027b0ee7a016d9b700829353a024f7b11483154aede",
+          "bytes": 1474479
+        }
+      }
+    },
+    {
+      "sr": "235.1",
+      "abbr": {
+        "de": "DSG",
+        "fr": "LPD",
+        "it": "LPD"
+      },
+      "eli": "https://fedlex.data.admin.ch/eli/cc/2022/491",
+      "consolidation": "https://fedlex.data.admin.ch/eli/cc/2022/491/20250707",
+      "date": "2025-07-07",
+      "domain": [
+        "general"
+      ],
+      "files": {
+        "de": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2022/491/20250707/de/xml/fedlex-data-admin-ch-eli-cc-2022-491-20250707-de-xml-1.xml",
+          "sha256": "a99bce3dc59a5c3f25e69ed5e483380c0f1a9b57ec452fedb62e0e68b7baabef",
+          "bytes": 162824
+        },
+        "fr": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2022/491/20250707/fr/xml/fedlex-data-admin-ch-eli-cc-2022-491-20250707-fr-xml-1.xml",
+          "sha256": "50b609dddcdb8b2b248f498de8e3a5eabfbb9e6d06674daf8fc508ab7393aeb3",
+          "bytes": 167777
+        },
+        "it": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2022/491/20250707/it/xml/fedlex-data-admin-ch-eli-cc-2022-491-20250707-it-xml-1.xml",
+          "sha256": "40d05593c64b46813c4ae1289ccd51717b737fc68b173edafbd2bc824d5fa91f",
+          "bytes": 157907
+        },
+        "en": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2022/491/20250707/en/xml/fedlex-data-admin-ch-eli-cc-2022-491-20250707-en-xml.xml",
+          "sha256": "47d871be5cfc9a7668ae13fd513ca19851c29df76d0ed6fdd861e09f32d8fe82",
+          "bytes": 155408
+        }
+      }
+    },
+    {
+      "sr": "142.20",
+      "abbr": {
+        "de": "AIG",
+        "fr": "LEI",
+        "it": "LStrI"
+      },
+      "eli": "https://fedlex.data.admin.ch/eli/cc/2007/758",
+      "consolidation": "https://fedlex.data.admin.ch/eli/cc/2007/758/20260612",
+      "date": "2026-06-12",
+      "domain": [
+        "residence"
+      ],
+      "files": {
+        "de": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2007/758/20260612/de/xml/fedlex-data-admin-ch-eli-cc-2007-758-20260612-de-xml-3.xml",
+          "sha256": "9320af88b37e7b7b3eaf9cc7d05346722f6bd9342efa442d73a7ddfb1cf4f7d7",
+          "bytes": 801739
+        },
+        "fr": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2007/758/20260612/fr/xml/fedlex-data-admin-ch-eli-cc-2007-758-20260612-fr-xml-3.xml",
+          "sha256": "f609b5ae385dfd2583bb07b164ef6993b1788b8002193f02c2afa77265623ded",
+          "bytes": 857740
+        },
+        "it": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2007/758/20260612/it/xml/fedlex-data-admin-ch-eli-cc-2007-758-20260612-it-xml-3.xml",
+          "sha256": "718024e9adbc52077dcfe60af648e69b2511525021a5bf7e50c4a24b862e4c2e",
+          "bytes": 817351
+        }
+      }
+    },
+    {
+      "sr": "142.201",
+      "abbr": {
+        "de": "VZAE",
+        "fr": "OASA",
+        "it": "OASA"
+      },
+      "eli": "https://fedlex.data.admin.ch/eli/cc/2007/759",
+      "consolidation": "https://fedlex.data.admin.ch/eli/cc/2007/759/20261001",
+      "date": "2026-10-01",
+      "domain": [
+        "residence"
+      ],
+      "files": {
+        "de": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2007/759/20261001/de/xml/fedlex-data-admin-ch-eli-cc-2007-759-20261001-de-xml.xml",
+          "sha256": "dbc46ec0f6385b064bb0852c1a748216212669a555b5d9465c6395a6f77eb680",
+          "bytes": 343990
+        },
+        "fr": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2007/759/20261001/fr/xml/fedlex-data-admin-ch-eli-cc-2007-759-20261001-fr-xml.xml",
+          "sha256": "b57915077e2323f447c19ff31d38eec52b59641b19947d3130cee9278695295d",
+          "bytes": 367638
+        },
+        "it": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2007/759/20261001/it/xml/fedlex-data-admin-ch-eli-cc-2007-759-20261001-it-xml.xml",
+          "sha256": "d1d2258adc80f76590bf7231657ce50e304b24c1eace26f9caa99f45df417bf9",
+          "bytes": 348694
+        }
+      }
+    },
+    {
+      "sr": "142.203",
+      "abbr": {
+        "de": "VFP",
+        "fr": "OLCP",
+        "it": "OLCP"
+      },
+      "eli": "https://fedlex.data.admin.ch/eli/cc/2002/261",
+      "consolidation": "https://fedlex.data.admin.ch/eli/cc/2002/261/20260101",
+      "date": "2026-01-01",
+      "domain": [
+        "residence"
+      ],
+      "files": {
+        "de": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2002/261/20260101/de/xml/fedlex-data-admin-ch-eli-cc-2002-261-20260101-de-xml.xml",
+          "sha256": "c7f40c7e2c71f52179428278d77c68e6982f9771fd25904d002f81d100fb8c1f",
+          "bytes": 55541
+        },
+        "fr": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2002/261/20260101/fr/xml/fedlex-data-admin-ch-eli-cc-2002-261-20260101-fr-xml.xml",
+          "sha256": "3341d6fe743fe319f7b31127d9dc9b21cf5fd02dd70d5ad0e97c95db8b3672d0",
+          "bytes": 61989
+        },
+        "it": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2002/261/20260101/it/xml/fedlex-data-admin-ch-eli-cc-2002-261-20260101-it-xml.xml",
+          "sha256": "fcaef89432f24b6ae313baa92fb3166f10b3be46c65e2ef5a73b028f5b9bdd0f",
+          "bytes": 56923
+        }
+      }
+    },
+    {
+      "sr": "0.142.112.681",
+      "abbr": {
+        "de": "FZA",
+        "fr": "ALCP",
+        "it": "ALC"
+      },
+      "eli": "https://fedlex.data.admin.ch/eli/cc/2002/243",
+      "consolidation": "https://fedlex.data.admin.ch/eli/cc/2002/243/20201215",
+      "date": "2020-12-15",
+      "domain": [
+        "residence"
+      ],
+      "files": {
+        "de": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2002/243/20201215/de/xml/fedlex-data-admin-ch-eli-cc-2002-243-20201215-de-xml-8.xml",
+          "sha256": "4a9c4bad585408bb3dcde4257455b86cb3dfdcfd665927a6d077bf29ccfe420a",
+          "bytes": 388467
+        },
+        "fr": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2002/243/20201215/fr/xml/fedlex-data-admin-ch-eli-cc-2002-243-20201215-fr-xml-8.xml",
+          "sha256": "eb89338bfe9bd7681f2e8849230c729b2d3d580cb40900ce6cf2dc25bfc5a85c",
+          "bytes": 403833
+        },
+        "it": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2002/243/20201215/it/xml/fedlex-data-admin-ch-eli-cc-2002-243-20201215-it-xml-8.xml",
+          "sha256": "718333aee36d74d1f99b81f03472cb20e83dd0256aca6057d207410a914eb859",
+          "bytes": 390958
+        }
+      }
+    },
+    {
+      "sr": "141.0",
+      "abbr": {
+        "de": "BüG",
+        "fr": "LN",
+        "it": "LCit"
+      },
+      "eli": "https://fedlex.data.admin.ch/eli/cc/2016/404",
+      "consolidation": "https://fedlex.data.admin.ch/eli/cc/2016/404/20230901",
+      "date": "2023-09-01",
+      "domain": [
+        "residence"
+      ],
+      "files": {
+        "de": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2016/404/20230901/de/xml/fedlex-data-admin-ch-eli-cc-2016-404-20230901-de-xml-6.xml",
+          "sha256": "955fbcbeb49bdef87a3e52f6267a69a2c5437073b37dfc2576ad3a1a65477952",
+          "bytes": 58138
+        },
+        "fr": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2016/404/20230901/fr/xml/fedlex-data-admin-ch-eli-cc-2016-404-20230901-fr-xml-6.xml",
+          "sha256": "2da2b60e06498531a2888313319c04eea78d1486d41cdb01aea7452e48803d8e",
+          "bytes": 57564
+        },
+        "it": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2016/404/20230901/it/xml/fedlex-data-admin-ch-eli-cc-2016-404-20230901-it-xml-6.xml",
+          "sha256": "47d1a257c73497214a6c0021e9eb63d520c223ca086d21455d9eb63fbdd5b848",
+          "bytes": 56911
+        },
+        "en": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2016/404/20230901/en/xml/fedlex-data-admin-ch-eli-cc-2016-404-20230901-en-xml-4.xml",
+          "sha256": "ee50a990025af92ac8e50236d2d4516878915bd0081ad207bd3bd0b2bf8f05d7",
+          "bytes": 56625
+        }
+      }
+    },
+    {
+      "sr": "141.01",
+      "abbr": {
+        "de": "BüV",
+        "fr": "OLN",
+        "it": "OCit"
+      },
+      "eli": "https://fedlex.data.admin.ch/eli/cc/2016/405",
+      "consolidation": "https://fedlex.data.admin.ch/eli/cc/2016/405/20260801",
+      "date": "2026-08-01",
+      "domain": [
+        "residence"
+      ],
+      "files": {
+        "de": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2016/405/20260801/de/xml/fedlex-data-admin-ch-eli-cc-2016-405-20260801-de-xml.xml",
+          "sha256": "3f6a7deea77a72fa32910177d9a8aaddb51af10d25cdba145f406c9838567c8e",
+          "bytes": 69126
+        },
+        "fr": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2016/405/20260801/fr/xml/fedlex-data-admin-ch-eli-cc-2016-405-20260801-fr-xml.xml",
+          "sha256": "bda89fe0c14c345657c867e3c8ed5c2536ceee35f9f7605f7e71ce511ff07c55",
+          "bytes": 70585
+        },
+        "it": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2016/405/20260801/it/xml/fedlex-data-admin-ch-eli-cc-2016-405-20260801-it-xml.xml",
+          "sha256": "ec182795dc33f9744abcbb4ebf427f0996a6b4686a3fb548e1db86aedb51cfb6",
+          "bytes": 69177
+        }
+      }
+    },
+    {
+      "sr": "431.02",
+      "abbr": {
+        "de": "RHG",
+        "fr": "LHR",
+        "it": "LArRa"
+      },
+      "eli": "https://fedlex.data.admin.ch/eli/cc/2006/619",
+      "consolidation": "https://fedlex.data.admin.ch/eli/cc/2006/619/20220101",
+      "date": "2022-01-01",
+      "domain": [
+        "residence"
+      ],
+      "files": {
+        "de": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2006/619/20220101/de/xml/fedlex-data-admin-ch-eli-cc-2006-619-20220101-de-xml-8.xml",
+          "sha256": "cdb43e434ca8b9bfd989c1d0a4e0acb0c6ac062567ec8ec2b739c32e2b9e726d",
+          "bytes": 43527
+        },
+        "fr": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2006/619/20220101/fr/xml/fedlex-data-admin-ch-eli-cc-2006-619-20220101-fr-xml-8.xml",
+          "sha256": "652e596ad733b39fa8477dcc31e7de0d7cc37a4b4b71552c2743e5ca4d051d23",
+          "bytes": 45484
+        },
+        "it": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2006/619/20220101/it/xml/fedlex-data-admin-ch-eli-cc-2006-619-20220101-it-xml-8.xml",
+          "sha256": "d6aeee4ad54a8dad12d37a0a82f20d1209a39963521683d366b0e8f3c0c19618",
+          "bytes": 43906
+        },
+        "en": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2006/619/20220101/en/xml/fedlex-data-admin-ch-eli-cc-2006-619-20220101-en-xml-8.xml",
+          "sha256": "5a0d16fea02d4e05752f7cf41217e3c156ec78c4d3dc6d104e6e3b5071490374",
+          "bytes": 43561
+        }
+      }
+    },
+    {
+      "sr": "220",
+      "abbr": {
+        "de": "OR",
+        "fr": "CO",
+        "it": "CO"
+      },
+      "eli": "https://fedlex.data.admin.ch/eli/cc/27/317_321_377",
+      "consolidation": "https://fedlex.data.admin.ch/eli/cc/27/317_321_377/20261001",
+      "date": "2026-10-01",
+      "domain": [
+        "work",
+        "housing"
+      ],
+      "files": {
+        "de": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/27/317_321_377/20261001/de/xml/fedlex-data-admin-ch-eli-cc-27-317_321_377-20261001-de-xml-3.xml",
+          "sha256": "b5aab27bc6d2e5a569e84b23b5396d3507ce6dc665270f1c48ffb86d1ec12d94",
+          "bytes": 2232437
+        },
+        "fr": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/27/317_321_377/20261001/fr/xml/fedlex-data-admin-ch-eli-cc-27-317_321_377-20261001-fr-xml-3.xml",
+          "sha256": "5bef56ec97c7623bfa555dc45847e1888b79903808d009685aa77ee98cab0d0f",
+          "bytes": 2318427
+        },
+        "it": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/27/317_321_377/20261001/it/xml/fedlex-data-admin-ch-eli-cc-27-317_321_377-20261001-it-xml-3.xml",
+          "sha256": "6ed78611cc9b6b7b8538b74d284910c7c34d9dc6488e740681c0a55c35e9bc2e",
+          "bytes": 2210595
+        }
+      }
+    },
+    {
+      "sr": "822.11",
+      "abbr": {
+        "de": "ArG",
+        "fr": "LTr",
+        "it": "LL"
+      },
+      "eli": "https://fedlex.data.admin.ch/eli/cc/1966/57_57_57",
+      "consolidation": "https://fedlex.data.admin.ch/eli/cc/1966/57_57_57/20230901",
+      "date": "2023-09-01",
+      "domain": [
+        "work"
+      ],
+      "files": {
+        "de": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1966/57_57_57/20230901/de/xml/fedlex-data-admin-ch-eli-cc-1966-57_57_57-20230901-de-xml-6.xml",
+          "sha256": "4c852a649f7fe5d85818fd3010f2fdd13b322d100e4d9a6a0a7b52770dc12682",
+          "bytes": 141565
+        },
+        "fr": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1966/57_57_57/20230901/fr/xml/fedlex-data-admin-ch-eli-cc-1966-57_57_57-20230901-fr-xml-6.xml",
+          "sha256": "239ed62474b3738802a9a27b5425c8121a847abc34111b3518377e68312bce49",
+          "bytes": 151314
+        },
+        "it": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1966/57_57_57/20230901/it/xml/fedlex-data-admin-ch-eli-cc-1966-57_57_57-20230901-it-xml-6.xml",
+          "sha256": "b6cfe6ce1fc77b40a95dad1f0844bf1ea1e1ee2fff8aa30af628102220913cac",
+          "bytes": 139888
+        }
+      }
+    },
+    {
+      "sr": "831.10",
+      "abbr": {
+        "de": "AHVG",
+        "fr": "LAVS",
+        "it": "LAVS"
+      },
+      "eli": "https://fedlex.data.admin.ch/eli/cc/63/837_843_843",
+      "consolidation": "https://fedlex.data.admin.ch/eli/cc/63/837_843_843/20260101",
+      "date": "2026-01-01",
+      "domain": [
+        "work"
+      ],
+      "files": {
+        "de": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/63/837_843_843/20260101/de/xml/fedlex-data-admin-ch-eli-cc-63-837_843_843-20260101-de-xml-1.xml",
+          "sha256": "92acf599e5ad9b43b2e31e01527a907d2c763795e7d61e6e323593bf56ab415c",
+          "bytes": 449309
+        },
+        "fr": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/63/837_843_843/20260101/fr/xml/fedlex-data-admin-ch-eli-cc-63-837_843_843-20260101-fr-xml-1.xml",
+          "sha256": "07fa4738d43cd83c50e564927b290017288515ee426453b8a6752d4c70d54841",
+          "bytes": 495374
+        },
+        "it": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/63/837_843_843/20260101/it/xml/fedlex-data-admin-ch-eli-cc-63-837_843_843-20260101-it-xml-1.xml",
+          "sha256": "ae79c341ffaba49274a133654578541f84f81c861e3e30b0ae190af19031d39a",
+          "bytes": 459394
+        }
+      }
+    },
+    {
+      "sr": "837.0",
+      "abbr": {
+        "de": "AVIG",
+        "fr": "LACI",
+        "it": "LADI"
+      },
+      "eli": "https://fedlex.data.admin.ch/eli/cc/1982/2184_2184_2184",
+      "consolidation": "https://fedlex.data.admin.ch/eli/cc/1982/2184_2184_2184/20260101",
+      "date": "2026-01-01",
+      "domain": [
+        "work"
+      ],
+      "files": {
+        "de": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1982/2184_2184_2184/20260101/de/xml/fedlex-data-admin-ch-eli-cc-1982-2184_2184_2184-20260101-de-xml-1.xml",
+          "sha256": "0e6df9120acc98d859ece90883a4d768ab98032efc93db41d1da718007bd0411",
+          "bytes": 426684
+        },
+        "fr": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1982/2184_2184_2184/20260101/fr/xml/fedlex-data-admin-ch-eli-cc-1982-2184_2184_2184-20260101-fr-xml-1.xml",
+          "sha256": "518f3d7fe952f78f84a18abf3b5314f57b050e35f470e21fcce4cf1335e43a99",
+          "bytes": 470700
+        },
+        "it": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1982/2184_2184_2184/20260101/it/xml/fedlex-data-admin-ch-eli-cc-1982-2184_2184_2184-20260101-it-xml-1.xml",
+          "sha256": "477267308d406176b0a78ef14a08ef830e74a48b8710e78d76dd4a0546eaa002",
+          "bytes": 432005
+        }
+      }
+    },
+    {
+      "sr": "834.1",
+      "abbr": {
+        "de": "EOG",
+        "fr": "LAPG",
+        "it": "LIPG"
+      },
+      "eli": "https://fedlex.data.admin.ch/eli/cc/1952/1021_1046_1050",
+      "consolidation": "https://fedlex.data.admin.ch/eli/cc/1952/1021_1046_1050/20260601",
+      "date": "2026-06-01",
+      "domain": [
+        "work"
+      ],
+      "files": {
+        "de": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1952/1021_1046_1050/20260601/de/xml/fedlex-data-admin-ch-eli-cc-1952-1021_1046_1050-20260601-de-xml-1.xml",
+          "sha256": "061e1327d1117bb82640efba2a4b91f05b626160596416e9ee0f72a4a522aa18",
+          "bytes": 164215
+        },
+        "fr": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1952/1021_1046_1050/20260601/fr/xml/fedlex-data-admin-ch-eli-cc-1952-1021_1046_1050-20260601-fr-xml-1.xml",
+          "sha256": "60dccb269ef7b380ede4a12f63bfda5076ef8ca00952111ab0b497ce35c3054b",
+          "bytes": 176728
+        },
+        "it": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1952/1021_1046_1050/20260601/it/xml/fedlex-data-admin-ch-eli-cc-1952-1021_1046_1050-20260601-it-xml-1.xml",
+          "sha256": "47ec447a384172d2fcb4017de046dd6b16212997839808a8007f44ac8e01c47a",
+          "bytes": 165764
+        }
+      }
+    },
+    {
+      "sr": "832.10",
+      "abbr": {
+        "de": "KVG",
+        "fr": "LAMal",
+        "it": "LAMal"
+      },
+      "eli": "https://fedlex.data.admin.ch/eli/cc/1995/1328_1328_1328",
+      "consolidation": "https://fedlex.data.admin.ch/eli/cc/1995/1328_1328_1328/20260701",
+      "date": "2026-07-01",
+      "domain": [
+        "work"
+      ],
+      "files": {
+        "de": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1995/1328_1328_1328/20260701/de/xml/fedlex-data-admin-ch-eli-cc-1995-1328_1328_1328-20260701-de-xml-1.xml",
+          "sha256": "32b0745cd3827c26d6ad5a0789d45269509e980a671afc70fdcbade07f64f8b9",
+          "bytes": 432753
+        },
+        "fr": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1995/1328_1328_1328/20260701/fr/xml/fedlex-data-admin-ch-eli-cc-1995-1328_1328_1328-20260701-fr-xml-1.xml",
+          "sha256": "c107fc65b90f34132c97caf7e2b441de5db8e7e917de003fba3d204067552e0b",
+          "bytes": 464256
+        },
+        "it": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1995/1328_1328_1328/20260701/it/xml/fedlex-data-admin-ch-eli-cc-1995-1328_1328_1328-20260701-it-xml-1.xml",
+          "sha256": "71e4d35953fb3156ce42dd7d2d05be1adb4c3cc18e6cea940eb08af0adc25308",
+          "bytes": 434951
+        }
+      }
+    },
+    {
+      "sr": "832.102",
+      "abbr": {
+        "de": "KVV",
+        "fr": "OAMal",
+        "it": "OAMal"
+      },
+      "eli": "https://fedlex.data.admin.ch/eli/cc/1995/3867_3867_3867",
+      "consolidation": "https://fedlex.data.admin.ch/eli/cc/1995/3867_3867_3867/20260801",
+      "date": "2026-08-01",
+      "domain": [
+        "work"
+      ],
+      "files": {
+        "de": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1995/3867_3867_3867/20260801/de/xml/fedlex-data-admin-ch-eli-cc-1995-3867_3867_3867-20260801-de-xml.xml",
+          "sha256": "1aed66cafd38b948c417b11a467117092bf45287685448dc70bcb3fa16cda653",
+          "bytes": 652377
+        },
+        "fr": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1995/3867_3867_3867/20260801/fr/xml/fedlex-data-admin-ch-eli-cc-1995-3867_3867_3867-20260801-fr-xml.xml",
+          "sha256": "6c50c78fd8b14d746f1d55c8b31b5891a4c8c475d94fafbdd2e2ffb8094ed9c8",
+          "bytes": 700260
+        },
+        "it": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1995/3867_3867_3867/20260801/it/xml/fedlex-data-admin-ch-eli-cc-1995-3867_3867_3867-20260801-it-xml.xml",
+          "sha256": "5fdfbefdc0d339864a0a07ddce9b3b30892c3509ab2c5ffdbb971fe724a7c7ab",
+          "bytes": 664431
+        }
+      }
+    },
+    {
+      "sr": "221.213.11",
+      "abbr": {
+        "de": "VMWG",
+        "fr": "OBLF",
+        "it": "OLAL"
+      },
+      "eli": "https://fedlex.data.admin.ch/eli/cc/1990/835_835_835",
+      "consolidation": "https://fedlex.data.admin.ch/eli/cc/1990/835_835_835/20251001",
+      "date": "2025-10-01",
+      "domain": [
+        "housing"
+      ],
+      "files": {
+        "de": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1990/835_835_835/20251001/de/xml/fedlex-data-admin-ch-eli-cc-1990-835_835_835-20251001-de-xml.xml",
+          "sha256": "f84d456982ad377770b3d41f5e810fe73508dc60ece34b7ed3de916e8b862e11",
+          "bytes": 47875
+        },
+        "fr": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1990/835_835_835/20251001/fr/xml/fedlex-data-admin-ch-eli-cc-1990-835_835_835-20251001-fr-xml.xml",
+          "sha256": "b9376560ef9146c64f4bf0bc0bdaef80599d30ea85683b0730f664a210f39eea",
+          "bytes": 51943
+        },
+        "it": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1990/835_835_835/20251001/it/xml/fedlex-data-admin-ch-eli-cc-1990-835_835_835-20251001-it-xml.xml",
+          "sha256": "2544e3d837c9d76afae1b9b4f232ce889a2566ada369b4ca9de1b6ee9a1e3d7d",
+          "bytes": 49146
+        }
+      }
+    },
+    {
+      "sr": "642.11",
+      "abbr": {
+        "de": "DBG",
+        "fr": "LIFD",
+        "it": "LIFD"
+      },
+      "eli": "https://fedlex.data.admin.ch/eli/cc/1991/1184_1184_1184",
+      "consolidation": "https://fedlex.data.admin.ch/eli/cc/1991/1184_1184_1184/20260902",
+      "date": "2026-09-02",
+      "domain": [
+        "tax"
+      ],
+      "files": {
+        "de": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1991/1184_1184_1184/20260902/de/xml/fedlex-data-admin-ch-eli-cc-1991-1184_1184_1184-20260902-de-xml-1.xml",
+          "sha256": "fa8b8259befc73a1e86d03622f523bf688200a99c0f02909cb4392acc0f1d971",
+          "bytes": 485482
+        },
+        "fr": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1991/1184_1184_1184/20260902/fr/xml/fedlex-data-admin-ch-eli-cc-1991-1184_1184_1184-20260902-fr-xml-1.xml",
+          "sha256": "99077913edca04c8821f18631a52e6aaad1586232890e50a81b5618492087c1e",
+          "bytes": 527983
+        },
+        "it": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1991/1184_1184_1184/20260902/it/xml/fedlex-data-admin-ch-eli-cc-1991-1184_1184_1184-20260902-it-xml-1.xml",
+          "sha256": "b47f7c731c22e53c18ba79ac2152d6f12e9f43ca2486283e3f815e9792e04a9e",
+          "bytes": 493560
+        }
+      }
+    },
+    {
+      "sr": "642.14",
+      "abbr": {
+        "de": "StHG",
+        "fr": "LHID",
+        "it": "LAID"
+      },
+      "eli": "https://fedlex.data.admin.ch/eli/cc/1991/1256_1256_1256",
+      "consolidation": "https://fedlex.data.admin.ch/eli/cc/1991/1256_1256_1256/20250101",
+      "date": "2025-01-01",
+      "domain": [
+        "tax"
+      ],
+      "files": {
+        "de": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1991/1256_1256_1256/20250101/de/xml/fedlex-data-admin-ch-eli-cc-1991-1256_1256_1256-20250101-de-xml-11.xml",
+          "sha256": "ff19e38973ef5a1e05948838ff2e80f4f2fb80dfd292fa2a89d58d69a1886ada",
+          "bytes": 343285
+        },
+        "fr": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1991/1256_1256_1256/20250101/fr/xml/fedlex-data-admin-ch-eli-cc-1991-1256_1256_1256-20250101-fr-xml-11.xml",
+          "sha256": "6ac67e96c5e2df2da92c926bd3723a344b5276ff81323854fb86b2006da78614",
+          "bytes": 375448
+        },
+        "it": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1991/1256_1256_1256/20250101/it/xml/fedlex-data-admin-ch-eli-cc-1991-1256_1256_1256-20250101-it-xml-11.xml",
+          "sha256": "972ec67620e8b6cdbecc964a22ce87aa5081662405988bcf5c7f8795c1c82998",
+          "bytes": 349328
+        }
+      }
+    },
+    {
+      "sr": "642.118.2",
+      "abbr": {
+        "de": "QStV",
+        "fr": "OIS",
+        "it": "OIFo"
+      },
+      "eli": "https://fedlex.data.admin.ch/eli/cc/2018/274",
+      "consolidation": "https://fedlex.data.admin.ch/eli/cc/2018/274/20250110",
+      "date": "2025-01-10",
+      "domain": [
+        "tax"
+      ],
+      "files": {
+        "de": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2018/274/20250110/de/xml/fedlex-data-admin-ch-eli-cc-2018-274-20250110-de-xml-1.xml",
+          "sha256": "8a65fe09b79a1844f819eb1f29ee58504287d3978af53a270016992993c8efc7",
+          "bytes": 47701
+        },
+        "fr": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2018/274/20250110/fr/xml/fedlex-data-admin-ch-eli-cc-2018-274-20250110-fr-xml-1.xml",
+          "sha256": "72a01c389f922b3871a776f72dd02e12308c3c60c702e7fad255b9498b87342a",
+          "bytes": 49691
+        },
+        "it": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/2018/274/20250110/it/xml/fedlex-data-admin-ch-eli-cc-2018-274-20250110-it-xml-1.xml",
+          "sha256": "9d3f82fd7e56a4665b298958be6ee2f78d767a5027e6db04ac7b98d864c4fc63",
+          "bytes": 49177
+        }
+      }
+    },
+    {
+      "sr": "741.01",
+      "abbr": {
+        "de": "SVG",
+        "fr": "LCR",
+        "it": "LCStr"
+      },
+      "eli": "https://fedlex.data.admin.ch/eli/cc/1959/679_705_685",
+      "consolidation": "https://fedlex.data.admin.ch/eli/cc/1959/679_705_685/20260701",
+      "date": "2026-07-01",
+      "domain": [
+        "mobility"
+      ],
+      "files": {
+        "de": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1959/679_705_685/20260701/de/xml/fedlex-data-admin-ch-eli-cc-1959-679_705_685-20260701-de-xml.xml",
+          "sha256": "cfac881d29ba5184941297bb95060875bb2f22d5d094c8232490a24bd44eb040",
+          "bytes": 397624
+        },
+        "fr": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1959/679_705_685/20260701/fr/xml/fedlex-data-admin-ch-eli-cc-1959-679_705_685-20260701-fr-xml.xml",
+          "sha256": "2bee6ebdd8e2c576e4c440c856f67a95a429a47f3e1c31288fa2351f59ffd874",
+          "bytes": 440654
+        },
+        "it": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1959/679_705_685/20260701/it/xml/fedlex-data-admin-ch-eli-cc-1959-679_705_685-20260701-it-xml.xml",
+          "sha256": "2491bc7462c389241250a847ee9a3b7aaed66106bb2a883bbbe7665027cb8da3",
+          "bytes": 410625
+        }
+      }
+    },
+    {
+      "sr": "741.51",
+      "abbr": {
+        "de": "VZV",
+        "fr": "OAC",
+        "it": "OAC"
+      },
+      "eli": "https://fedlex.data.admin.ch/eli/cc/1976/2423_2423_2423",
+      "consolidation": "https://fedlex.data.admin.ch/eli/cc/1976/2423_2423_2423/20260101",
+      "date": "2026-01-01",
+      "domain": [
+        "mobility"
+      ],
+      "files": {
+        "de": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1976/2423_2423_2423/20260101/de/xml/fedlex-data-admin-ch-eli-cc-1976-2423_2423_2423-20260101-de-xml-3.xml",
+          "sha256": "f80631be3ac2a7baac9f0d08901973aa7674174cbc56bec5abf336181ddd4361",
+          "bytes": 705695
+        },
+        "fr": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1976/2423_2423_2423/20260101/fr/xml/fedlex-data-admin-ch-eli-cc-1976-2423_2423_2423-20260101-fr-xml-3.xml",
+          "sha256": "d14a2392e838d329a7fda66c620dbd5d268c914f89d69e4207585b554a2d34a7",
+          "bytes": 769551
+        },
+        "it": {
+          "url": "https://fedlex.data.admin.ch/filestore/fedlex.data.admin.ch/eli/cc/1976/2423_2423_2423/20260101/it/xml/fedlex-data-admin-ch-eli-cc-1976-2423_2423_2423-20260101-it-xml-3.xml",
+          "sha256": "527249ec7136571101f4a572ba8bbc50cf227ae05b1ce3e33c18b5439b14b9f6",
+          "bytes": 720010
+        }
+      }
+    }
+  ]
+}

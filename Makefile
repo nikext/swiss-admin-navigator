@@ -7,7 +7,7 @@ UV ?= uv
 todo = @echo "make $@: not implemented yet (lands in $(1), see docs/PLAN.md)" >&2; exit 1
 
 .PHONY: help setup lint fmt test check smoke-gemini gcp-setup gcp-budget \
-        ingest index mcp-dev agent-dev eval-smoke eval-full \
+        resolve ingest spotcheck fixtures index mcp-dev agent-dev eval-smoke eval-full \
         deploy-mcp deploy-agent deploy-web
 
 help: ## List targets
@@ -41,8 +41,18 @@ gcp-setup: ## Idempotent APIs, Artifact Registry, bucket, SAs (DRY_RUN=1 to prev
 gcp-budget: ## Monthly budget alert at 50/90/100% (DRY_RUN=1 to preview)
 	bash infra/budget.sh
 
-ingest: ## Fedlex -> data/articles.jsonl
-	$(call todo,M1)
+resolve: ## Re-resolve acts.yaml on Fedlex -> corpus/manifest.lock.json (AS_OF=YYYY-MM-DD)
+	$(UV) run python -m ingest.resolve $(if $(AS_OF),--as-of $(AS_OF))
+
+ingest: ## Locked corpus -> data/articles.jsonl + corpus/stats.md (download is cached)
+	$(UV) run python -m ingest.download
+	$(UV) run python -m ingest.parse
+
+spotcheck: ## Compare random articles with Fedlex's HTML rendering (N=10)
+	$(UV) run python -m ingest.spotcheck --n $(or $(N),10)
+
+fixtures: ## Re-cut the parser test fixtures from the cached corpus
+	$(UV) run python -m ingest.tests.make_fixtures
 
 index: ## Embed + build data/index.sqlite
 	$(call todo,M2)

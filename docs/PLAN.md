@@ -8,7 +8,7 @@ what was verified. Update the status table in the same PR.
 | # | Milestone | Status | PR / notes |
 |---|---|---|---|
 | M0 | Bootstrap: tooling, CI, GCP project | ✅ done | [#1](https://github.com/nikext/swiss-admin-navigator/pull/1). Gemini isn't served in europe-west6, so model endpoints are `eu`/`global` (ADR-013) |
-| M1 | Corpus pipeline: Fedlex → `articles.jsonl` | ⬜ todo | |
+| M1 | Corpus pipeline: Fedlex → `articles.jsonl` | ✅ done | #2. 23 acts, 18,396 records; spot-check vs Fedlex HTML 10/10 + 100/100 (DATA.md §6–7, ADR-014) |
 | M2 | Index + swiss-law MCP server (local → Cloud Run) | ⬜ todo | |
 | M3 | `navigator_v1` single agent (local) + eval harness v0 | ⬜ todo | |
 | M4 | Golden set (150) + CI eval gates | ⬜ todo | |

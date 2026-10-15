@@ -175,3 +175,28 @@ lag `global` in model availability (e.g. the pro preview), so E1 contenders
 must be checked per location. `gemini-embedding-001` is the only Zürich-served
 option we found; E4 (M2) can weigh it if in-country query embedding matters.
 Re-probe when Google adds europe-west6 serving.
+
+### ADR-014: The corpus build is lock-driven and strict about article identity
+**Status:** accepted (2026-10-15, M1)
+**Context:** The plan had `make ingest` resolve, download and parse in one go.
+That makes every build depend on what Fedlex serves that day, so the lock
+file would only record what happened, not drive it. Parsing the full corpus
+also showed that Fedlex's XML has real identity errors: EN ZGB has a run of
+shifted eIds (`art_256` prints "Art. 255a"), and IT OR prints the range
+`art_697_l_697_m` as "Art. 697l".
+**Decision:**
+1. `make resolve` is the only step that asks Fedlex what's current. It writes
+   the lock with url and sha256 per file. `make ingest` builds from the
+   committed lock only, and a sha mismatch is an error.
+2. A record is emitted only when its eId agrees with its printed number
+   (structural comparison, connectors ignored). Disagreements are dropped and
+   listed in the committed `corpus/stats.md`, never repaired by guessing
+   (a first heuristic "repair" would have mislabelled IT OR's truncated range).
+3. Article status is three-way (`in_force`, `repealed`, `omitted`), because
+   "…" placeholders for spent amendment provisions are not repeals.
+4. Romansh is not ingested; DE/FR/IT/EN only.
+**Consequences:** Builds are reproducible and diffable. A Fedlex fix to the EN
+ZGB shows up as a stats diff on the next `make resolve`. We lose 10 of 18,406
+records (9 unofficial EN, 1 repealed IT range), and every answer stays
+citable to the right number. Verified by `make spotcheck` against Fedlex's
+HTML manifestation (DATA.md §7).
