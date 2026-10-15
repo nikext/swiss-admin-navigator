@@ -1,0 +1,9 @@
+# Model profile (ADR-008): the only place model IDs live.
+# Verified 2026-10-15 against the Agent Platform locations page
+# (docs.cloud.google.com/vertex-ai/generative-ai/docs/learn/locations,
+# "last updated 2026-10-14"): all three are listed for europe-west6.
+# A live smoke call is `make smoke-gemini`.
+location: europe-west6
+agent_model: gemini-3.8-flash
+judge_model: gemini-3.1-pro-preview   # preview on the locations page
+embedding_model: gemini-embedding-2

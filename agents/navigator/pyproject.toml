@@ -1,0 +1,9 @@
+[project]
+name = "swiss-nav-navigator"
+version = "0.0.0"
+description = "navigator ADK agent (deployed to Agent Runtime as a self-contained folder)"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "google-adk==2.12.0",
+    "pyyaml>=6.0.3",
+]

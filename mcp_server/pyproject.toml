@@ -1,0 +1,6 @@
+[project]
+name = "swiss-nav-mcp"
+version = "0.0.0"
+description = "swiss-law MCP server: read-only retrieval over Swiss federal law"
+requires-python = ">=3.12,<3.13"
+dependencies = []
