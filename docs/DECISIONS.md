@@ -351,3 +351,144 @@ uncompressed. `preload.txt` is regenerated at every build, so new imports are
 covered automatically. Further levers if cold start matters again: drop
 google-genai from the server for a plain REST call (fewer imports and a
 cheaper first embedding call), or keep one warm instance (min 1, billed).
+
+### ADR-018: navigator_v1 = one LlmAgent with output_schema; the citation verifier is an after_model_callback with one ADK-style retry
+**Status:** accepted (2026-10-15, M3). Refines AGENTS.md §3 and ARCHITECTURE.md §4.
+**Context:** The plan asked for `output_schema` "if it works with tools in the
+pinned ADK" and a citation check "as an `after_agent_callback` … retry once with
+feedback". Checked in the google-adk 2.12.0 source and live:
+- **Schema + tools.** ADK sends `response_schema` together with the tools
+  when the model reports `output_schema_and_tools`. For `Gemini` that is true
+  when the model id starts with `gemini-` **and** `GOOGLE_GENAI_USE_ENTERPRISE`
+  (or the deprecated `GOOGLE_GENAI_USE_VERTEXAI`) is set. Our client is always
+  Vertex (`client_kwargs={"enterprise": True}`), but without the env var ADK
+  falls back to a `set_model_response` tool. In that path, the final answer is
+  produced by the tool, so it never passes `after_model_callback`. Both paths
+  were run live. LiteLLM models (Apertus, Claude in M9) always take the
+  fallback.
+- **Callbacks cannot retry.** Per adk.dev/callbacks, `after_agent_callback`
+  can only append content. ADK 2.x points to graph/dynamic workflows instead
+  of custom `BaseAgent`s, but a `Workflow` is a `BaseNode`, not a `BaseAgent`.
+  Its fit with `adk eval`, Agent Runtime and Memory Bank is unverified, and
+  its chat/isolation semantics are involved.
+- ADK's own `ReflectAndRetryModelPlugin` retries inside an `LlmAgent`. Its
+  `after_model_callback` replaces a bad response with a call to a reserved,
+  undeclared tool, and that tool's response carries the guidance.
+**Decision:**
+- The root stays a plain `LlmAgent` (`agent.py`, `build_agent(mcp_url)`), with
+  `DraftAnswer` as `output_schema` and all five MCP tools behind an explicit
+  `tool_filter`.
+- The contract is split. The model fills `DraftAnswer`. Code returns `Answer`
+  (`contract.py`), which adds each citation's `abbr`, `url` and `as_of` from
+  the fetched article, the exact source span as `quote`, a `verification`
+  record, and the fixed `notice` (ADR-010). One new model field,
+  `clarifying_question`, makes the clarification behaviour measurable.
+- The verifier runs in `after_model_callback` (`verifier.py`). It treats any
+  final submission as the answer: JSON text, or a `set_model_response` call,
+  so both paths are covered and that tool never runs. It re-fetches every
+  cited article over the agent's own MCP session and checks, deterministically
+  (`citecheck.py`): the SR/article exists, it is in force, the quote language
+  has text, the paragraph and letter exist, the quote is verbatim, and the
+  quote sits in the cited paragraph. It also checks that every [n] marker has
+  a citation. On a problem in the first draft, the answer is replaced by a call
+  to the reserved `citation_check` tool, which carries the draft and the
+  problems. That tool is registered in `before_model_callback` but never
+  declared, and the call carries ADK's skip-thought-signature marker. The
+  model then redrafts in the same invocation.
+- After the last round (one retry), whatever is still wrong is degraded and
+  recorded. Non-existent or repealed references are dropped together with
+  their markers. Non-verbatim quotes are removed. A pinpoint that is off is
+  moved to the paragraph that contains the quote. Confidence is set to `low`.
+  Server errors never trigger a retry (`status: unavailable`).
+- "Verbatim" means a substring match after normalising whitespace (any Unicode
+  space), apostrophes (’ ‘ ʼ → ') and invisible characters (soft hyphen,
+  zero-width). Fedlex FR/IT use ’, and models type '. An ellipsis splits the
+  quote into parts that must appear in order. Quotes under 20 characters fail.
+  The final quote is the exact source span.
+- An `after_tool_callback` gives the model only `structuredContent`. MCP
+  results carry the same JSON twice, so `get_article` OR 271a drops from
+  9,577 to 4,573 characters. The toolset caches `tools/list` for an hour.
+**Consequences:** It stays compatible with `adk web`, `adk eval`, Agent
+Runtime and Memory Bank, and with the LiteLLM models of M9. The model sees one
+call in its history that it did not make. Streaming clients see the draft
+before the verified final answer, so the UI (M6) renders only the final event.
+A retry is expensive: on the smoke baseline the one retried case cost
+CHF 0.13 and took 152 s, against a mean of CHF 0.037. Measured on the 20-case
+smoke baseline (7d081e6): first drafts had 72 citations with 2 problems in one
+case (a paragraph on an unnumbered article and its misquote), which was fixed
+after one retry. Nothing was dropped. The verifier cannot catch a true quote
+that is attached to a claim it does not support; groundedness is the judge's
+job (ADR-019).
+
+### ADR-019: Answer eval harness v0: local runner, independent re-check, profile judge, draft cases
+**Status:** accepted (2026-10-15, M3)
+**Context:** EVALS.md asks for an end-to-end harness that parses the JSON
+answer, computes the deterministic metrics, calls a judge, and writes JSON +
+Markdown reports, with ADK's `adk eval` reserved for multi-turn sets (M4). The
+30 starting cases can only be drafts: golden cases need Nikola's verification
+(CLAUDE.md).
+**Decision:**
+- `evals/harness/answer_eval.py` (`make eval-smoke`, `make eval-full`) runs
+  each case through `build_agent(url)` with ADK's `InMemoryRunner`, 4 at a
+  time. By default it starts its own MCP server from the checkout on a free
+  port with a relaxed rate limit (`law.local_server`), so runs neither hit the
+  public server's per-IP limit (30/min) nor depend on its deploy;
+  `--mcp-url` points at any other server.
+- The harness does not trust the agent's verification record. It re-fetches
+  every final citation over its own MCP client and applies the same
+  "verbatim" definition (`citecheck.find_quote`). Quote fidelity and the
+  hallucination rate are pooled over citations, with CIs that resample cases.
+- The judge is the profile's `judge` role (`gemini-3.1-pro-preview@global`,
+  temperature 0, structured output). It gets the full text of every cited
+  article and grades claim-level groundedness (yes 1 / partly 0.5 / no 0),
+  key facts, `must_not` and behaviour. The prompt (`prompts/judge.md`) is
+  pinned by sha in every report. Behaviour accuracy = the deterministic rule
+  for the category AND the judge's verdict. Citation precision is reported
+  twice: against `expected_citations` only, and "expected or judged
+  relevant".
+- Language match = `language` field and `langdetect` (seeded) both equal the
+  case language. Cost = tokens × `evals/pricing.yaml` (list prices from
+  ai.google.dev, 2026-10-15; Vertex's page does not render; USD→CHF 0.82,
+  approximate).
+- Cases: `evals/datasets/drafts/golden.jsonl`, 30 drafts (DE 8, EN 8, FR 7,
+  IT 7; 20 answerable, 3 clarification, 3 cantonal, 2 out of scope,
+  2 adversarial; 20 tagged `smoke`, 5 per language). They were written from
+  the article text and are `verified_by: null`. The harness uses `golden.jsonl`
+  once it exists and marks every report built on drafts as "not a headline
+  number".
+**Results (drafts, not headline numbers).** Smoke baseline, prompt v1
+(`7d081e6`): quote fidelity 72/72, hallucinated 0, groundedness 78.0
+(70.6–84.8), key facts 98.3, behaviour 20/20, CHF 0.037/answer, p50 51 s.
+All 30 cases, prompt v2 (`3e7e603`): quote fidelity **108/108**,
+hallucinated citations **0**, required-citation recall 100 (n=23),
+groundedness 80.7 (70.0–90.2), key facts 100, `must_not` 0, behaviour 93.3
+(83.3–100), language match 100. Per answer: CHF 0.036 mean, CHF 0.13 p95,
+p50 35 s, p95 129 s, 7.2 model calls, 67.7k prompt tokens (56% implicitly
+cached), 4.0k thinking tokens. One case was sent back by the verifier and
+passed after the retry. Prompt v2 against v1, paired on the 20 smoke cases:
+groundedness −2.0 (−19.5…+11.5), key facts +1.7 (0…+5.0), cost −USD 0.003
+(−0.020…+0.014). That is **no measurable effect on groundedness at n=20**.
+The targeted fix did work: the clarification case that researched every branch
+went from USD 0.163 to 0.031, and residence-02 no longer presents an
+unverified settlement agreement as fact.
+**Consequences:**
+- The M3 targets (quote fidelity 100%, hallucinated citations 0) hold on all
+  30 drafts. Groundedness (~80) is the weakest metric. The verifier cannot see
+  it (true quotes, unsupported prose). That makes it the target for the M8
+  LLM verifier and for E6.
+- **Smoke cost:** a 20-case run costs about CHF 1.4 (agent 0.75, judge
+  0.66), well above EVALS.md's CHF 0.50 goal. M4 must choose: a cheaper CI
+  judge (with agreement measured on the human-labelled subset), a lower
+  thinking level (thinking tokens are ~40% of agent cost), or fewer CI cases.
+- **Latency** (p50 35–51 s, ~7 model calls with thinking) is far from chat
+  speed. It matters for M6. Levers to measure: thinking level, trimming
+  `get_article` output (it repeats `text` in `paragraphs`), fewer
+  `resolve_citation` round trips.
+- Known judge limits, for the M4 agreement study: it counts "Art. 271z OR
+  does not exist" as an unsupported claim (adversarial-01 groundedness 17),
+  and single-run groundedness has wide CIs.
+- Draft labels the run disputes, for Nikola's review: social-05
+  (clarification expected, but the agent gave a useful branching answer) and
+  adversarial-01. Its first draft used Art. 999 OR, which exists (bill of
+  exchange law). The agent said so and quoted it; the case now uses
+  Art. 271z OR.

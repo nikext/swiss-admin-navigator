@@ -10,7 +10,7 @@ what was verified. Update the status table in the same PR.
 | M0 | Bootstrap: tooling, CI, GCP project | ✅ done | [#1](https://github.com/nikext/swiss-admin-navigator/pull/1). Gemini isn't served in europe-west6, so model endpoints are `eu`/`global` (ADR-013) |
 | M1 | Corpus pipeline: Fedlex → `articles.jsonl` | ✅ done | #2. 23 acts, 18,396 records; spot-check vs Fedlex HTML 10/10 + 100/100 (DATA.md §6–7, ADR-014) |
 | M2 | Index + swiss-law MCP server (local → Cloud Run) | ✅ done | #3. E4: dense R@8 98.5 on 102 queries, hybrid −13.7 (ADR-016); public at https://swiss-nav-mcp-mdyqt5hgsq-oa.a.run.app/mcp; cold start 2.07 s instance / 2.64 s first response / 3.89 s first search result (ADR-017) |
-| M3 | `navigator_v1` single agent (local) + eval harness v0 | ⬜ todo | |
+| M3 | `navigator_v1` single agent (local) + eval harness v0 | ✅ done | #4. On 30 **draft** cases: quote fidelity 108/108, hallucinated citations 0, groundedness 80.7, behaviour 93.3, CHF 0.036 and p50 35 s per answer (ADR-018/019). Drafts await Nikola's verification → golden |
 | M4 | Golden set (150) + CI eval gates | ⬜ todo | |
 | M5 | Deploy to Agent Runtime + Sessions + tracing | ⬜ todo | |
 | M6 | Web UI + BFF on Cloud Run | ⬜ todo | |
@@ -130,6 +130,12 @@ fidelity is 100%, and hallucinated citations are 0 on the 30 cases.
 **Goal:** a trustworthy measuring stick.
 
 Tasks
+- **From M3 (ADR-019):** Nikola verifies the 30 drafts in
+  `evals/datasets/drafts/golden.jsonl` and moves them to `golden.jsonl`
+  (disputed labels: social-05, adversarial-01). A smoke run costs ~CHF 1.4
+  against the CHF 0.50 goal: pick a cheaper CI judge (check its agreement on
+  the human labels), a lower thinking level, or fewer CI cases. Fix the judge
+  counting "Art. X does not exist" as an unsupported claim.
 - Grow golden to 150 (EVALS.md §1), plus adversarial (50) and silver
   (300–500). Topic checklist:
   - **Residence:** L/B/C permits and their conditions, family reunification,

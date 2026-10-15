@@ -101,7 +101,7 @@ make fmt          # ruff --fix + ruff format
 make smoke-gemini # one tiny call per profile model at its location (ADC)
 make gcp-setup    # infra/setup.sh: APIs, AR, bucket, SAs (DRY_RUN=1 to preview)
 make gcp-budget   # infra/budget.sh: USD 37/month budget (exists already)
-make agent-dev    # adk web agents
+make agent-dev    # adk web agents (needs `make mcp-dev` running)
 make resolve      # refresh the lock from Fedlex (AS_OF=YYYY-MM-DD, default today)
 make ingest       # locked corpus → download (cached, sha-checked) + parse → data/articles.jsonl
 make spotcheck    # N random articles vs Fedlex's HTML rendering (N=10)
@@ -110,8 +110,8 @@ make index        # chunk + embed (cached by content) + build data/index.sqlite
 make index-e4     # E4 experiment index (both tokenizers, three vector spaces)
 make eval-retrieval  # recall@k/MRR of the served config (E4=1: the E4 grid)
 make mcp-dev      # MCP server on http://127.0.0.1:8080/mcp (STDIO=1: stdio)
-make eval-smoke   # (M3) 20-case smoke eval → evals/reports/
-make eval-full    # (M4) full golden + adversarial
+make eval-smoke   # 20 smoke cases: agent + judge, own local MCP server (~CHF 1.4) → evals/reports/
+make eval-full    # every case of golden (drafts until it exists); M4 adds adversarial
 make deploy-mcp   # build + push + Cloud Run (ask first; DRY_RUN=1 previews)
 make deploy-agent | deploy-web   # (M5/M6, ask first)
 ```
