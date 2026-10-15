@@ -3,9 +3,9 @@
 from google.adk.models import Gemini
 from google.adk.tools.mcp_tool import McpToolset
 
-from agents.navigator.agent import PROMPT, TOOLS, profile, root_agent, toolset, verifier
+from agents.navigator.agent import PROMPT, TOOLS, build_agent, profile, root_agent
 from agents.navigator.contract import DraftAnswer
-from agents.navigator.verifier import compact_tool_result
+from agents.navigator.verifier import CitationVerifier, compact_tool_result
 
 
 def test_root_agent_uses_profile_model_and_location() -> None:
@@ -19,13 +19,17 @@ def test_root_agent_uses_profile_model_and_location() -> None:
 
 
 def test_tools_contract_and_verifier_are_wired() -> None:
-    assert root_agent.tools == [toolset]
+    agent = build_agent("http://127.0.0.1:1/mcp")
+    (toolset,) = agent.tools
     assert isinstance(toolset, McpToolset)
     assert toolset.tool_filter == TOOLS
-    assert root_agent.output_schema is DraftAnswer
-    assert root_agent.before_model_callback == verifier.before_model
-    assert root_agent.after_model_callback == verifier.after_model
-    assert root_agent.after_tool_callback is compact_tool_result
+    assert toolset._connection_params.url == "http://127.0.0.1:1/mcp"  # type: ignore[attr-defined]
+    assert agent.output_schema is DraftAnswer
+    verifier = agent.after_model_callback.__self__  # type: ignore[union-attr]
+    assert isinstance(verifier, CitationVerifier)
+    assert verifier.toolset is toolset
+    assert agent.before_model_callback == verifier.before_model
+    assert agent.after_tool_callback is compact_tool_result
 
 
 def test_prompt_is_served_verbatim() -> None:
