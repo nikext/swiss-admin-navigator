@@ -94,5 +94,7 @@ def test_text_lock_flags_changed_articles(tmp_path: Path) -> None:
     assert stale_cases(cases, locked, text_hashes(cases, db)) == [
         "h-2: cited text changed since verification (220 art_273); re-verify"
     ]
-    assert stale_cases(cases, {}, locked)[0].startswith("h-1")  # not in the lock yet
+    assert stale_cases(cases, {}, locked)[0] == (
+        "h-1: cited article not in the lock (220 art_271_a); run --update-lock"
+    )
     assert article_hash(db, "220", "art_999") is None

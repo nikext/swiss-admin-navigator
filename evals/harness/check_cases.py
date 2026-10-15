@@ -104,12 +104,12 @@ def stale_cases(cases: Iterable[Case], locked: Hashes, current: Hashes) -> list[
     """Golden cases citing an article whose text changed (or is new) since the lock."""
     out = []
     for c in cases:
-        changed = [
-            f"{e.sr} {e.eid}"
-            for e in c.expected_citations
-            if locked.get(f"{e.sr} {e.eid}") != current.get(f"{e.sr} {e.eid}")
-        ]
-        if changed:
+        keys = [f"{e.sr} {e.eid}" for e in c.expected_citations]
+        if missing := [k for k in keys if k not in locked]:
+            what = ", ".join(missing)
+            out.append(f"{c.id}: cited article not in the lock ({what}); run --update-lock")
+            continue
+        if changed := [k for k in keys if locked[k] != current.get(k)]:
             what = ", ".join(changed)
             out.append(f"{c.id}: cited text changed since verification ({what}); re-verify")
     return out
