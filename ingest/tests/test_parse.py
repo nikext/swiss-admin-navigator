@@ -106,6 +106,13 @@ def test_heading_path_and_marginal_heading(or_de: dict[str, Article]) -> None:
         "II. Kündigung durch den Vermieter",
     ]
     assert a.heading == "Kündigung durch den Vermieter"
+    assert a.heading_eids == [
+        "part_2",
+        "part_2/tit_8",
+        "part_2/tit_8/chap_3",
+        "part_2/tit_8/chap_3/lvl_A",
+        "part_2/tit_8/chap_3/lvl_A/lvl_II",
+    ]
 
 
 def test_footnotes_are_stripped_and_kept_separately(or_de: dict[str, Article]) -> None:
@@ -141,6 +148,7 @@ def test_range_and_transitional_labels(or_de: dict[str, Article]) -> None:
     t = or_de["disp_u2/art_1"]
     assert t.label == "Art. 1"
     assert t.heading_path[0] == "Schlussbestimmungen der Änderung vom 23. März 1962"
+    assert t.heading_eids[0] == "disp_u2"
 
 
 def test_french_uses_french_abbreviation_and_repeal_words() -> None:
@@ -168,6 +176,7 @@ def test_annex_articles_are_ingested_with_scoped_eids() -> None:
     assert a.label == "Art. 6"
     assert a.heading == "Aufenthaltsregelung"
     assert a.heading_path == ["Anhang I", "Freizügigkeit", "II. Arbeitnehmer"]
+    assert a.heading_eids == ["annex_I", "annex_I/lvl_u1", "annex_I/lvl_u1/lvl_II"]
     assert a.paragraphs[0].num == "(1)"
     assert a.url.endswith("/de#annex_I/lvl_u1/lvl_II/art_6")
 

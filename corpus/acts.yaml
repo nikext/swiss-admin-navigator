@@ -8,6 +8,10 @@
 # consolidation. See docs/DATA.md.
 #
 # `domain` routes questions to a specialist agent in M8. See docs/AGENTS.md.
+#
+# `aliases` (optional): other abbreviations people still write, for
+# `resolve_citation`. The official per-language abbreviations (incl. EN ones
+# like FADP) come from each XML's FRBRname and need not be listed here.
 
 acts:
   # --- Foundations -----------------------------------------------------------
@@ -18,11 +22,13 @@ acts:
     domain: general
   - sr: "210"
     abbr: { de: ZGB, fr: CC, it: CC }
+    aliases: [SCC]
     title_de: Schweizerisches Zivilgesetzbuch
     eli: https://fedlex.data.admin.ch/eli/cc/24/233_245_233
     domain: general
   - sr: "235.1"
     abbr: { de: DSG, fr: LPD, it: LPD }
+    aliases: [nDSG, revDSG, nLPD]
     title_de: Bundesgesetz über den Datenschutz
     eli: https://fedlex.data.admin.ch/eli/cc/2022/491
     domain: general
@@ -30,6 +36,7 @@ acts:
   # --- Residence, permits, citizenship, registration -------------------------
   - sr: "142.20"
     abbr: { de: AIG, fr: LEI, it: LStrI }
+    aliases: [AuG, LEtr, LStr, FNIA]  # names before the 2019 rename; current EN
     title_de: Ausländer- und Integrationsgesetz
     eli: https://fedlex.data.admin.ch/eli/cc/2007/758
     domain: residence
