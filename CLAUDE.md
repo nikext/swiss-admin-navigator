@@ -101,5 +101,9 @@ make eval-full    # full golden + adversarial
 
 ## Session-agreed settings
 
-- GCP project: _(ask in session 1)_
-- PR review: _(ask in session 1)_
+- GCP project: `random-projects-509513` (the GCP.md §2 fallback; shared with
+  `zuri-sunny`, so prefix every resource with `swiss-nav` and label it
+  `app=swiss-nav`). Agreed 2026-10-15.
+- PR review: Claude merges its own milestone PRs once CI is green and the
+  milestone's "Done when" is verified. No human review required. Agreed
+  2026-10-15.
