@@ -49,6 +49,15 @@ def html_article_text(article: html.HtmlElement) -> str:
     return comparable(article.text_content())
 
 
+def without_subheading(theirs: str, heading: str | None) -> str:
+    """Fedlex's HTML prints a reference subheading such as "(art. 30, al. 1, let. k,
+    LEI)" at the start of the body; we keep it at the end of `heading` instead."""
+    m = re.match(r"\([^()]*(?:\([^()]*\)[^()]*)*\)\s*", theirs)
+    if m and heading and comparable(heading).endswith(m.group(0).strip()):
+        return theirs[m.end() :]
+    return theirs
+
+
 def html_url(client: PoliteClient, act: LockedAct, lang: str) -> str:
     template = (QUERIES / "consolidation_files.rq").read_text(encoding="utf-8")
     for row in sparql(client, render(template, CONSOLIDATION=act.consolidation)):
@@ -89,6 +98,7 @@ def main(argv: list[str] | None = None) -> int:
             ratio, diff = 0.0, ""
             if anchor_ok:
                 theirs, ours = html_article_text(found[0]), comparable(rec["text"])
+                theirs = without_subheading(theirs, rec["heading"])
                 ratio = difflib.SequenceMatcher(None, ours, theirs, autojunk=False).ratio()
                 if ours != theirs:
                     diff = _first_difference(ours, theirs)

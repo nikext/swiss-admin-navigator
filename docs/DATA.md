@@ -254,4 +254,8 @@ independent rendering in the filestore. It checks that the record's `#eId`
 anchor exists there (www.fedlex.admin.ch is a JS app, so HTTP 200 alone proves
 nothing), that the deep-link page answers 200, and that the text is
 identical after dropping footnote markers and normalising whitespace.
-On 2026-10-15: **10/10 identical** (seed 20261015) and **N/100** (seed 7).
+Fedlex's HTML prints reference subheadings ("(art. 30, al. 1, let. k, LEI)")
+at the start of the body, while we keep them in `heading`; the comparison
+accounts for that. On 2026-10-15: **10/10 identical** (seed 20261015) and
+**100/100 identical** (seed 7; 31 acts, DE 32 / FR 32 / IT 29 / EN 7). A first
+run reported 96/100, and all four differences were exactly that subheading.
