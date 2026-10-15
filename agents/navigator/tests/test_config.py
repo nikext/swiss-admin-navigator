@@ -2,13 +2,25 @@ from pathlib import Path
 
 import pytest
 
-from agents.navigator.config import PROFILES_DIR, Profile, ProfileError, load_profile
+from agents.navigator.config import (
+    PROFILES_DIR,
+    ROLES,
+    ModelRef,
+    Profile,
+    ProfileError,
+    load_profile,
+)
 
 GOOD = """\
-location: europe-west6
-agent_model: model-a
-judge_model: model-j
-embedding_model: model-e
+agent:
+  model: model-a
+  location: eu
+judge:
+  model: model-j
+  location: global
+embedding:
+  model: model-e
+  location: eu
 """
 
 
@@ -25,29 +37,36 @@ def test_every_shipped_profile_loads() -> None:
         assert isinstance(load_profile(name, env={}), Profile)
 
 
-def test_default_profile_is_regional() -> None:
-    # ARCHITECTURE.md §5: use the regional endpoint, not `global`.
-    assert load_profile(env={}).location == "europe-west6"
+def test_profile_location_ignores_infra_region() -> None:
+    # GOOGLE_CLOUD_LOCATION is the infra region (europe-west6), where these
+    # models are not served (ADR-013). It must not leak into model locations.
+    profile = load_profile(env={"GOOGLE_CLOUD_LOCATION": "europe-west6"})
+    assert profile.agent.location != "europe-west6"
+
+
+def test_roles() -> None:
+    assert ROLES == ("agent", "judge", "embedding")
 
 
 def test_name_resolution_order(profiles: Path) -> None:
     (profiles / "cheap.yaml").write_text(GOOD.replace("model-a", "model-cheap"))
     assert load_profile(env={}, profiles_dir=profiles).name == "default"
     env = {"NAV_PROFILE": "cheap"}
-    assert load_profile(env=env, profiles_dir=profiles).agent_model == "model-cheap"
-    assert load_profile("default", env=env, profiles_dir=profiles).agent_model == "model-a"
+    assert load_profile(env=env, profiles_dir=profiles).agent.model == "model-cheap"
+    assert load_profile("default", env=env, profiles_dir=profiles).agent.model == "model-a"
 
 
 def test_env_overrides_single_fields(profiles: Path) -> None:
-    p = load_profile(env={"AGENT_MODEL": "model-x", "JUDGE_MODEL": ""}, profiles_dir=profiles)
-    assert p.agent_model == "model-x"
-    assert p.judge_model == "model-j"  # empty env var does not override
+    env = {"AGENT_MODEL": "model-x", "JUDGE_LOCATION": "eu", "EMBEDDING_MODEL": ""}
+    p = load_profile(env=env, profiles_dir=profiles)
+    assert p.agent == ModelRef(model="model-x", location="eu")
+    assert p.judge == ModelRef(model="model-j", location="eu")
+    assert p.embedding.model == "model-e"  # empty env var does not override
     assert p.as_dict() == {
         "name": "default",
-        "location": "europe-west6",
-        "agent_model": "model-x",
-        "judge_model": "model-j",
-        "embedding_model": "model-e",
+        "agent": {"model": "model-x", "location": "eu"},
+        "judge": {"model": "model-j", "location": "eu"},
+        "embedding": {"model": "model-e", "location": "eu"},
     }
 
 
@@ -59,10 +78,16 @@ def test_unknown_profile_lists_available(profiles: Path) -> None:
 @pytest.mark.parametrize(
     ("content", "message"),
     [
-        (GOOD + "temperature: 0.2\n", "unknown keys \\['temperature'\\]"),
-        (GOOD.replace("judge_model: model-j\n", ""), "missing \\['judge_model'\\]"),
-        (GOOD.replace("model-e", "''"), "embedding_model must be a non-empty string"),
-        (GOOD.replace("model-e", "3"), "embedding_model must be a non-empty string"),
+        (GOOD + "temperature: 0.2\n", r"unknown keys \['temperature'\]"),
+        (GOOD.split("embedding:")[0], r"missing \['embedding'\]"),
+        (
+            GOOD.replace("  location: global\n", ""),
+            r"judge: unknown keys \[\], missing \['location'\]",
+        ),
+        (GOOD.replace("model: model-e", "model: model-e\n  tier: x"), r"embedding: unknown keys"),
+        (GOOD.replace("model-e", "''"), r"embedding.model must be a non-empty string"),
+        (GOOD.replace("model-e", "3"), r"embedding.model must be a non-empty string"),
+        (GOOD.replace("judge:\n  model: model-j\n  location: global", "judge: x"), "judge must be"),
         ("- a\n- b\n", "expected a mapping"),
     ],
 )

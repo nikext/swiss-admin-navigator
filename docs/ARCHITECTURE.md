@@ -14,7 +14,10 @@ flowchart LR
     runtime["Agent Runtime<br/>(formerly Agent Engine)<br/>ADK navigator agent"]
     sessions[("Sessions")]
     memory[("Memory Bank<br/>opt-in profile")]
-    gemini["Gemini models<br/>(regional endpoint)"]
+  end
+
+  subgraph models_eu["Agent Platform model endpoint · eu multi-region (ADR-013)"]
+    gemini["Gemini models<br/>(agent + embeddings)"]
   end
 
   subgraph run_mcp["Cloud Run · europe-west6"]
@@ -131,10 +134,18 @@ Rules (enforced by the prompt, the verifier, and evals):
 - Agent Runtime, Sessions, Memory Bank, Sandboxes and Agent Gateway are all
   supported in **europe-west6 (Zürich)** (verified on the Agent Platform
   locations page, 2026-10-15).
-- The Gemini models used here are listed for europe-west6. Use the **regional
-  endpoint**, not `global`, so the "runs in Zürich" claim holds. Google notes
-  that endpoints alone don't guarantee in-region ML processing, so in the
-  README say "deployed in europe-west6", not "data never leaves Switzerland".
+- **Gemini is not served in Zürich** for this project (live-checked
+  2026-10-15, ADR-013). `gemini-3.8-flash`, `gemini-embedding-2` and the
+  alternatives return 404 in europe-west6 and in every single EU region we
+  tried. They are served on the **`eu` multi-region endpoint** (ML processing
+  within EU member states; Switzerland is explicitly excluded) and on
+  `global`. Agent and embedding calls use `eu`. The eval judge
+  (`gemini-3.1-pro-preview`) is only on `global`, which is fine because it
+  only sees eval data. Locations live in the model profile, not in
+  `GOOGLE_CLOUD_LOCATION`.
+- In the README say "agent deployed in europe-west6 (Zürich), model calls
+  processed in the EU". Don't say "runs in Zürich" or "data never leaves
+  Switzerland".
 - **Cloud Run GPUs are not offered in europe-west6.** L4 runs in
   europe-west1/europe-west4/us-central1, and RTX PRO 6000 (preview) in
   europe-west4 among others. Apertus therefore runs in **europe-west4**. Say so

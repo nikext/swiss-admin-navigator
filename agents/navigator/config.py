@@ -1,9 +1,14 @@
 """Model profiles (ADR-008): model IDs live in `profiles/<name>.yaml`, never in code.
 
-The profile is chosen by `NAV_PROFILE` (default: `default`). Individual fields can
-be overridden per run with `AGENT_MODEL`, `JUDGE_MODEL`, `EMBEDDING_MODEL` and
-`GOOGLE_CLOUD_LOCATION`, which is how eval experiments swap models. Eval reports
-must record `Profile.as_dict()` so results stay reproducible.
+Each role (agent, judge, embedding) names a model and the Agent Platform
+endpoint location that serves it (`eu`, `global`, or a region; ADR-013). That
+location is deliberately independent of `GOOGLE_CLOUD_LOCATION`, which is the
+infrastructure region (Agent Runtime, Cloud Run).
+
+The profile is chosen by `NAV_PROFILE` (default: `default`). Single fields can
+be overridden per run with `<ROLE>_MODEL` / `<ROLE>_LOCATION` (e.g.
+`AGENT_MODEL`, `JUDGE_LOCATION`), which is how eval experiments swap models.
+Eval reports must record `Profile.as_dict()` so results stay reproducible.
 """
 
 from __future__ import annotations
@@ -12,18 +17,11 @@ import os
 from collections.abc import Mapping
 from dataclasses import asdict, dataclass, fields
 from pathlib import Path
+from typing import Any
 
 import yaml
 
 PROFILES_DIR = Path(__file__).parent / "profiles"
-
-# profile field -> env var that overrides it
-_ENV_OVERRIDES = {
-    "location": "GOOGLE_CLOUD_LOCATION",
-    "agent_model": "AGENT_MODEL",
-    "judge_model": "JUDGE_MODEL",
-    "embedding_model": "EMBEDDING_MODEL",
-}
 
 
 class ProfileError(ValueError):
@@ -31,15 +29,30 @@ class ProfileError(ValueError):
 
 
 @dataclass(frozen=True)
+class ModelRef:
+    model: str
+    location: str
+
+
+@dataclass(frozen=True)
 class Profile:
     name: str
-    location: str
-    agent_model: str
-    judge_model: str
-    embedding_model: str
+    agent: ModelRef
+    judge: ModelRef
+    embedding: ModelRef
 
-    def as_dict(self) -> dict[str, str]:
+    def as_dict(self) -> dict[str, Any]:
         return asdict(self)
+
+
+ROLES = tuple(f.name for f in fields(Profile) if f.name != "name")
+_REF_KEYS = {f.name for f in fields(ModelRef)}
+
+
+def _keys_check(where: str, raw: Mapping[str, Any], expected: set[str]) -> None:
+    unknown, missing = raw.keys() - expected, expected - raw.keys()
+    if unknown or missing:
+        raise ProfileError(f"{where}: unknown keys {sorted(unknown)}, missing {sorted(missing)}")
 
 
 def load_profile(
@@ -58,17 +71,19 @@ def load_profile(
     raw = yaml.safe_load(path.read_text(encoding="utf-8"))
     if not isinstance(raw, dict):
         raise ProfileError(f"{path}: expected a mapping, got {type(raw).__name__}")
+    _keys_check(str(path), raw, set(ROLES))
 
-    expected = {f.name for f in fields(Profile)} - {"name"}
-    unknown = raw.keys() - expected
-    missing = expected - raw.keys()
-    if unknown or missing:
-        raise ProfileError(f"{path}: unknown keys {sorted(unknown)}, missing {sorted(missing)}")
-
-    values: dict[str, str] = {}
-    for key in sorted(expected):
-        value = env.get(_ENV_OVERRIDES[key]) or raw[key]
-        if not isinstance(value, str) or not value.strip():
-            raise ProfileError(f"{path}: {key} must be a non-empty string")
-        values[key] = value.strip()
-    return Profile(name=name, **values)
+    refs: dict[str, ModelRef] = {}
+    for role in ROLES:
+        section = raw[role]
+        if not isinstance(section, dict):
+            raise ProfileError(f"{path}: {role} must be a mapping with {sorted(_REF_KEYS)}")
+        _keys_check(f"{path}: {role}", section, _REF_KEYS)
+        values: dict[str, str] = {}
+        for key in sorted(_REF_KEYS):
+            value = env.get(f"{role}_{key}".upper()) or section[key]
+            if not isinstance(value, str) or not value.strip():
+                raise ProfileError(f"{path}: {role}.{key} must be a non-empty string")
+            values[key] = value.strip()
+        refs[role] = ModelRef(**values)
+    return Profile(name=name, **refs)

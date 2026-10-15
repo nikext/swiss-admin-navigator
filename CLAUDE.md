@@ -84,7 +84,10 @@ feature count.
   repo (see Session-agreed settings). It also hosts `zuri-sunny` and
   `epoch-war`.
 - Regions: **europe-west6** (Zürich) for agent, MCP and web.
-  **europe-west4** for Cloud Run GPU (none in Zürich).
+  **europe-west4** for Cloud Run GPU (none in Zürich). Gemini is **not**
+  served in europe-west6: model endpoint locations live in the profile
+  (`eu` for agent/embeddings, `global` for the judge; ADR-013).
+- ADC is set up (`~/.config/gcloud/application_default_credentials.json`).
 
 ## Commands
 
@@ -95,7 +98,7 @@ make setup        # uv sync --all-packages --locked, pre-commit install
 make lint test    # ruff check + format check, pyright; pytest (unit only)
 make check        # lint + test + every pre-commit hook on all files (= CI)
 make fmt          # ruff --fix + ruff format
-make smoke-gemini # one tiny call per profile model in europe-west6 (ADC)
+make smoke-gemini # one tiny call per profile model at its location (ADC)
 make gcp-setup    # infra/setup.sh: APIs, AR, bucket, SAs (DRY_RUN=1 to preview)
 make gcp-budget   # infra/budget.sh: USD 37/month budget (exists already)
 make agent-dev    # adk web agents

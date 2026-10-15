@@ -162,7 +162,9 @@ gcloud run deploy apertus --image $GPU_REGION-docker.pkg.dev/…/vllm-apertus:<t
 
 - Enable the Claude model in the Model Garden console (needs the user's
   acceptance). Claude models are listed for European regions including
-  europe-west6 (verify the exact model available there).
+  europe-west6 (verify the exact model available there). Don't trust the
+  locations page alone: Gemini is listed for "Europe" but isn't served in
+  europe-west6 for this project (ADR-013). Probe it live, region by region.
 - Call it through LiteLLM (`vertex_ai/claude-…`) in the eval harness, or
   through ADK's Claude support. Pay-per-token, so there's nothing to undeploy.
 

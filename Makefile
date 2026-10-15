@@ -32,7 +32,7 @@ test: ## Unit tests (integration tests: uv run pytest -m integration)
 check: lint test ## lint + test + every pre-commit hook on all files
 	$(UV) run pre-commit run --all-files
 
-smoke-gemini: ## One tiny call per profile model in europe-west6 (needs ADC)
+smoke-gemini: ## One tiny call per profile model at its endpoint location (needs ADC)
 	$(UV) run python -m scripts.smoke_gemini
 
 gcp-setup: ## Idempotent APIs, Artifact Registry, bucket, SAs (DRY_RUN=1 to preview)
