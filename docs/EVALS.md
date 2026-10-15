@@ -149,6 +149,9 @@ ADR-019). **Measured in M4 (20 smoke cases, agent only, no judge):**
 | medium | 0.034 | 0.68 | 38 / 103 | 4.0k | 20/20 | 1.00 |
 | low | 0.023 | 0.46 | 22 / 34 | 0 | 18/20 | 0.96 |
 
+Reports: `evals/reports/2026-10-15-0990ecd-smoke-think-{low,medium}-drafts.json`
+(answers stored, not yet judged).
+
 Low thinking is a third cheaper and much faster, but the agent then gives
 branching answers instead of asking (residence-01, residence-07) and missed
 QStV 9 in tax-01. Whether to serve it is decided with the chosen judge on the

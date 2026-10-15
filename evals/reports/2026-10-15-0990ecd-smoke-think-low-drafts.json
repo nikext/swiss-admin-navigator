@@ -1,0 +1,4652 @@
+{
+ "name": "smoke-think-low-drafts",
+ "run_at": "2026-10-15T19:10:46+00:00",
+ "git_sha": "0990ecd",
+ "summary": {
+  "cases": 20,
+  "errors": 0,
+  "quote_fidelity": {
+   "verbatim": 77,
+   "quotes": 77,
+   "rate": 1.0,
+   "ci95": [
+    1.0,
+    1.0
+   ]
+  },
+  "hallucinated_citations": {
+   "count": 0,
+   "citations": 77,
+   "rate": 0.0,
+   "ci95": [
+    0.0,
+    0.0
+   ]
+  },
+  "not_in_force_citations": 0,
+  "unchecked_citations": 0,
+  "first_draft": {
+   "citations": 77,
+   "quotes": 77,
+   "problems": {},
+   "cases_sent_back": 0
+  },
+  "verification": {
+   "passed": 20
+  },
+  "dropped_citations": 0,
+  "required_recall": {
+   "mean": 0.9642857142857143,
+   "ci95": [
+    0.8928571428571429,
+    1.0
+   ],
+   "n": 14
+  },
+  "precision_expected": {
+   "mean": 0.4875,
+   "ci95": [
+    0.35833333333333334,
+    0.6091666666666666
+   ],
+   "n": 20
+  },
+  "behaviour_det": {
+   "mean": 0.9,
+   "ci95": [
+    0.75,
+    1.0
+   ],
+   "n": 20
+  },
+  "lang_match": {
+   "mean": 1.0,
+   "ci95": [
+    1.0,
+    1.0
+   ],
+   "n": 20
+  },
+  "latency_s": {
+   "p50": 22.29,
+   "p95": 33.64
+  },
+  "tool_calls_mean": 6.2,
+  "model_calls_mean": 7.2,
+  "tokens_mean": {
+   "prompt": 51729.1,
+   "cached": 22197.35,
+   "output": 1163.1,
+   "thoughts": 0.0
+  },
+  "cost_per_answer": {
+   "usd": 0.028175,
+   "chf": 0.0231035,
+   "p95_chf": 0.041984
+  },
+  "run_cost_chf": {
+   "agent": 0.46207
+  },
+  "by": {
+   "category": {
+    "adversarial": {
+     "n": 2,
+     "behaviour": 1.0,
+     "groundedness": null,
+     "key_facts": null,
+     "lang_match": 1.0
+    },
+    "answerable": {
+     "n": 12,
+     "behaviour": 1.0,
+     "groundedness": null,
+     "key_facts": null,
+     "lang_match": 1.0
+    },
+    "cantonal_pointer": {
+     "n": 2,
+     "behaviour": 1.0,
+     "groundedness": null,
+     "key_facts": null,
+     "lang_match": 1.0
+    },
+    "needs_clarification": {
+     "n": 2,
+     "behaviour": 0.0,
+     "groundedness": null,
+     "key_facts": null,
+     "lang_match": 1.0
+    },
+    "out_of_scope": {
+     "n": 2,
+     "behaviour": 1.0,
+     "groundedness": null,
+     "key_facts": null,
+     "lang_match": 1.0
+    }
+   },
+   "lang": {
+    "de": {
+     "n": 5,
+     "behaviour": 1.0,
+     "groundedness": null,
+     "key_facts": null,
+     "lang_match": 1.0
+    },
+    "en": {
+     "n": 5,
+     "behaviour": 0.8,
+     "groundedness": null,
+     "key_facts": null,
+     "lang_match": 1.0
+    },
+    "fr": {
+     "n": 5,
+     "behaviour": 1.0,
+     "groundedness": null,
+     "key_facts": null,
+     "lang_match": 1.0
+    },
+    "it": {
+     "n": 5,
+     "behaviour": 0.8,
+     "groundedness": null,
+     "key_facts": null,
+     "lang_match": 1.0
+    }
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "housing-01",
+   "lang": "fr",
+   "category": "answerable",
+   "domain": "housing",
+   "error": null,
+   "status": "passed",
+   "rounds": 1,
+   "first_draft": {
+    "citations": 3,
+    "quotes": 3,
+    "problems": {}
+   },
+   "dropped": [],
+   "repairs": [],
+   "citations": 3,
+   "quotes": 3,
+   "verbatim": 3,
+   "hallucinated": 0,
+   "not_in_force": 0,
+   "unchecked": 0,
+   "required_recall": 1.0,
+   "precision_expected": 0.6666666666666666,
+   "behaviour_det": true,
+   "detected_lang": "fr",
+   "lang_ok": true,
+   "tool_calls": 5,
+   "tools": {
+    "search_law": 1,
+    "get_article": 4
+   },
+   "usage": {
+    "model_calls": 6,
+    "prompt": 37592,
+    "cached": 10308,
+    "output": 875,
+    "thoughts": 0
+   },
+   "latency_s": 20.23,
+   "cost_usd": 0.02452,
+   "answer": {
+    "language": "fr",
+    "answer_markdown": "Non, un bailleur ne peut pas résilier valablement votre bail simplement parce que vous lui avez demandé d'effectuer des réparations.\n\nEn droit suisse, le bailleur a l'obligation de maintenir le logement dans un état approprié à son usage [1]. Si vous réclamez de bonne foi la remise en état ou l'entretien auquel vous avez droit, le congé donné par le bailleur en représailles est considéré comme contraire aux règles de la bonne foi et est donc annulable [2].\n\nPour faire valoir ce droit, vous devez impérativement saisir l'autorité de conciliation compétente dans un délai strict de 30 jours à compter de la réception de la résiliation [3]. À défaut d'agir dans ce délai, le congé devient définitif même s'il était contestable.",
+    "citations": [
+     {
+      "ref": "1",
+      "sr": "220",
+      "article": "Art. 256",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "fr",
+      "quote": "Le bailleur est tenu de délivrer la chose à la date convenue, dans un état approprié à l’usage pour lequel elle a été louée, et de l’entretenir en cet état.",
+      "translation": null,
+      "abbr": "CO",
+      "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/fr#art_256",
+      "as_of": "2026-10-01"
+     },
+     {
+      "ref": "2",
+      "sr": "220",
+      "article": "Art. 271a",
+      "paragraph": "1",
+      "letter": "a",
+      "quote_lang": "fr",
+      "quote": "Le congé est annulable lorsqu’il est donné par le bailleur, notamment:\na. parce que le locataire fait valoir de bonne foi des prétentions découlant du bail;",
+      "translation": null,
+      "abbr": "CO",
+      "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/fr#art_271_a",
+      "as_of": "2026-10-01"
+     },
+     {
+      "ref": "3",
+      "sr": "220",
+      "article": "Art. 273",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "fr",
+      "quote": "La partie qui veut contester le congé doit saisir l’autorité de conciliation dans les 30 jours qui suivent la réception du congé.",
+      "translation": null,
+      "abbr": "CO",
+      "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/fr#art_273",
+      "as_of": "2026-10-01"
+     }
+    ],
+    "clarifying_question": null,
+    "cantonal_note": "L'autorité de conciliation en matière de baux et loyers est organisée au niveau cantonal (ou par district/arrondissement selon votre canton de résidence).",
+    "follow_up_questions": [
+     "Comment prouver que la résiliation fait suite à ma demande de réparation ?",
+     "Puis-je demander une prolongation de bail si la résiliation n'est pas annulée ?",
+     "Quelles sont les démarches pour consigner le loyer si le bailleur refuse de faire les réparations ?"
+    ],
+    "confidence": "high",
+    "out_of_scope": false,
+    "verification": {
+     "status": "passed",
+     "rounds": [
+      {
+       "citations": 3,
+       "quotes": 3,
+       "problems": []
+      }
+     ],
+     "dropped": [],
+     "repairs": []
+    },
+    "notice": "Unofficial. Not legal advice. Sources: Fedlex (fedlex.admin.ch)."
+   },
+   "raw_final": null,
+   "tool_trace": [
+    {
+     "name": "search_law",
+     "args": {
+      "query": "résiliation bail réparation prétentions fondées sur le bail contestable",
+      "sr": [
+       "220"
+      ],
+      "lang": "fr"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "fr",
+      "sr": "220",
+      "article": "Art. 271a"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "fr",
+      "sr": "220",
+      "article": "Art. 273"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "220",
+      "article": "Art. 256",
+      "lang": "fr"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "article": "Art. 271",
+      "lang": "fr",
+      "sr": "220"
+     }
+    }
+   ],
+   "citation_checks": [
+    {
+     "ref": "1",
+     "sr": "220",
+     "article": "Art. 256",
+     "quote_lang": "fr",
+     "eid": "art_256",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "2",
+     "sr": "220",
+     "article": "Art. 271a",
+     "quote_lang": "fr",
+     "eid": "art_271_a",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "3",
+     "sr": "220",
+     "article": "Art. 273",
+     "quote_lang": "fr",
+     "eid": "art_273",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    }
+   ],
+   "judgement": null
+  },
+  {
+   "id": "housing-03",
+   "lang": "it",
+   "category": "answerable",
+   "domain": "housing",
+   "error": null,
+   "status": "passed",
+   "rounds": 1,
+   "first_draft": {
+    "citations": 3,
+    "quotes": 3,
+    "problems": {}
+   },
+   "dropped": [],
+   "repairs": [],
+   "citations": 3,
+   "quotes": 3,
+   "verbatim": 3,
+   "hallucinated": 0,
+   "not_in_force": 0,
+   "unchecked": 0,
+   "required_recall": 1.0,
+   "precision_expected": 1.0,
+   "behaviour_det": true,
+   "detected_lang": "it",
+   "lang_ok": true,
+   "tool_calls": 2,
+   "tools": {
+    "search_law": 1,
+    "get_article": 1
+   },
+   "usage": {
+    "model_calls": 3,
+    "prompt": 13968,
+    "cached": 0,
+    "output": 862,
+    "thoughts": 0
+   },
+   "latency_s": 24.8,
+   "cost_usd": 0.01371,
+   "answer": {
+    "language": "it",
+    "answer_markdown": "Sì, è possibile liberarsi anticipatamente dagli obblighi contrattuali se si restituisce l'appartamento proponendo al locatore un nuovo inquilino subentrante [1].\n\nPer essere liberati, il nuovo conduttore proposto deve soddisfare precisi requisiti previsti dalla legge:\n- **Solvibile**: deve disporre delle capacità finanziarie per pagare il canone di locazione [1].\n- **Accettabile**: non deve poter essere ragionevolmente rifiutato dal locatore [1].\n- **Alle medesime condizioni**: deve essere disposto a subentrare nel contratto alle stesse identiche condizioni contrattuali in essere [1].\n\nSe il conduttore non propone un subentrante che rispetta questi requisiti, rimane tenuto a pagare il canone (corrispettivo) fino alla scadenza ordinaria prevista dal contratto o dalla legge [2]. In ogni caso, il locatore deve detrarre dall'importo dovuto le spese risparmiate o quanto ha guadagnato (o intenzionalmente omesso di guadagnare) con un uso alternativo dell'immobile [3].",
+    "citations": [
+     {
+      "ref": "1",
+      "sr": "220",
+      "article": "Art. 264",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "it",
+      "quote": "Il conduttore che restituisce la cosa senza osservare i termini di preavviso o le scadenze è liberato dai suoi obblighi verso il locatore soltanto se gli propone un nuovo conduttore solvibile che non possa essere ragionevolmente rifiutato dal locatore; il nuovo conduttore deve essere disposto a riprendere il contratto alle medesime condizioni.",
+      "translation": null,
+      "abbr": "CO",
+      "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/it#art_264",
+      "as_of": "2026-10-01"
+     },
+     {
+      "ref": "2",
+      "sr": "220",
+      "article": "Art. 264",
+      "paragraph": "2",
+      "letter": null,
+      "quote_lang": "it",
+      "quote": "Se non propone un nuovo conduttore con tali requisiti, il conduttore resta tenuto al pagamento del corrispettivo fino al momento in cui, per contratto o per legge, la locazione si estingue o può essere sciolta.",
+      "translation": null,
+      "abbr": "CO",
+      "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/it#art_264",
+      "as_of": "2026-10-01"
+     },
+     {
+      "ref": "3",
+      "sr": "220",
+      "article": "Art. 264",
+      "paragraph": "3",
+      "letter": null,
+      "quote_lang": "it",
+      "quote": "Il locatore deve lasciarsi imputare nel corrispettivo:\na. le spese risparmiate e\nb. ciò che ha guadagnato con una diversa utilizzazione della cosa o che ha omesso intenzionalmente di guadagnare.",
+      "translation": null,
+      "abbr": "CO",
+      "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/it#art_264",
+      "as_of": "2026-10-01"
+     }
+    ],
+    "clarifying_question": null,
+    "cantonal_note": null,
+    "follow_up_questions": [
+     "Quanto tempo ha a disposizione il locatore per verificare il candidato proposto?",
+     "Cosa succede se il locatore rifiuta ingiustificatamente il nuovo conduttore?",
+     "Quali documenti è opportuno farsi firmare dal candidato subentrante prima di presentarlo?"
+    ],
+    "confidence": "high",
+    "out_of_scope": false,
+    "verification": {
+     "status": "passed",
+     "rounds": [
+      {
+       "citations": 3,
+       "quotes": 3,
+       "problems": []
+      }
+     ],
+     "dropped": [],
+     "repairs": []
+    },
+    "notice": "Unofficial. Not legal advice. Sources: Fedlex (fedlex.admin.ch)."
+   },
+   "raw_final": null,
+   "tool_trace": [
+    {
+     "name": "search_law",
+     "args": {
+      "lang": "it",
+      "query": "restituzione della cosa locata nuovo conduttore subentrante",
+      "sr": [
+       "220"
+      ]
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "article": "264",
+      "sr": "220",
+      "lang": "it"
+     }
+    }
+   ],
+   "citation_checks": [
+    {
+     "ref": "1",
+     "sr": "220",
+     "article": "Art. 264",
+     "quote_lang": "it",
+     "eid": "art_264",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "2",
+     "sr": "220",
+     "article": "Art. 264",
+     "quote_lang": "it",
+     "eid": "art_264",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "3",
+     "sr": "220",
+     "article": "Art. 264",
+     "quote_lang": "it",
+     "eid": "art_264",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    }
+   ],
+   "judgement": null
+  },
+  {
+   "id": "housing-05",
+   "lang": "de",
+   "category": "cantonal_pointer",
+   "domain": "housing",
+   "error": null,
+   "status": "passed",
+   "rounds": 1,
+   "first_draft": {
+    "citations": 5,
+    "quotes": 5,
+    "problems": {}
+   },
+   "dropped": [],
+   "repairs": [],
+   "citations": 5,
+   "quotes": 5,
+   "verbatim": 5,
+   "hallucinated": 0,
+   "not_in_force": 0,
+   "unchecked": 0,
+   "required_recall": 1.0,
+   "precision_expected": 0.6,
+   "behaviour_det": true,
+   "detected_lang": "de",
+   "lang_ok": true,
+   "tool_calls": 16,
+   "tools": {
+    "search_law": 3,
+    "get_article": 11,
+    "get_toc": 2
+   },
+   "usage": {
+    "model_calls": 17,
+    "prompt": 168600,
+    "cached": 108341,
+    "output": 1626,
+    "thoughts": 0
+   },
+   "latency_s": 33.64,
+   "cost_usd": 0.05942,
+   "answer": {
+    "language": "de",
+    "answer_markdown": "Wenn Sie eine Kündigung für Ihre Wohnung anfechten wollen, müssen Sie das Begehren innert **30 Tagen nach Empfang der Kündigung** bei der zuständigen **Schlichtungsbehörde** einreichen [1]. \n\nDie Kündigung ist insbesondere anfechtbar, wenn sie gegen den Grundsatz von Treu und Glauben verstösst [2]. Dies ist nach dem Gesetz namentlich der Fall, wenn die Kündigung ausgesprochen wird, weil Sie nach Treu und Glauben Ansprüche aus dem Mietverhältnis geltend machen oder weil der Vermieter eine Vertragsänderung bzw. Mietzinserhöhung durchsetzen will [3].\n\nDas amtliche Kündigungsformular, das Ihnen der Vermieter zustellen muss [4], enthält Angaben zur örtlich zuständigen Schlichtungsbehörde sowie zur Anfechtung und zu einer allfälligen Erstreckung des Mietverhältnisses [5].",
+    "citations": [
+     {
+      "ref": "1",
+      "sr": "220",
+      "article": "Art. 273",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Will eine Partei die Kündigung anfechten, so muss sie das Begehren innert 30 Tagen nach Empfang der Kündigung der Schlichtungsbehörde einreichen.",
+      "translation": null,
+      "abbr": "OR",
+      "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/de#art_273",
+      "as_of": "2026-10-01"
+     },
+     {
+      "ref": "2",
+      "sr": "220",
+      "article": "Art. 271",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Die Kündigung ist anfechtbar, wenn sie gegen den Grundsatz von Treu und Glauben verstösst.",
+      "translation": null,
+      "abbr": "OR",
+      "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/de#art_271",
+      "as_of": "2026-10-01"
+     },
+     {
+      "ref": "3",
+      "sr": "220",
+      "article": "Art. 271a",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Die Kündigung durch den Vermieter ist insbesondere anfechtbar, wenn sie ausgesprochen wird:\na. weil der Mieter nach Treu und Glauben Ansprüche aus dem Mietverhältnis geltend macht;\nb. weil der Vermieter eine einseitige Vertragsänderung zu Lasten des Mieters oder eine Mietzinsanpassung durchsetzen will; …",
+      "translation": null,
+      "abbr": "OR",
+      "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/de#art_271_a",
+      "as_of": "2026-10-01"
+     },
+     {
+      "ref": "4",
+      "sr": "220",
+      "article": "Art. 266l",
+      "paragraph": "2",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Der Vermieter muss mit einem Formular kündigen, das vom Kanton genehmigt ist und das angibt, wie der Mieter vorzugehen hat, wenn er die Kündigung anfechten oder eine Erstreckung des Mietverhältnisses verlangen will.",
+      "translation": null,
+      "abbr": "OR",
+      "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/de#art_266_l",
+      "as_of": "2026-10-01"
+     },
+     {
+      "ref": "5",
+      "sr": "221.213.11",
+      "article": "Art. 9",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Das Formular für die Mitteilung der Kündigung im Sinne von Artikel 266l Absatz 2 OR muss enthalten: … d. die gesetzlichen Voraussetzungen der Anfechtung der Kündigung und der Erstreckung des Mietverhältnisses (Art. 271–273 OR);\ne. das Verzeichnis der Schlichtungsbehörden und ihre örtliche Zuständigkeit.",
+      "translation": null,
+      "abbr": "VMWG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1990/835_835_835/de#art_9",
+      "as_of": "2025-10-01"
+     }
+    ],
+    "clarifying_question": null,
+    "cantonal_note": "Für Liegenschaften in Winterthur ist im Kanton Zürich die Schlichtungsbehörde am Bezirksgericht Winterthur zuständig. Die genaue Kontaktadresse und das einzureichende Begehren finden Sie auf dem amtlichen Kündigungsformular oder über die Website der Gerichte des Kantons Zürich.",
+    "follow_up_questions": [
+     "Unter welchen Voraussetzungen kann ich zusätzlich oder eventualiter eine Erstreckung des Mietverhältnisses verlangen?",
+     "Welche Begründungspflicht hat der Vermieter bei einer Kündigung?",
+     "Wie läuft das Schlichtungsverfahren vor der Schlichtungsbehörde ab?"
+    ],
+    "confidence": "high",
+    "out_of_scope": false,
+    "verification": {
+     "status": "passed",
+     "rounds": [
+      {
+       "citations": 5,
+       "quotes": 5,
+       "problems": []
+      }
+     ],
+     "dropped": [],
+     "repairs": []
+    },
+    "notice": "Unofficial. Not legal advice. Sources: Fedlex (fedlex.admin.ch)."
+   },
+   "raw_final": null,
+   "tool_trace": [
+    {
+     "name": "search_law",
+     "args": {
+      "query": "Kündigung anfechten Schlichtungsbehörde Frist",
+      "sr": [
+       "220"
+      ]
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "de",
+      "article": "273",
+      "sr": "220"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "article": "271",
+      "lang": "de",
+      "sr": "220"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "de",
+      "sr": "220",
+      "article": "271a"
+     }
+    },
+    {
+     "name": "search_law",
+     "args": {
+      "query": "örtliche Zuständigkeit Schlichtungsbehörde Miete Wohnräume",
+      "sr": [
+       "272"
+      ]
+     }
+    },
+    {
+     "name": "search_law",
+     "args": {
+      "sr": [
+       "221.213.11"
+      ],
+      "query": "Schlichtungsbehörde Kündigung"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "article": "9",
+      "sr": "221.213.11",
+      "lang": "de"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "de",
+      "sr": "221.213.11",
+      "article": "22"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "article": "266l",
+      "lang": "de",
+      "sr": "220"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "article": "273",
+      "lang": "de",
+      "sr": "220"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "220",
+      "lang": "de",
+      "article": "273b"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "220",
+      "article": "272",
+      "lang": "de"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "220",
+      "article": "274",
+      "lang": "de"
+     }
+    },
+    {
+     "name": "get_toc",
+     "args": {
+      "sr": "220",
+      "depth": 2,
+      "path": "art_271_art_273_c"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "220",
+      "lang": "de",
+      "article": "273c"
+     }
+    },
+    {
+     "name": "get_toc",
+     "args": {
+      "sr": "220",
+      "path": null,
+      "depth": 2
+     }
+    }
+   ],
+   "citation_checks": [
+    {
+     "ref": "1",
+     "sr": "220",
+     "article": "Art. 273",
+     "quote_lang": "de",
+     "eid": "art_273",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "2",
+     "sr": "220",
+     "article": "Art. 271",
+     "quote_lang": "de",
+     "eid": "art_271",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "3",
+     "sr": "220",
+     "article": "Art. 271a",
+     "quote_lang": "de",
+     "eid": "art_271_a",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "4",
+     "sr": "220",
+     "article": "Art. 266l",
+     "quote_lang": "de",
+     "eid": "art_266_l",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "5",
+     "sr": "221.213.11",
+     "article": "Art. 9",
+     "quote_lang": "de",
+     "eid": "art_9",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    }
+   ],
+   "judgement": null
+  },
+  {
+   "id": "work-01",
+   "lang": "de",
+   "category": "answerable",
+   "domain": "work",
+   "error": null,
+   "status": "passed",
+   "rounds": 1,
+   "first_draft": {
+    "citations": 4,
+    "quotes": 4,
+    "problems": {}
+   },
+   "dropped": [],
+   "repairs": [],
+   "citations": 4,
+   "quotes": 4,
+   "verbatim": 4,
+   "hallucinated": 0,
+   "not_in_force": 0,
+   "unchecked": 0,
+   "required_recall": 1.0,
+   "precision_expected": 0.5,
+   "behaviour_det": true,
+   "detected_lang": "de",
+   "lang_ok": true,
+   "tool_calls": 5,
+   "tools": {
+    "resolve_citation": 1,
+    "get_article": 4
+   },
+   "usage": {
+    "model_calls": 6,
+    "prompt": 31858,
+    "cached": 7050,
+    "output": 1192,
+    "thoughts": 0
+   },
+   "latency_s": 26.89,
+   "cost_usd": 0.0236,
+   "answer": {
+    "language": "de",
+    "answer_markdown": "Grundsätzlich darf der Arbeitgeber während einer krankheitsbedingten Arbeitsunfähigkeit nicht kündigen, sofern die Probezeit bereits abgelaufen ist [1]. In diesem Fall gilt ein gesetzlicher Kündigungsschutz (Sperrfrist) [1]:\n\n- **Dauer der Sperrfrist:** Der Arbeitgeber darf nicht kündigen, solange Sie ohne eigenes Verschulden durch Krankheit ganz oder teilweise arbeitsunfähig sind – und zwar im 1. Dienstjahr während 30 Tagen, ab dem 2. bis und mit 5. Dienstjahr während 90 Tagen und ab dem 6. Dienstjahr während 180 Tagen [1].\n- **Folge einer Kündigung:** Eine Kündigung, die der Arbeitgeber während dieser Sperrfrist ausspricht, ist **nichtig** (rechtlich unwirksam) [2].\n- **Kündigung vor der Erkrankung:** Wurde Ihnen bereits vor Beginn der Krankheit gekündigt, ist die Kündigung zwar gültig, aber die Kündigungsfrist wird für die Dauer der Krankheit (längstens bis zum Ablauf der jeweiligen Sperrfrist) unterbrochen und erst danach fortgesetzt [2]. Fällt das berechnete Ende nicht auf den vertraglichen Kündigungstermin (z. B. Monatsende), verlängert sich das Arbeitsverhältnis bis zum nächstfolgenden Endtermin [3].\n\n**Wichtige Ausnahmen:**\n- **Probezeit:** Während der Probezeit besteht dieser Kündigungsschutz nicht; hier darf das Arbeitsverhältnis auch bei Krankheit gekündigt werden [1, 4].",
+    "citations": [
+     {
+      "ref": "1",
+      "sr": "220",
+      "article": "Art. 336c",
+      "paragraph": "1",
+      "letter": "b",
+      "quote_lang": "de",
+      "quote": "Nach Ablauf der Probezeit darf der Arbeitgeber das Arbeitsverhältnis nicht kündigen: … während der Arbeitnehmer ohne eigenes Verschulden durch Krankheit oder durch Unfall ganz oder teilweise an der Arbeitsleistung verhindert ist, und zwar im ersten Dienstjahr während 30 Tagen, ab zweitem bis und mit fünftem Dienstjahr während 90 Tagen und ab sechstem Dienstjahr während 180 Tagen;",
+      "translation": null,
+      "abbr": "OR",
+      "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/de#art_336_c",
+      "as_of": "2026-10-01"
+     },
+     {
+      "ref": "2",
+      "sr": "220",
+      "article": "Art. 336c",
+      "paragraph": "2",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Die Kündigung, die während einer der in Absatz 1 festgesetzten Sperrfristen erklärt wird, ist nichtig; ist dagegen die Kündigung vor Beginn einer solchen Frist erfolgt, aber die Kündigungsfrist bis dahin noch nicht abgelaufen, so wird deren Ablauf unterbrochen und erst nach Beendigung der Sperrfrist fortgesetzt.",
+      "translation": null,
+      "abbr": "OR",
+      "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/de#art_336_c",
+      "as_of": "2026-10-01"
+     },
+     {
+      "ref": "3",
+      "sr": "220",
+      "article": "Art. 336c",
+      "paragraph": "3",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Gilt für die Beendigung des Arbeitsverhältnisses ein Endtermin, wie das Ende eines Monats oder einer Arbeitswoche, und fällt dieser nicht mit dem Ende der fortgesetzten Kündigungsfrist zusammen, so verlängert sich diese bis zum nächstfolgenden Endtermin.",
+      "translation": null,
+      "abbr": "OR",
+      "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/de#art_336_c",
+      "as_of": "2026-10-01"
+     },
+     {
+      "ref": "4",
+      "sr": "220",
+      "article": "Art. 335b",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Das Arbeitsverhältnis kann während der Probezeit jederzeit mit einer Kündigungsfrist von sieben Tagen gekündigt werden; als Probezeit gilt der erste Monat eines Arbeitsverhältnisses.",
+      "translation": null,
+      "abbr": "OR",
+      "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/de#art_335_b",
+      "as_of": "2026-10-01"
+     }
+    ],
+    "clarifying_question": null,
+    "cantonal_note": null,
+    "follow_up_questions": [
+     "Wie verhält es sich mit dem Lohnanspruch während der Krankheit?",
+     "Was passiert, wenn die Kündigung nach Ablauf der Sperrfrist ausgesprochen wird?",
+     "Was muss ich tun, wenn mein Arbeitgeber mir trotz Sperrfrist kündigt?"
+    ],
+    "confidence": "high",
+    "out_of_scope": false,
+    "verification": {
+     "status": "passed",
+     "rounds": [
+      {
+       "citations": 4,
+       "quotes": 4,
+       "problems": []
+      }
+     ],
+     "dropped": [],
+     "repairs": []
+    },
+    "notice": "Unofficial. Not legal advice. Sources: Fedlex (fedlex.admin.ch)."
+   },
+   "raw_final": null,
+   "tool_trace": [
+    {
+     "name": "resolve_citation",
+     "args": {
+      "text": "Art. 336c OR"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "article": "Art. 336c",
+      "sr": "220",
+      "lang": "de"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "article": "Art. 335b",
+      "sr": "220",
+      "lang": "de"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "220",
+      "lang": "de",
+      "article": "Art. 337"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "de",
+      "article": "Art. 336",
+      "sr": "220"
+     }
+    }
+   ],
+   "citation_checks": [
+    {
+     "ref": "1",
+     "sr": "220",
+     "article": "Art. 336c",
+     "quote_lang": "de",
+     "eid": "art_336_c",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "2",
+     "sr": "220",
+     "article": "Art. 336c",
+     "quote_lang": "de",
+     "eid": "art_336_c",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "3",
+     "sr": "220",
+     "article": "Art. 336c",
+     "quote_lang": "de",
+     "eid": "art_336_c",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "4",
+     "sr": "220",
+     "article": "Art. 335b",
+     "quote_lang": "de",
+     "eid": "art_335_b",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    }
+   ],
+   "judgement": null
+  },
+  {
+   "id": "work-02",
+   "lang": "fr",
+   "category": "answerable",
+   "domain": "work",
+   "error": null,
+   "status": "passed",
+   "rounds": 1,
+   "first_draft": {
+    "citations": 4,
+    "quotes": 4,
+    "problems": {}
+   },
+   "dropped": [],
+   "repairs": [],
+   "citations": 4,
+   "quotes": 4,
+   "verbatim": 4,
+   "hallucinated": 0,
+   "not_in_force": 0,
+   "unchecked": 0,
+   "required_recall": 1.0,
+   "precision_expected": 0.3333333333333333,
+   "behaviour_det": true,
+   "detected_lang": "fr",
+   "lang_ok": true,
+   "tool_calls": 4,
+   "tools": {
+    "search_law": 1,
+    "get_article": 3
+   },
+   "usage": {
+    "model_calls": 5,
+    "prompt": 28010,
+    "cached": 6778,
+    "output": 988,
+    "thoughts": 0
+   },
+   "latency_s": 31.83,
+   "cost_usd": 0.02014,
+   "answer": {
+    "language": "fr",
+    "answer_markdown": "Selon le Code des obligations suisse, pour un contrat de durée indéterminée, le délai de congé légal est de **deux mois pour la fin d'un mois** de la deuxième à la neuvième année de service [1]. Étant donné que vous travaillez depuis trois ans dans la même entreprise, c'est ce délai légal de deux mois qui s'applique par défaut.\n\nToutefois, la loi prévoit que ce délai peut être modifié par un accord écrit (votre contrat individuel de travail), par un contrat-type de travail ou par une convention collective de travail (CCT) [2]. Les délais de congé doivent également être identiques pour l'employeur et pour l'employé [3].\n\nIl convient donc de vérifier en priorité votre contrat de travail ou la convention collective applicable à votre secteur, qui peuvent fixer une durée différente (par exemple trois mois). À défaut de clause contractuelle ou conventionnelle spécifique, votre délai de préavis est de deux mois pour la fin d'un mois calendaire [1]. De plus, vous devez motiver votre décision par écrit si l'employeur le demande [4].",
+    "citations": [
+     {
+      "ref": "1",
+      "sr": "220",
+      "article": "Art. 335c",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "fr",
+      "quote": "Le contrat peut être résilié pour la fin d’un mois moyennant un délai de congé d’un mois pendant la première année de service, de deux mois de la deuxième à la neuvième année de service, de trois mois ultérieurement.",
+      "translation": null,
+      "abbr": "CO",
+      "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/fr#art_335_c",
+      "as_of": "2026-10-01"
+     },
+     {
+      "ref": "2",
+      "sr": "220",
+      "article": "Art. 335c",
+      "paragraph": "2",
+      "letter": null,
+      "quote_lang": "fr",
+      "quote": "Ces délais peuvent être modifiés par accord écrit, contrat-type de travail ou convention collective; des délais inférieurs à un mois ne peuvent toutefois être fixés que par convention collective et pour la première année de service.",
+      "translation": null,
+      "abbr": "CO",
+      "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/fr#art_335_c",
+      "as_of": "2026-10-01"
+     },
+     {
+      "ref": "3",
+      "sr": "220",
+      "article": "Art. 335a",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "fr",
+      "quote": "Les délais de congé doivent être identiques pour les deux parties; si un accord prévoit des délais différents, le délai le plus long est applicable aux deux parties.",
+      "translation": null,
+      "abbr": "CO",
+      "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/fr#art_335_a",
+      "as_of": "2026-10-01"
+     },
+     {
+      "ref": "4",
+      "sr": "220",
+      "article": "Art. 335",
+      "paragraph": "2",
+      "letter": null,
+      "quote_lang": "fr",
+      "quote": "La partie qui donne le congé doit motiver sa décision par écrit si l’autre partie le demande.",
+      "translation": null,
+      "abbr": "CO",
+      "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/fr#art_335",
+      "as_of": "2026-10-01"
+     }
+    ],
+    "clarifying_question": null,
+    "cantonal_note": null,
+    "follow_up_questions": [
+     "Comment calculer précisément le terme du contrat si la lettre est envoyée en cours de mois ?",
+     "Que se passe-t-il si mon contrat individuel prévoit un délai de congé plus long ou plus court que la loi ?",
+     "Dois-je obligatoirement donner un motif dans ma lettre de démission ?"
+    ],
+    "confidence": "high",
+    "out_of_scope": false,
+    "verification": {
+     "status": "passed",
+     "rounds": [
+      {
+       "citations": 4,
+       "quotes": 4,
+       "problems": []
+      }
+     ],
+     "dropped": [],
+     "repairs": []
+    },
+    "notice": "Unofficial. Not legal advice. Sources: Fedlex (fedlex.admin.ch)."
+   },
+   "raw_final": null,
+   "tool_trace": [
+    {
+     "name": "search_law",
+     "args": {
+      "query": "délai de congé résiliation travail années de service",
+      "sr": [
+       "220"
+      ],
+      "lang": "fr"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "fr",
+      "article": "Art. 335c",
+      "sr": "220"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "220",
+      "article": "Art. 335a",
+      "lang": "fr"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "article": "Art. 335",
+      "sr": "220",
+      "lang": "fr"
+     }
+    }
+   ],
+   "citation_checks": [
+    {
+     "ref": "1",
+     "sr": "220",
+     "article": "Art. 335c",
+     "quote_lang": "fr",
+     "eid": "art_335_c",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "2",
+     "sr": "220",
+     "article": "Art. 335c",
+     "quote_lang": "fr",
+     "eid": "art_335_c",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "3",
+     "sr": "220",
+     "article": "Art. 335a",
+     "quote_lang": "fr",
+     "eid": "art_335_a",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "4",
+     "sr": "220",
+     "article": "Art. 335",
+     "quote_lang": "fr",
+     "eid": "art_335",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    }
+   ],
+   "judgement": null
+  },
+  {
+   "id": "work-06",
+   "lang": "fr",
+   "category": "answerable",
+   "domain": "work",
+   "error": null,
+   "status": "passed",
+   "rounds": 1,
+   "first_draft": {
+    "citations": 4,
+    "quotes": 4,
+    "problems": {}
+   },
+   "dropped": [],
+   "repairs": [],
+   "citations": 4,
+   "quotes": 4,
+   "verbatim": 4,
+   "hallucinated": 0,
+   "not_in_force": 0,
+   "unchecked": 0,
+   "required_recall": 1.0,
+   "precision_expected": 0.3333333333333333,
+   "behaviour_det": true,
+   "detected_lang": "fr",
+   "lang_ok": true,
+   "tool_calls": 6,
+   "tools": {
+    "search_law": 3,
+    "get_article": 3
+   },
+   "usage": {
+    "model_calls": 7,
+    "prompt": 49793,
+    "cached": 20757,
+    "output": 1116,
+    "thoughts": 0
+   },
+   "latency_s": 22.29,
+   "cost_usd": 0.02752,
+   "answer": {
+    "language": "fr",
+    "answer_markdown": "En droit suisse, la protection contre le licenciement dépend de votre situation par rapport au temps d'essai :\n\n- **Après le temps d'essai :** votre employeur ne peut pas résilier votre contrat pendant toute la durée de la grossesse, ainsi qu'au cours des seize semaines qui suivent l'accouchement [1]. Si un congé ordinaire vous est notifié pendant cette période de protection, il est nul de plein droit [2]. Si le licenciement vous a été notifié avant le début de la grossesse et que le délai de préavis n'a pas encore expiré, ce délai est suspendu pendant toute la grossesse et les seize semaines après l'accouchement, puis il reprend [2].\n- **Pendant le temps d'essai :** la protection contre le licenciement en temps inopportun ne s'applique pas [1] ; chacune des parties peut résilier le contrat avec un délai de congé de sept jours [3].\n- **Résiliation immédiate :** l'employeur conserve la faculté de résilier immédiatement le contrat pour de justes motifs [4], mais la grossesse ou un empêchement de travailler sans faute ne constituent pas un juste motif [4].",
+    "citations": [
+     {
+      "ref": "1",
+      "sr": "220",
+      "article": "Art. 336c",
+      "paragraph": "1",
+      "letter": "c",
+      "quote_lang": "fr",
+      "quote": "Après le temps d’essai, l’employeur ne peut pas résilier le contrat: … c. pendant la grossesse et au cours des seize semaines qui suivent l’accouchement;",
+      "translation": null,
+      "abbr": "CO",
+      "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/fr#art_336_c",
+      "as_of": "2026-10-01"
+     },
+     {
+      "ref": "2",
+      "sr": "220",
+      "article": "Art. 336c",
+      "paragraph": "2",
+      "letter": null,
+      "quote_lang": "fr",
+      "quote": "Le congé donné pendant une des périodes prévues à l’alinéa précédent est nul; si le congé a été donné avant l’une de ces périodes et si le délai de congé n’a pas expiré avant cette période, ce délai est suspendu et ne continue à courir qu’après la fin de la période.",
+      "translation": null,
+      "abbr": "CO",
+      "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/fr#art_336_c",
+      "as_of": "2026-10-01"
+     },
+     {
+      "ref": "3",
+      "sr": "220",
+      "article": "Art. 335b",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "fr",
+      "quote": "Pendant le temps d’essai, chacune des parties peut résilier le contrat de travail à tout moment moyennant un délai de congé de sept jours; est considéré comme temps d’essai le premier mois de travail.",
+      "translation": null,
+      "abbr": "CO",
+      "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/fr#art_335_b",
+      "as_of": "2026-10-01"
+     },
+     {
+      "ref": "4",
+      "sr": "220",
+      "article": "Art. 337",
+      "paragraph": "3",
+      "letter": null,
+      "quote_lang": "fr",
+      "quote": "Le juge apprécie librement s’il existe de justes motifs, mais en aucun cas il ne peut considérer comme tel le fait que le travailleur a été sans sa faute empêché de travailler.",
+      "translation": null,
+      "abbr": "CO",
+      "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/fr#art_337",
+      "as_of": "2026-10-01"
+     }
+    ],
+    "clarifying_question": null,
+    "cantonal_note": null,
+    "follow_up_questions": [
+     "Que faire concrètement si mon employeur me remet une lettre de licenciement pendant ma grossesse ?",
+     "Mon employeur doit-il être déjà informé de ma grossesse pour que la protection s'applique ?",
+     "Quels sont mes droits si le licenciement est intervenu pendant le temps d'essai ?"
+    ],
+    "confidence": "high",
+    "out_of_scope": false,
+    "verification": {
+     "status": "passed",
+     "rounds": [
+      {
+       "citations": 4,
+       "quotes": 4,
+       "problems": []
+      }
+     ],
+     "dropped": [],
+     "repairs": []
+    },
+    "notice": "Unofficial. Not legal advice. Sources: Fedlex (fedlex.admin.ch)."
+   },
+   "raw_final": null,
+   "tool_trace": [
+    {
+     "name": "search_law",
+     "args": {
+      "sr": [
+       "220"
+      ],
+      "lang": "fr",
+      "query": "licenciement grossesse enceinte protection"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "220",
+      "article": "Art. 336c",
+      "lang": "fr"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "220",
+      "article": "Art. 335b",
+      "lang": "fr"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "220",
+      "article": "Art. 337",
+      "lang": "fr"
+     }
+    },
+    {
+     "name": "search_law",
+     "args": {
+      "sr": [
+       "151.1"
+      ],
+      "query": "licenciement grossesse loi sur l'egalite",
+      "lang": "fr"
+     }
+    },
+    {
+     "name": "search_law",
+     "args": {
+      "lang": "fr",
+      "sr": [
+       "822.11"
+      ],
+      "query": "femmes enceintes protection grossesse"
+     }
+    }
+   ],
+   "citation_checks": [
+    {
+     "ref": "1",
+     "sr": "220",
+     "article": "Art. 336c",
+     "quote_lang": "fr",
+     "eid": "art_336_c",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "2",
+     "sr": "220",
+     "article": "Art. 336c",
+     "quote_lang": "fr",
+     "eid": "art_336_c",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "3",
+     "sr": "220",
+     "article": "Art. 335b",
+     "quote_lang": "fr",
+     "eid": "art_335_b",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "4",
+     "sr": "220",
+     "article": "Art. 337",
+     "quote_lang": "fr",
+     "eid": "art_337",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    }
+   ],
+   "judgement": null
+  },
+  {
+   "id": "social-01",
+   "lang": "de",
+   "category": "answerable",
+   "domain": "work",
+   "error": null,
+   "status": "passed",
+   "rounds": 1,
+   "first_draft": {
+    "citations": 7,
+    "quotes": 7,
+    "problems": {}
+   },
+   "dropped": [],
+   "repairs": [],
+   "citations": 7,
+   "quotes": 7,
+   "verbatim": 7,
+   "hallucinated": 0,
+   "not_in_force": 0,
+   "unchecked": 0,
+   "required_recall": 1.0,
+   "precision_expected": 0.75,
+   "behaviour_det": true,
+   "detected_lang": "de",
+   "lang_ok": true,
+   "tool_calls": 6,
+   "tools": {
+    "search_law": 1,
+    "get_article": 5
+   },
+   "usage": {
+    "model_calls": 7,
+    "prompt": 43497,
+    "cached": 10301,
+    "output": 1427,
+    "thoughts": 0
+   },
+   "latency_s": 20.46,
+   "cost_usd": 0.03102,
+   "answer": {
+    "language": "de",
+    "answer_markdown": "### Dauer des Anspruchs\nDie Mutterschaftsentschädigung entsteht am Tag der Geburt [1] und wird an **98 aufeinanderfolgenden Tagen** (14 Wochen) ausgerichtet [2].\n\n* **Verlängerung bei Spitalaufenthalt des Kindes:** Bleibt das Neugeborene unmittelbar nach der Geburt ununterbrochen mindestens zwei Wochen im Spital und nimmt die Mutter danach wieder eine Erwerbstätigkeit auf, verlängert sich die Bezugsdauer um die Dauer der Hospitalisierung, maximal jedoch um 56 Tage [3].\n* **Vorzeitiges Ende:** Nimmt die Mutter ihre Erwerbstätigkeit vor Ablauf der 98 Tage wieder auf oder stirbt sie, erlischt der Anspruch vorzeitig [4].\n\n### Höhe der Entschädigung\nDie Entschädigung wird als Taggeld ausgerichtet:\n* Das Taggeld beträgt **80 Prozent** des durchschnittlichen vor Beginn des Anspruchs erzielten Erwerbseinkommens [5].\n* Es ist gesetzlich begrenzt auf **höchstens 220 Franken pro Tag** [6]. Übersteigt die Entschädigung diesen Maximalbetrag, wird sie gekürzt [7].",
+    "citations": [
+     {
+      "ref": "1",
+      "sr": "834.1",
+      "article": "Art. 16c",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Der Entschädigungsanspruch entsteht am Tag der Niederkunft.",
+      "translation": null,
+      "abbr": "EOG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1952/1021_1046_1050/de#art_16_c",
+      "as_of": "2026-06-01"
+     },
+     {
+      "ref": "2",
+      "sr": "834.1",
+      "article": "Art. 16c",
+      "paragraph": "2",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Die Mutterschaftsentschädigung wird an 98 aufeinanderfolgenden Tagen ab Beginn des Anspruchs ausgerichtet.",
+      "translation": null,
+      "abbr": "EOG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1952/1021_1046_1050/de#art_16_c",
+      "as_of": "2026-06-01"
+     },
+     {
+      "ref": "3",
+      "sr": "834.1",
+      "article": "Art. 16c",
+      "paragraph": "3",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Bei einem Spitalaufenthalt des Neugeborenen verlängert sich die Dauer der Ausrichtung um die Dauer der Hospitalisierung, höchstens aber um 56 Tage, wenn:\na. das Neugeborene unmittelbar nach der Geburt ununterbrochen während mindestens zwei Wochen im Spital verweilt; und\nb. die Mutter nachweist, dass sie im Zeitpunkt der Niederkunft bereits beschlossen hatte, nach Ende des Mutterschaftsurlaubs wieder eine Erwerbstätigkeit aufzunehmen.",
+      "translation": null,
+      "abbr": "EOG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1952/1021_1046_1050/de#art_16_c",
+      "as_of": "2026-06-01"
+     },
+     {
+      "ref": "4",
+      "sr": "834.1",
+      "article": "Art. 16d",
+      "paragraph": "3",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Er endet vorzeitig, wenn die Mutter ihre Erwerbstätigkeit wiederaufnimmt oder wenn sie stirbt",
+      "translation": null,
+      "abbr": "EOG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1952/1021_1046_1050/de#art_16_d",
+      "as_of": "2026-06-01"
+     },
+     {
+      "ref": "5",
+      "sr": "834.1",
+      "article": "Art. 16e",
+      "paragraph": "2",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Das Taggeld beträgt 80 Prozent des durchschnittlichen Erwerbseinkommens, welches vor Beginn des Entschädigungsanspruchs erzielt wurde.",
+      "translation": null,
+      "abbr": "EOG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1952/1021_1046_1050/de#art_16_e",
+      "as_of": "2026-06-01"
+     },
+     {
+      "ref": "6",
+      "sr": "834.1",
+      "article": "Art. 16f",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Die Mutterschaftsentschädigung beträgt höchstens 220 Franken im Tag.",
+      "translation": null,
+      "abbr": "EOG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1952/1021_1046_1050/de#art_16_f",
+      "as_of": "2026-06-01"
+     },
+     {
+      "ref": "7",
+      "sr": "834.1",
+      "article": "Art. 16f",
+      "paragraph": "2",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Die Mutterschaftsentschädigung wird gekürzt, soweit sie den Höchstbetrag nach Absatz 1 übersteigt.",
+      "translation": null,
+      "abbr": "EOG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1952/1021_1046_1050/de#art_16_f",
+      "as_of": "2026-06-01"
+     }
+    ],
+    "clarifying_question": null,
+    "cantonal_note": null,
+    "follow_up_questions": [
+     "Welche Voraussetzungen muss ich erfüllen, um Anspruch auf die Mutterschaftsentschädigung zu haben?",
+     "Zahlt mein Arbeitgeber während des Mutterschaftsurlaubs mehr als die gesetzlichen 80 Prozent?",
+     "Was geschieht mit der Entschädigung bei Arbeitslosigkeit oder Arbeitsunfähigkeit?"
+    ],
+    "confidence": "high",
+    "out_of_scope": false,
+    "verification": {
+     "status": "passed",
+     "rounds": [
+      {
+       "citations": 7,
+       "quotes": 7,
+       "problems": []
+      }
+     ],
+     "dropped": [],
+     "repairs": []
+    },
+    "notice": "Unofficial. Not legal advice. Sources: Fedlex (fedlex.admin.ch)."
+   },
+   "raw_final": null,
+   "tool_trace": [
+    {
+     "name": "search_law",
+     "args": {
+      "query": "Mutterschaftsentschädigung Dauer Höhe Taggeld",
+      "lang": "de"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "article": "Art. 16c",
+      "lang": "de",
+      "sr": "834.1"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "834.1",
+      "article": "Art. 16d",
+      "lang": "de"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "de",
+      "sr": "834.1",
+      "article": "Art. 16e"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "de",
+      "article": "Art. 16f",
+      "sr": "834.1"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "834.1",
+      "article": "Art. 16b",
+      "lang": "de"
+     }
+    }
+   ],
+   "citation_checks": [
+    {
+     "ref": "1",
+     "sr": "834.1",
+     "article": "Art. 16c",
+     "quote_lang": "de",
+     "eid": "art_16_c",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "2",
+     "sr": "834.1",
+     "article": "Art. 16c",
+     "quote_lang": "de",
+     "eid": "art_16_c",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "3",
+     "sr": "834.1",
+     "article": "Art. 16c",
+     "quote_lang": "de",
+     "eid": "art_16_c",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "4",
+     "sr": "834.1",
+     "article": "Art. 16d",
+     "quote_lang": "de",
+     "eid": "art_16_d",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "5",
+     "sr": "834.1",
+     "article": "Art. 16e",
+     "quote_lang": "de",
+     "eid": "art_16_e",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "6",
+     "sr": "834.1",
+     "article": "Art. 16f",
+     "quote_lang": "de",
+     "eid": "art_16_f",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "7",
+     "sr": "834.1",
+     "article": "Art. 16f",
+     "quote_lang": "de",
+     "eid": "art_16_f",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    }
+   ],
+   "judgement": null
+  },
+  {
+   "id": "social-02",
+   "lang": "it",
+   "category": "answerable",
+   "domain": "work",
+   "error": null,
+   "status": "passed",
+   "rounds": 1,
+   "first_draft": {
+    "citations": 6,
+    "quotes": 6,
+    "problems": {}
+   },
+   "dropped": [],
+   "repairs": [],
+   "citations": 6,
+   "quotes": 6,
+   "verbatim": 6,
+   "hallucinated": 0,
+   "not_in_force": 0,
+   "unchecked": 0,
+   "required_recall": 1.0,
+   "precision_expected": 0.75,
+   "behaviour_det": true,
+   "detected_lang": "it",
+   "lang_ok": true,
+   "tool_calls": 5,
+   "tools": {
+    "search_law": 1,
+    "get_article": 4
+   },
+   "usage": {
+    "model_calls": 6,
+    "prompt": 36058,
+    "cached": 10301,
+    "output": 1213,
+    "thoughts": 0
+   },
+   "latency_s": 16.0,
+   "cost_usd": 0.02464,
+   "answer": {
+    "language": "it",
+    "answer_markdown": "In qualità di padre legale, il diritto svizzero le riconosce:\n\n- **Durata del congedo:** ha diritto a un congedo di due settimane [1]. Può essere fruito in blocco (in settimane) oppure a singole giornate lavorative [2] (corrispondenti a 10 giorni lavorativi / un massimo di 14 indennità giornaliere [3]).\n- **Termine per usufruirne:** il congedo deve essere preso entro **sei mesi dalla nascita del figlio** [4].\n\n**Condizioni per l'indennità (IPG):**\nPercepisce l'indennità di perdita di guadagno per i giorni di congedo se al momento della nascita è il padre legale (o lo diventa nei sei mesi successivi), era assicurato obbligatoriamente all'AVS nei nove mesi precedenti il parto e ha lavorato per almeno cinque mesi durante tale periodo [5]. Il diritto all'indennità si estingue alla scadenza del termine quadro di sei mesi o dopo aver riscosso il numero massimo di 14 indennità giornaliere [6].",
+    "citations": [
+     {
+      "ref": "1",
+      "sr": "220",
+      "article": "Art. 329g",
+      "paragraph": "1",
+      "letter": "a",
+      "quote_lang": "it",
+      "quote": "Ha diritto a un congedo di due settimane:\na. il lavoratore che è il padre legale al momento della nascita del figlio o lo diventa nei sei mesi seguenti;",
+      "translation": null,
+      "abbr": "CO",
+      "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/it#art_329_g",
+      "as_of": "2026-10-01"
+     },
+     {
+      "ref": "2",
+      "sr": "220",
+      "article": "Art. 329g",
+      "paragraph": "3",
+      "letter": null,
+      "quote_lang": "it",
+      "quote": "Il congedo può essere preso in settimane o in giorni.",
+      "translation": null,
+      "abbr": "CO",
+      "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/it#art_329_g",
+      "as_of": "2026-10-01"
+     },
+     {
+      "ref": "3",
+      "sr": "834.1",
+      "article": "Art. 16k",
+      "paragraph": "2",
+      "letter": null,
+      "quote_lang": "it",
+      "quote": "L’altro genitore ha diritto al massimo a 14 indennità giornaliere.",
+      "translation": null,
+      "abbr": "LIPG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1952/1021_1046_1050/it#art_16_k",
+      "as_of": "2026-06-01"
+     },
+     {
+      "ref": "4",
+      "sr": "220",
+      "article": "Art. 329g",
+      "paragraph": "2",
+      "letter": null,
+      "quote_lang": "it",
+      "quote": "Il congedo deve essere preso entro sei mesi dalla nascita del figlio.",
+      "translation": null,
+      "abbr": "CO",
+      "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/it#art_329_g",
+      "as_of": "2026-10-01"
+     },
+     {
+      "ref": "5",
+      "sr": "834.1",
+      "article": "Art. 16i",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "it",
+      "quote": "Ha diritto all’indennità chi:\na. è l’altro genitore legale al momento della nascita del figlio o lo diventa nei sei mesi seguenti;\nb. era assicurato obbligatoriamente ai sensi della LAVS durante i nove mesi immediatamente precedenti la nascita del figlio;\nc. durante tale periodo ha esercitato un’attività lucrativa per almeno cinque mesi;",
+      "translation": null,
+      "abbr": "LIPG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1952/1021_1046_1050/it#art_16_i",
+      "as_of": "2026-06-01"
+     },
+     {
+      "ref": "6",
+      "sr": "834.1",
+      "article": "Art. 16j",
+      "paragraph": "3",
+      "letter": null,
+      "quote_lang": "it",
+      "quote": "Il diritto all’indennità si estingue:\na. alla scadenza del termine quadro;\nb. dopo la riscossione del numero massimo di indennità giornaliere;",
+      "translation": null,
+      "abbr": "LIPG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1952/1021_1046_1050/it#art_16_j",
+      "as_of": "2026-06-01"
+     }
+    ],
+    "clarifying_question": null,
+    "cantonal_note": null,
+    "follow_up_questions": [
+     "A quanto ammonta l'indennità giornaliera durante il congedo?",
+     "Come viene presentata la richiesta di indennità alla cassa di compensazione?",
+     "Il datore di lavoro può ridurre i miei giorni di vacanza a causa del congedo paternità?"
+    ],
+    "confidence": "high",
+    "out_of_scope": false,
+    "verification": {
+     "status": "passed",
+     "rounds": [
+      {
+       "citations": 6,
+       "quotes": 6,
+       "problems": []
+      }
+     ],
+     "dropped": [],
+     "repairs": []
+    },
+    "notice": "Unofficial. Not legal advice. Sources: Fedlex (fedlex.admin.ch)."
+   },
+   "raw_final": null,
+   "tool_trace": [
+    {
+     "name": "search_law",
+     "args": {
+      "query": "congedo paternità altre genitore settimane mesi",
+      "lang": "it"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "article": "329g",
+      "sr": "220",
+      "lang": "it"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "it",
+      "sr": "834.1",
+      "article": "16i"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "834.1",
+      "article": "16j",
+      "lang": "it"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "834.1",
+      "lang": "it",
+      "article": "16k"
+     }
+    }
+   ],
+   "citation_checks": [
+    {
+     "ref": "1",
+     "sr": "220",
+     "article": "Art. 329g",
+     "quote_lang": "it",
+     "eid": "art_329_g",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "2",
+     "sr": "220",
+     "article": "Art. 329g",
+     "quote_lang": "it",
+     "eid": "art_329_g",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "3",
+     "sr": "834.1",
+     "article": "Art. 16k",
+     "quote_lang": "it",
+     "eid": "art_16_k",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "4",
+     "sr": "220",
+     "article": "Art. 329g",
+     "quote_lang": "it",
+     "eid": "art_329_g",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "5",
+     "sr": "834.1",
+     "article": "Art. 16i",
+     "quote_lang": "it",
+     "eid": "art_16_i",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "6",
+     "sr": "834.1",
+     "article": "Art. 16j",
+     "quote_lang": "it",
+     "eid": "art_16_j",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    }
+   ],
+   "judgement": null
+  },
+  {
+   "id": "social-03",
+   "lang": "en",
+   "category": "answerable",
+   "domain": "work",
+   "error": null,
+   "status": "passed",
+   "rounds": 1,
+   "first_draft": {
+    "citations": 4,
+    "quotes": 4,
+    "problems": {}
+   },
+   "dropped": [],
+   "repairs": [],
+   "citations": 4,
+   "quotes": 4,
+   "verbatim": 4,
+   "hallucinated": 0,
+   "not_in_force": 0,
+   "unchecked": 0,
+   "required_recall": 1.0,
+   "precision_expected": 0.5,
+   "behaviour_det": true,
+   "detected_lang": "en",
+   "lang_ok": true,
+   "tool_calls": 7,
+   "tools": {
+    "list_acts": 1,
+    "search_law": 1,
+    "get_article": 5
+   },
+   "usage": {
+    "model_calls": 8,
+    "prompt": 79961,
+    "cached": 39952,
+    "output": 1256,
+    "thoughts": 0
+   },
+   "latency_s": 29.61,
+   "cost_usd": 0.03771,
+   "answer": {
+    "language": "en",
+    "answer_markdown": "### Deadline to Take Out Health Insurance\nYou must take out basic health insurance within **three months** of taking up residence in Switzerland [1]. If you join on time within this three-month window, coverage applies retroactively from the day you took up residence [2].\n\n### What Happens If You Are Late?\nIf you miss the three-month deadline:\n1. **No retroactive coverage**: Your insurance will only begin on the actual date you join, leaving a gap where earlier medical expenses are not covered [2].\n2. **Premium surcharge (penalty)**: If the delay is inexcusable, you must pay a premium surcharge of 30% to 50% of the premium [2, 3]. This surcharge is levied for twice the duration of the delay, up to a maximum of five years [3]. In cases of financial hardship, the insurer reduces the surcharge [2, 3].\n3. **Automatic assignment by cantonal authorities**: Cantons monitor compliance with mandatory insurance and will officially assign you to an insurer if you fail to take out insurance in time [4].",
+    "citations": [
+     {
+      "ref": "1",
+      "sr": "832.10",
+      "article": "Art. 3",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Jede Person mit Wohnsitz in der Schweiz muss sich innert drei Monaten nach der Wohnsitznahme oder der Geburt in der Schweiz für Krankenpflege versichern oder von ihrem gesetzlichen Vertreter beziehungsweise ihrer gesetzlichen Vertreterin versichern lassen.",
+      "translation": "Every person resident in Switzerland must take out health insurance for health care within three months of taking up residence or being born in Switzerland, or have insurance taken out on their behalf by their legal representative.",
+      "abbr": "KVG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1995/1328_1328_1328/de#art_3",
+      "as_of": "2026-07-01"
+     },
+     {
+      "ref": "2",
+      "sr": "832.10",
+      "article": "Art. 5",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Bei rechtzeitigem Beitritt (Art. 3 Abs. 1) beginnt die Versicherung im Zeitpunkt der Geburt oder der Wohnsitznahme in der Schweiz.",
+      "translation": "If joining is on time (Art. 3 para. 1), the insurance begins at the time of birth or of taking up residence in Switzerland.",
+      "abbr": "KVG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1995/1328_1328_1328/de#art_5",
+      "as_of": "2026-07-01"
+     },
+     {
+      "ref": "3",
+      "sr": "832.102",
+      "article": "Art. 8",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Die Erhebungsdauer für den Prämienzuschlag bei verspätetem Beitritt nach Artikel 5 Absatz 2 KVG entspricht der doppelten Dauer der Verspätung, höchstens jedoch fünf Jahren. Der Prämienzuschlag beträgt 30 bis 50 Prozent der Prämie.",
+      "translation": "The duration of the premium surcharge for late entry under Article 5 paragraph 2 KVG corresponds to twice the duration of the delay, but at most five years. The premium surcharge amounts to 30 to 50 percent of the premium.",
+      "abbr": "KVV",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1995/3867_3867_3867/de#art_8",
+      "as_of": "2026-08-01"
+     },
+     {
+      "ref": "4",
+      "sr": "832.10",
+      "article": "Art. 6",
+      "paragraph": "2",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Die vom Kanton bezeichnete Behörde weist Personen, die ihrer Versicherungspflicht nicht rechtzeitig nachkommen, einem Versicherer zu.",
+      "translation": "The authority designated by the canton assigns persons who do not fulfill their insurance obligation on time to an insurer.",
+      "abbr": "KVG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1995/1328_1328_1328/de#art_6",
+      "as_of": "2026-07-01"
+     }
+    ],
+    "clarifying_question": null,
+    "cantonal_note": "Cantonal health authorities or communal registration offices enforce mandatory insurance. You may receive a notice requiring you to provide proof of insurance within their designated timeframe.",
+    "follow_up_questions": [
+     "Are there exemptions from mandatory Swiss health insurance for cross-border commuters or posted workers?",
+     "Can I freely choose any authorized Swiss health insurance company?",
+     "How does the annual deductible (franchise) and co-payment system work in Switzerland?"
+    ],
+    "confidence": "high",
+    "out_of_scope": false,
+    "verification": {
+     "status": "passed",
+     "rounds": [
+      {
+       "citations": 4,
+       "quotes": 4,
+       "problems": []
+      }
+     ],
+     "dropped": [],
+     "repairs": []
+    },
+    "notice": "Unofficial. Not legal advice. Sources: Fedlex (fedlex.admin.ch)."
+   },
+   "raw_final": null,
+   "tool_trace": [
+    {
+     "name": "list_acts",
+     "args": {}
+    },
+    {
+     "name": "search_law",
+     "args": {
+      "sr": [
+       "832.10",
+       "832.102"
+      ],
+      "query": "Krankenversicherung Versicherungspflicht Frist Beitritt verspätet"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "article": "Art. 3",
+      "sr": "832.10",
+      "lang": "de"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "832.10",
+      "lang": "de",
+      "article": "Art. 5"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "832.10",
+      "lang": "de",
+      "article": "Art. 6"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "de",
+      "sr": "832.102",
+      "article": "Art. 8"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "832.102",
+      "lang": "de",
+      "article": "Art. 7"
+     }
+    }
+   ],
+   "citation_checks": [
+    {
+     "ref": "1",
+     "sr": "832.10",
+     "article": "Art. 3",
+     "quote_lang": "de",
+     "eid": "art_3",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "2",
+     "sr": "832.10",
+     "article": "Art. 5",
+     "quote_lang": "de",
+     "eid": "art_5",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "3",
+     "sr": "832.102",
+     "article": "Art. 8",
+     "quote_lang": "de",
+     "eid": "art_8",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "4",
+     "sr": "832.10",
+     "article": "Art. 6",
+     "quote_lang": "de",
+     "eid": "art_6",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    }
+   ],
+   "judgement": null
+  },
+  {
+   "id": "social-04",
+   "lang": "fr",
+   "category": "answerable",
+   "domain": "work",
+   "error": null,
+   "status": "passed",
+   "rounds": 1,
+   "first_draft": {
+    "citations": 4,
+    "quotes": 4,
+    "problems": {}
+   },
+   "dropped": [],
+   "repairs": [],
+   "citations": 4,
+   "quotes": 4,
+   "verbatim": 4,
+   "hallucinated": 0,
+   "not_in_force": 0,
+   "unchecked": 0,
+   "required_recall": 1.0,
+   "precision_expected": 0.6666666666666666,
+   "behaviour_det": true,
+   "detected_lang": "fr",
+   "lang_ok": true,
+   "tool_calls": 5,
+   "tools": {
+    "search_law": 1,
+    "get_article": 4
+   },
+   "usage": {
+    "model_calls": 6,
+    "prompt": 41873,
+    "cached": 17625,
+    "output": 1039,
+    "thoughts": 0
+   },
+   "latency_s": 33.71,
+   "cost_usd": 0.0234,
+   "answer": {
+    "language": "fr",
+    "answer_markdown": "Pour avoir droit aux indemnités de chômage, vous devez en principe avoir exercé durant **au moins 12 mois** une activité soumise à cotisation (en tant que salarié) [1].\n\nCes 12 mois de travail doivent avoir été accomplis au cours du **délai-cadre de cotisation**, qui dure en règle générale **deux ans** avant votre inscription au chômage [2, 3].\n\nCertaines périodes particulières sont également comptées comme périodes de cotisation, notamment le service militaire, le service civil ou la protection civile, ou encore l'incapacité de travail non rémunérée liée à une maladie, un accident ou la maternité alors qu'un contrat de travail existait [1].\n\nPar ailleurs, la loi prévoit des dispenses de cotisations pour des situations particulières (par exemple à la suite d'une formation, d'une maladie de longue durée, d'une maternité, ou d'une séparation/divorce sous certaines conditions de domicile) [4].",
+    "citations": [
+     {
+      "ref": "1",
+      "sr": "837.0",
+      "article": "Art. 13",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "fr",
+      "quote": "Celui qui, dans les limites du délai-cadre prévu à cet effet (art. 9, al. 3), a exercé durant douze mois au moins une activité soumise à cotisation remplit les conditions relatives à la période de cotisation.",
+      "translation": null,
+      "abbr": "LACI",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1982/2184_2184_2184/fr#art_13",
+      "as_of": "2026-01-01"
+     },
+     {
+      "ref": "2",
+      "sr": "837.0",
+      "article": "Art. 9",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "fr",
+      "quote": "Des délais-cadres de deux ans s’appliquent aux périodes d’indemnisation et de cotisation, sauf disposition contraire de la présente loi.",
+      "translation": null,
+      "abbr": "LACI",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1982/2184_2184_2184/fr#art_9",
+      "as_of": "2026-01-01"
+     },
+     {
+      "ref": "3",
+      "sr": "837.0",
+      "article": "Art. 9",
+      "paragraph": "3",
+      "letter": null,
+      "quote_lang": "fr",
+      "quote": "Le délai-cadre applicable à la période de cotisation commence à courir deux ans plus tôt.",
+      "translation": null,
+      "abbr": "LACI",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1982/2184_2184_2184/fr#art_9",
+      "as_of": "2026-01-01"
+     },
+     {
+      "ref": "4",
+      "sr": "837.0",
+      "article": "Art. 14",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "fr",
+      "quote": "Sont libérées des conditions relatives à la période de cotisation les personnes qui, dans les limites du délai-cadre (art. 9, al. 3) et pendant plus de douze mois au total, n’étaient pas parties à un rapport de travail et, partant, n’ont pu remplir les conditions relatives à la période de cotisation",
+      "translation": null,
+      "abbr": "LACI",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1982/2184_2184_2184/fr#art_14",
+      "as_of": "2026-01-01"
+     }
+    ],
+    "clarifying_question": null,
+    "cantonal_note": "L'inscription au chômage et le suivi s'effectuent auprès de l'office régional de placement (ORP) de votre canton ou commune de domicile.",
+    "follow_up_questions": [
+     "Quelles sont les conditions pour être libéré de la période de cotisation ?",
+     "Combien d'indemnités journalières peut-on toucher au maximum ?",
+     "Quelles sont les autres conditions pour avoir droit au chômage ?"
+    ],
+    "confidence": "high",
+    "out_of_scope": false,
+    "verification": {
+     "status": "passed",
+     "rounds": [
+      {
+       "citations": 4,
+       "quotes": 4,
+       "problems": []
+      }
+     ],
+     "dropped": [],
+     "repairs": []
+    },
+    "notice": "Unofficial. Not legal advice. Sources: Fedlex (fedlex.admin.ch)."
+   },
+   "raw_final": null,
+   "tool_trace": [
+    {
+     "name": "search_law",
+     "args": {
+      "lang": "fr",
+      "query": "droit à l'indemnité chômage période de cotisation mois"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "837.0",
+      "lang": "fr",
+      "article": "Art. 13"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "fr",
+      "sr": "837.0",
+      "article": "Art. 9"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "837.0",
+      "lang": "fr",
+      "article": "Art. 14"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "article": "Art. 8",
+      "sr": "837.0",
+      "lang": "fr"
+     }
+    }
+   ],
+   "citation_checks": [
+    {
+     "ref": "1",
+     "sr": "837.0",
+     "article": "Art. 13",
+     "quote_lang": "fr",
+     "eid": "art_13",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "2",
+     "sr": "837.0",
+     "article": "Art. 9",
+     "quote_lang": "fr",
+     "eid": "art_9",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "3",
+     "sr": "837.0",
+     "article": "Art. 9",
+     "quote_lang": "fr",
+     "eid": "art_9",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "4",
+     "sr": "837.0",
+     "article": "Art. 14",
+     "quote_lang": "fr",
+     "eid": "art_14",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    }
+   ],
+   "judgement": null
+  },
+  {
+   "id": "residence-01",
+   "lang": "en",
+   "category": "needs_clarification",
+   "domain": "residence",
+   "error": null,
+   "status": "passed",
+   "rounds": 1,
+   "first_draft": {
+    "citations": 7,
+    "quotes": 7,
+    "problems": {}
+   },
+   "dropped": [],
+   "repairs": [],
+   "citations": 7,
+   "quotes": 7,
+   "verbatim": 7,
+   "hallucinated": 0,
+   "not_in_force": 0,
+   "unchecked": 0,
+   "required_recall": null,
+   "precision_expected": 0.4,
+   "behaviour_det": false,
+   "detected_lang": "en",
+   "lang_ok": true,
+   "tool_calls": 8,
+   "tools": {
+    "search_law": 1,
+    "get_article": 7
+   },
+   "usage": {
+    "model_calls": 9,
+    "prompt": 72509,
+    "cached": 35225,
+    "output": 2023,
+    "thoughts": 0
+   },
+   "latency_s": 30.07,
+   "cost_usd": 0.03819,
+   "answer": {
+    "language": "en",
+    "answer_markdown": "Losing your job does not immediately cancel your residence permit, but what happens next depends primarily on your nationality, the type of permit you hold, and how long you have lived in Switzerland.\n\n### EU/EFTA Citizens\nUnder Swiss law, specific rules govern the expiration of residence rights following involuntary termination of employment:\n- **Short-stay permit (L permit):** The right of residence expires 6 months after involuntary termination of the employment relationship [1]. However, if unemployment benefits continue to be paid after these 6 months, the right of residence expires when the compensation ends [2].\n- **Residence permit (B permit):** \n  - If the employment ends involuntarily during the first 12 months of your stay, the right of residence expires 6 months after termination, or when unemployment benefits end if they continue past 6 months [1, 2].\n  - If the involuntary termination occurs after the first 12 months of stay, the right of residence expires 6 months after termination; if unemployment compensation continues past 6 months, it expires 6 months after the end of those benefits [3].\n\n### Third-Country Nationals\n- **B permit:** A temporary residence permit is usually granted for a specific purpose (such as employment) and remains valid until its expiry date, unless revocation grounds apply [4, 5]. Job loss does not automatically revoke the permit, but relying on social assistance can be a ground for revocation or non-renewal [4].\n- **Settlement permit (C permit):** A permanent settlement permit is granted indefinitely and without conditions [6]. It cannot be revoked simply because of unemployment; revocation is only permitted under very strict grounds, such as permanent and substantial reliance on social assistance [7].",
+    "citations": [
+     {
+      "ref": "1",
+      "sr": "142.20",
+      "article": "Art. 61a",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Das Aufenthaltsrecht von Staatsangehörigen der Mitgliedstaaten der EU und der EFTA mit einer Kurzaufenthaltsbewilligung erlischt sechs Monate nach unfreiwilliger Beendigung des Arbeitsverhältnisses. Das Aufenthaltsrecht von Staatsangehörigen der Mitgliedstaaten der EU und der EFTA mit einer Aufenthaltsbewilligung erlischt sechs Monate nach unfreiwilliger Beendigung des Arbeitsverhältnisses, wenn dieses vor Ablauf der ersten zwölf Monate des Aufenthalts endet.",
+      "translation": "The right of residence of nationals of EU and EFTA member states holding a short-stay permit expires six months after involuntary termination of employment. The right of residence of nationals of EU and EFTA member states holding a residence permit expires six months after involuntary termination of employment if it ends before the end of the first twelve months of stay.",
+      "abbr": "AIG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2007/758/de#art_61_a",
+      "as_of": "2026-06-12"
+     },
+     {
+      "ref": "2",
+      "sr": "142.20",
+      "article": "Art. 61a",
+      "paragraph": "2",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Wird nach Ablauf der sechs Monate nach Absatz 1 weiterhin Arbeitslosenentschädigung ausbezahlt, so erlischt das Aufenthaltsrecht mit dem Ende der Entschädigung.",
+      "translation": "If unemployment compensation continues to be paid after the expiry of the six months under paragraph 1, the right of residence expires at the end of the compensation.",
+      "abbr": "AIG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2007/758/de#art_61_a",
+      "as_of": "2026-06-12"
+     },
+     {
+      "ref": "3",
+      "sr": "142.20",
+      "article": "Art. 61a",
+      "paragraph": "4",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Bei unfreiwilliger Beendigung des Arbeitsverhältnisses nach den ersten zwölf Monaten des Aufenthalts erlischt das Aufenthaltsrecht von Staatsangehörigen der Mitgliedstaaten der EU und der EFTA mit einer Aufenthaltsbewilligung sechs Monate nach der Beendigung des Arbeitsverhältnisses. Wird nach Ablauf der sechs Monate weiterhin Arbeitslosenentschädigung ausbezahlt, so erlischt das Aufenthaltsrecht sechs Monate nach dem Ende der Entschädigung.",
+      "translation": "In the case of involuntary termination of employment after the first twelve months of stay, the right of residence of nationals of EU and EFTA member states holding a residence permit expires six months after the termination of the employment relationship. If unemployment compensation continues to be paid after the expiry of the six months, the right of residence expires six months after the end of the compensation.",
+      "abbr": "AIG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2007/758/de#art_61_a",
+      "as_of": "2026-06-12"
+     },
+     {
+      "ref": "4",
+      "sr": "142.20",
+      "article": "Art. 62",
+      "paragraph": "1",
+      "letter": "e",
+      "quote_lang": "de",
+      "quote": "Die zuständige Behörde kann Bewilligungen, ausgenommen die Niederlassungsbewilligung, und andere Verfügungen nach diesem Gesetz widerrufen, wenn die Ausländerin oder der Ausländer: … oder eine Person, für die sie oder er zu sorgen hat, auf Sozialhilfe angewiesen ist",
+      "translation": "The competent authority may revoke permits, except for the settlement permit, and other rulings under this Act if the foreign national: … or a person they are required to support is reliant on social assistance",
+      "abbr": "AIG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2007/758/de#art_62",
+      "as_of": "2026-06-12"
+     },
+     {
+      "ref": "5",
+      "sr": "142.20",
+      "article": "Art. 33",
+      "paragraph": "2",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Sie wird für einen bestimmten Aufenthaltszweck erteilt und kann mit weiteren Bedingungen verbunden werden.",
+      "translation": "It is granted for a specific purpose of stay and may be subject to further conditions.",
+      "abbr": "AIG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2007/758/de#art_33",
+      "as_of": "2026-06-12"
+     },
+     {
+      "ref": "6",
+      "sr": "142.20",
+      "article": "Art. 34",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Die Niederlassungsbewilligung wird unbefristet und ohne Bedingungen erteilt.",
+      "translation": "The settlement permit is granted for an indefinite duration and without conditions.",
+      "abbr": "AIG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2007/758/de#art_34",
+      "as_of": "2026-06-12"
+     },
+     {
+      "ref": "7",
+      "sr": "142.20",
+      "article": "Art. 63",
+      "paragraph": "1",
+      "letter": "c",
+      "quote_lang": "de",
+      "quote": "Die Niederlassungsbewilligung kann nur widerrufen werden, wenn: … die Ausländerin oder der Ausländer oder eine Person, für die sie oder er zu sorgen hat, dauerhaft und in erheblichem Mass auf Sozialhilfe angewiesen ist",
+      "translation": "The settlement permit may only be revoked if: … the foreign national or a person they are required to support is permanently and substantially reliant on social assistance",
+      "abbr": "AIG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2007/758/de#art_63",
+      "as_of": "2026-06-12"
+     }
+    ],
+    "clarifying_question": null,
+    "cantonal_note": "Cantonal migration offices handle residence permit decisions, renewals, and revocations, while regional employment offices (RAV / ORP) process unemployment registration.",
+    "follow_up_questions": [
+     "What nationality do you hold, and what permit type (L, B, or C) do you have?",
+     "How do I register with the regional employment service (RAV) to receive unemployment benefits?",
+     "Does receiving unemployment benefits count as social assistance for permit renewal?"
+    ],
+    "confidence": "high",
+    "out_of_scope": false,
+    "verification": {
+     "status": "passed",
+     "rounds": [
+      {
+       "citations": 7,
+       "quotes": 7,
+       "problems": []
+      }
+     ],
+     "dropped": [],
+     "repairs": []
+    },
+    "notice": "Unofficial. Not legal advice. Sources: Fedlex (fedlex.admin.ch)."
+   },
+   "raw_final": null,
+   "tool_trace": [
+    {
+     "name": "search_law",
+     "args": {
+      "query": "unemployment permit revocation loss residence permit job loss AIG",
+      "sr": [
+       "142.20"
+      ]
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "142.20",
+      "lang": "de",
+      "article": "61a"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "de",
+      "article": "62",
+      "sr": "142.20"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "142.20",
+      "article": "61",
+      "lang": "de"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "article": "63",
+      "sr": "142.20",
+      "lang": "de"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "142.20",
+      "lang": "de",
+      "article": "33"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "article": "32",
+      "sr": "142.20",
+      "lang": "de"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "de",
+      "sr": "142.20",
+      "article": "34"
+     }
+    }
+   ],
+   "citation_checks": [
+    {
+     "ref": "1",
+     "sr": "142.20",
+     "article": "Art. 61a",
+     "quote_lang": "de",
+     "eid": "art_61_a",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "2",
+     "sr": "142.20",
+     "article": "Art. 61a",
+     "quote_lang": "de",
+     "eid": "art_61_a",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "3",
+     "sr": "142.20",
+     "article": "Art. 61a",
+     "quote_lang": "de",
+     "eid": "art_61_a",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "4",
+     "sr": "142.20",
+     "article": "Art. 62",
+     "quote_lang": "de",
+     "eid": "art_62",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "5",
+     "sr": "142.20",
+     "article": "Art. 33",
+     "quote_lang": "de",
+     "eid": "art_33",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "6",
+     "sr": "142.20",
+     "article": "Art. 34",
+     "quote_lang": "de",
+     "eid": "art_34",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "7",
+     "sr": "142.20",
+     "article": "Art. 63",
+     "quote_lang": "de",
+     "eid": "art_63",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    }
+   ],
+   "judgement": null
+  },
+  {
+   "id": "residence-02",
+   "lang": "de",
+   "category": "answerable",
+   "domain": "residence",
+   "error": null,
+   "status": "passed",
+   "rounds": 1,
+   "first_draft": {
+    "citations": 5,
+    "quotes": 5,
+    "problems": {}
+   },
+   "dropped": [],
+   "repairs": [],
+   "citations": 5,
+   "quotes": 5,
+   "verbatim": 5,
+   "hallucinated": 0,
+   "not_in_force": 0,
+   "unchecked": 0,
+   "required_recall": 1.0,
+   "precision_expected": 0.25,
+   "behaviour_det": true,
+   "detected_lang": "de",
+   "lang_ok": true,
+   "tool_calls": 5,
+   "tools": {
+    "search_law": 1,
+    "get_article": 4
+   },
+   "usage": {
+    "model_calls": 6,
+    "prompt": 36647,
+    "cached": 10383,
+    "output": 1404,
+    "thoughts": 0
+   },
+   "latency_s": 21.12,
+   "cost_usd": 0.02574,
+   "answer": {
+    "language": "de",
+    "answer_markdown": "Als US-Bürgerin mit sieben Jahren Aufenthalt mit einer B-Bewilligung haben Sie zwei Möglichkeiten:\n\n1. **Vorzeitige Erteilung bereits jetzt möglich:**\nDie Niederlassungsbewilligung kann bereits nach einem ununterbrochenen fünfjährigen Aufenthalt mit Aufenthaltsbewilligung erteilt werden, wenn keine Widerrufsgründe vorliegen und Sie erfolgreich integriert sind sowie sich gut in der Landessprache verständigen können [1]. Für die vorzeitige Erteilung müssen Sie mündliche Sprachkompetenzen mindestens auf dem Niveau B1 und schriftliche mindestens auf dem Niveau A1 in der am Wohnort gesprochenen Landessprache nachweisen [2], neben den allgemeinen Integrationskriterien [3].\n\n2. **Reguläre Erteilung nach zehn Jahren:**\nErfüllen Sie die erhöhten Sprach- oder Integrationsanforderungen für die vorzeitige Bewilligung nicht, kann Ihnen die Niederlassungsbewilligung regulär nach insgesamt mindestens zehn Jahren Aufenthalt (davon die letzten fünf Jahre ununterbrochen mit Aufenthaltsbewilligung) erteilt werden, sofern Sie integriert sind und keine Widerrufsgründe vorliegen [4]. Für die ordentliche Erteilung genügen mündliche Sprachkenntnisse auf dem Niveau A2 und schriftliche auf dem Niveau A1 [5].",
+    "citations": [
+     {
+      "ref": "1",
+      "sr": "142.20",
+      "article": "Art. 34",
+      "paragraph": "4",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Ausländerinnen und Ausländern kann die Niederlassungsbewilligung bereits nach einem ununterbrochenen Aufenthalt mit Aufenthaltsbewilligung während der letzten fünf Jahre erteilt werden, wenn sie die Voraussetzungen nach Absatz 2 Buchstaben b und c erfüllen und sich gut in der am Wohnort gesprochenen Landessprache verständigen können.",
+      "translation": null,
+      "abbr": "AIG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2007/758/de#art_34",
+      "as_of": "2026-06-12"
+     },
+     {
+      "ref": "2",
+      "sr": "142.201",
+      "article": "Art. 62",
+      "paragraph": "1bis",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Die Ausländerin oder der Ausländer muss nachweisen, dass sie oder er in der am Wohnort gesprochenen Landessprache über mündliche Sprachkompetenzen mindestens auf dem Referenzniveau B1 und schriftliche Sprachkompetenzen mindestens auf dem Referenzniveau A1 des Referenzrahmens verfügt.",
+      "translation": null,
+      "abbr": "VZAE",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2007/759/de#art_62",
+      "as_of": "2026-10-01"
+     },
+     {
+      "ref": "3",
+      "sr": "142.20",
+      "article": "Art. 58a",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Bei der Beurteilung der Integration berücksichtigt die zuständige Behörde folgende Kriterien:\na. die Beachtung der öffentlichen Sicherheit und Ordnung;\nb. die Respektierung der Werte der Bundesverfassung;\nc. die Sprachkompetenzen; und\nd. die Teilnahme am Wirtschaftsleben oder am Erwerb von Bildung.",
+      "translation": null,
+      "abbr": "AIG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2007/758/de#art_58_a",
+      "as_of": "2026-06-12"
+     },
+     {
+      "ref": "4",
+      "sr": "142.20",
+      "article": "Art. 34",
+      "paragraph": "2",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Ausländerinnen und Ausländern kann die Niederlassungsbewilligung erteilt werden, wenn:\na. sie sich insgesamt mindestens zehn Jahre mit einer Kurzaufenthalts- oder Aufenthaltsbewilligung in der Schweiz aufgehalten haben und sie während den letzten fünf Jahren ununterbrochen im Besitz einer Aufenthaltsbewilligung waren; und\nb. keine Widerrufsgründe nach Artikel 62 oder 63 Absatz 2 vorliegen; und\nc. sie integriert sind.",
+      "translation": null,
+      "abbr": "AIG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2007/758/de#art_34",
+      "as_of": "2026-06-12"
+     },
+     {
+      "ref": "5",
+      "sr": "142.201",
+      "article": "Art. 60",
+      "paragraph": "2",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Die Ausländerin oder der Ausländer muss nachweisen, dass sie oder er in der am Wohnort gesprochenen Landessprache über mündliche Sprachkompetenzen mindestens auf dem Referenzniveau A2 und schriftliche Sprachkompetenzen mindestens auf dem Referenzniveau A1 des Referenzrahmens verfügt.",
+      "translation": null,
+      "abbr": "VZAE",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2007/759/de#art_60",
+      "as_of": "2026-10-01"
+     }
+    ],
+    "clarifying_question": null,
+    "cantonal_note": "Das Gesuch um Erteilung der Niederlassungsbewilligung (Ausweis C) ist bei der Migrationsbehörde Ihres Wohnkantons bzw. Ihrer Wohngemeinde einzureichen.",
+    "follow_up_questions": [
+     "Welche Sprachzertifikate werden für den Nachweis der Sprachkompetenzen anerkannt?",
+     "Welche Kriterien gelten genau für die Beurteilung der erfolgreichen Integration?",
+     "Werden Aufenthalte zu Studien- oder Ausbildungszwecken an die fünf bzw. zehn Jahre angerechnet?"
+    ],
+    "confidence": "high",
+    "out_of_scope": false,
+    "verification": {
+     "status": "passed",
+     "rounds": [
+      {
+       "citations": 5,
+       "quotes": 5,
+       "problems": []
+      }
+     ],
+     "dropped": [],
+     "repairs": []
+    },
+    "notice": "Unofficial. Not legal advice. Sources: Fedlex (fedlex.admin.ch)."
+   },
+   "raw_final": null,
+   "tool_trace": [
+    {
+     "name": "search_law",
+     "args": {
+      "lang": "de",
+      "query": "Niederlassungsbewilligung Erteilung Dauer Aufenthalt AIG"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "142.20",
+      "article": "Art. 34",
+      "lang": "de"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "de",
+      "sr": "142.201",
+      "article": "Art. 62"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "142.20",
+      "lang": "de",
+      "article": "Art. 58a"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "de",
+      "article": "Art. 60",
+      "sr": "142.201"
+     }
+    }
+   ],
+   "citation_checks": [
+    {
+     "ref": "1",
+     "sr": "142.20",
+     "article": "Art. 34",
+     "quote_lang": "de",
+     "eid": "art_34",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "2",
+     "sr": "142.201",
+     "article": "Art. 62",
+     "quote_lang": "de",
+     "eid": "art_62",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "3",
+     "sr": "142.20",
+     "article": "Art. 58a",
+     "quote_lang": "de",
+     "eid": "art_58_a",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "4",
+     "sr": "142.20",
+     "article": "Art. 34",
+     "quote_lang": "de",
+     "eid": "art_34",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "5",
+     "sr": "142.201",
+     "article": "Art. 60",
+     "quote_lang": "de",
+     "eid": "art_60",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    }
+   ],
+   "judgement": null
+  },
+  {
+   "id": "residence-07",
+   "lang": "it",
+   "category": "needs_clarification",
+   "domain": "residence",
+   "error": null,
+   "status": "passed",
+   "rounds": 1,
+   "first_draft": {
+    "citations": 4,
+    "quotes": 4,
+    "problems": {}
+   },
+   "dropped": [],
+   "repairs": [],
+   "citations": 4,
+   "quotes": 4,
+   "verbatim": 4,
+   "hallucinated": 0,
+   "not_in_force": 0,
+   "unchecked": 0,
+   "required_recall": null,
+   "precision_expected": 0.5,
+   "behaviour_det": false,
+   "detected_lang": "it",
+   "lang_ok": true,
+   "tool_calls": 9,
+   "tools": {
+    "search_law": 1,
+    "get_article": 8
+   },
+   "usage": {
+    "model_calls": 10,
+    "prompt": 78042,
+    "cached": 38242,
+    "output": 1465,
+    "thoughts": 0
+   },
+   "latency_s": 31.22,
+   "cost_usd": 0.03821,
+   "answer": {
+    "language": "it",
+    "answer_markdown": "In linea di principio sì, tramite la procedura di ricongiungimento familiare, ma le condizioni esatte dipendono dal suo statuto di soggiorno o cittadinanza in Svizzera:\n\n- **Se lei è cittadino svizzero:** sua moglie ha diritto al rilascio di un permesso di dimora se coabita con lei [1].\n- **Se lei è titolare di un permesso di domicilio (permesso C):** sua moglie ha diritto al permesso di dimora se coabitate, disponete di un'abitazione conforme ai vostri bisogni, non dipendete dall'aiuto sociale, lei non percepisce prestazioni complementari e sua moglie è in grado di comunicare nella lingua nazionale del luogo (o è iscritta a un corso di lingua) [2].\n- **Se lei è titolare di un permesso di dimora (permesso B):** a sua moglie può essere concesso un permesso di dimora alle medesime condizioni (coabitazione, alloggio adeguato, assenza di aiuto sociale/prestazioni complementari, competenze o promozione linguistica) [3].\n\n**Termini:** la domanda di ricongiungimento per il coniuge deve di regola essere presentata entro il termine di 5 anni [4].",
+    "citations": [
+     {
+      "ref": "1",
+      "sr": "142.20",
+      "article": "Art. 42",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "it",
+      "quote": "I coniugi stranieri e i figli stranieri, non coniugati e minori di 18 anni, di cittadini svizzeri hanno diritto al rilascio e alla proroga del permesso di dimora se coabitano con loro.",
+      "translation": null,
+      "abbr": "LStrI",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2007/758/it#art_42",
+      "as_of": "2026-06-12"
+     },
+     {
+      "ref": "2",
+      "sr": "142.20",
+      "article": "Art. 43",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "it",
+      "quote": "Il coniuge straniero e i figli stranieri, non coniugati e minori di 18 anni, di uno straniero titolare del permesso di domicilio hanno diritto al rilascio e alla proroga del permesso di dimora se:\na. coabitano con lui;\nb. dispongono di un’abitazione conforme ai loro bisogni;\nc. non dipendono dall’aiuto sociale;\nd. sono in grado di comunicare nella lingua nazionale parlata nel luogo di residenza; e\ne. lo straniero cui si ricongiungono non riceve prestazioni complementari annue ai sensi della legge federale del 6 ottobre 2006 sulle prestazioni complementari all’assicurazione per la vecchiaia, i superstiti e l’invalidità (LPC) né potrebbe riceverne in seguito al ricongiungimento familiare.",
+      "translation": null,
+      "abbr": "LStrI",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2007/758/it#art_43",
+      "as_of": "2026-06-12"
+     },
+     {
+      "ref": "3",
+      "sr": "142.20",
+      "article": "Art. 44",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "it",
+      "quote": "Al coniuge straniero e ai figli stranieri, non coniugati e minori di 18 anni, di uno straniero titolare del permesso di dimora può essere rilasciato o prorogato un permesso di dimora se:\na. coabitano con lui;\nb. dispongono di un’abitazione conforme ai loro bisogni;\nc. non dipendono dall’aiuto sociale;\nd. sono in grado di comunicare nella lingua nazionale parlata nel luogo di residenza; e\ne. lo straniero cui si ricongiungono non riceve prestazioni complementari annue ai sensi della LPC né potrebbe riceverne in seguito al ricongiungimento familiare.",
+      "translation": null,
+      "abbr": "LStrI",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2007/758/it#art_44",
+      "as_of": "2026-06-12"
+     },
+     {
+      "ref": "4",
+      "sr": "142.20",
+      "article": "Art. 47",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "it",
+      "quote": "Il diritto al ricongiungimento familiare dev’essere fatto valere entro cinque anni.",
+      "translation": null,
+      "abbr": "LStrI",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2007/758/it#art_47",
+      "as_of": "2026-06-12"
+     }
+    ],
+    "clarifying_question": null,
+    "cantonal_note": "La domanda di ricongiungimento familiare va presentata all'autorità competente in materia di migrazione o stranieri del Cantone in cui risiedete.",
+    "follow_up_questions": [
+     "Quali requisiti linguistici specifici deve soddisfare il coniuge all'arrivo?",
+     "Sua moglie può lavorare in Svizzera una volta ottenuto il permesso di soggiorno?",
+     "Come viene calcolato il termine di cinque anni per presentare la domanda?"
+    ],
+    "confidence": "high",
+    "out_of_scope": false,
+    "verification": {
+     "status": "passed",
+     "rounds": [
+      {
+       "citations": 4,
+       "quotes": 4,
+       "problems": []
+      }
+     ],
+     "dropped": [],
+     "repairs": []
+    },
+    "notice": "Unofficial. Not legal advice. Sources: Fedlex (fedlex.admin.ch)."
+   },
+   "raw_final": null,
+   "tool_trace": [
+    {
+     "name": "search_law",
+     "args": {
+      "query": "ricongiungimento familiare coniuge permesso dimora domicilio",
+      "lang": "it"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "article": "Art. 42",
+      "sr": "142.20",
+      "lang": "it"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "it",
+      "article": "Art. 43",
+      "sr": "142.20"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "it",
+      "article": "Art. 44",
+      "sr": "142.20"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "it",
+      "sr": "142.20",
+      "article": "Art. 47"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "article": "Art. 51",
+      "sr": "142.20",
+      "lang": "it"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "142.20",
+      "article": "Art. 2",
+      "lang": "it"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "142.20",
+      "article": "Art. 49",
+      "lang": "it"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "142.20",
+      "lang": "it",
+      "article": "Art. 58a"
+     }
+    }
+   ],
+   "citation_checks": [
+    {
+     "ref": "1",
+     "sr": "142.20",
+     "article": "Art. 42",
+     "quote_lang": "it",
+     "eid": "art_42",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "2",
+     "sr": "142.20",
+     "article": "Art. 43",
+     "quote_lang": "it",
+     "eid": "art_43",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "3",
+     "sr": "142.20",
+     "article": "Art. 44",
+     "quote_lang": "it",
+     "eid": "art_44",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "4",
+     "sr": "142.20",
+     "article": "Art. 47",
+     "quote_lang": "it",
+     "eid": "art_47",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    }
+   ],
+   "judgement": null
+  },
+  {
+   "id": "tax-01",
+   "lang": "en",
+   "category": "answerable",
+   "domain": "tax",
+   "error": null,
+   "status": "passed",
+   "rounds": 1,
+   "first_draft": {
+    "citations": 3,
+    "quotes": 3,
+    "problems": {}
+   },
+   "dropped": [],
+   "repairs": [],
+   "citations": 3,
+   "quotes": 3,
+   "verbatim": 3,
+   "hallucinated": 0,
+   "not_in_force": 0,
+   "unchecked": 0,
+   "required_recall": 0.5,
+   "precision_expected": 0.6666666666666666,
+   "behaviour_det": true,
+   "detected_lang": "en",
+   "lang_ok": true,
+   "tool_calls": 4,
+   "tools": {
+    "search_law": 1,
+    "get_article": 3
+   },
+   "usage": {
+    "model_calls": 5,
+    "prompt": 27843,
+    "cached": 6888,
+    "output": 1140,
+    "thoughts": 0
+   },
+   "latency_s": 13.91,
+   "cost_usd": 0.02051,
+   "answer": {
+    "language": "en",
+    "answer_markdown": "Under Swiss federal direct tax law, foreign employees residing in Switzerland without a permanent residence permit (C permit) are generally subject to withholding tax (*Quellensteuer*) on their employment income [1]. \n\nYou are **obligated** to undergo a subsequent regular taxation (*nachträgliche ordentliche Veranlagung*) and file a tax return if [2]:\n- Your gross income reaches or exceeds a specific threshold defined by the Federal Department of Finance in cooperation with the cantons (set at CHF 120,000 per year) [2]; or\n- You have income that is not subject to withholding tax (such as self-employment income, alimony, or securities/rental income) [2]. In this case, you must request the tax return form from the competent tax authority by March 31 of the year following the tax year [2].\n- You live in an intact marriage with a person who meets either of these criteria [2].\n\nOnce subject to mandatory regular taxation, it continues until the end of your withholding tax liability [2]. Tax withheld at source is credited without interest [2].\n\n*(Note: You may also voluntarily apply for regular taxation by March 31 of the following year [3], but if neither condition is met and you do not apply, the withholding tax settles your tax liability definitively [3]).*",
+    "citations": [
+     {
+      "ref": "1",
+      "sr": "642.11",
+      "article": "Art. 83",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Arbeitnehmer ohne Niederlassungsbewilligung, die in der Schweiz jedoch steuerrechtlichen Wohnsitz oder Aufenthalt haben, unterliegen für ihr Einkommen aus unselbstständiger Erwerbstätigkeit einer Quellensteuer.",
+      "translation": "Employees without a permanent residence permit who have their tax residence or habitual abode in Switzerland are subject to withholding tax on their income from employment.",
+      "abbr": "DBG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1991/1184_1184_1184/de#art_83",
+      "as_of": "2026-09-02"
+     },
+     {
+      "ref": "2",
+      "sr": "642.11",
+      "article": "Art. 89",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Personen, die nach Artikel 83 Absatz 1 der Quellensteuer unterliegen, werden nachträglich im ordentlichen Verfahren veranlagt, wenn:\na. ihr Bruttoeinkommen in einem Steuerjahr einen bestimmten Betrag erreicht oder übersteigt; oder\nb. sie über Einkünfte verfügen, die nicht der Quellensteuer unterliegen.",
+      "translation": "Persons who are subject to withholding tax under Article 83 paragraph 1 are subsequently assessed under the ordinary procedure if: a. their gross income reaches or exceeds a certain amount in a tax year; or b. they possess income that is not subject to withholding tax.",
+      "abbr": "DBG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1991/1184_1184_1184/de#art_89",
+      "as_of": "2026-09-02"
+     },
+     {
+      "ref": "3",
+      "sr": "642.11",
+      "article": "Art. 89a",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Personen, die nach Artikel 83 Absatz 1 der Quellensteuer unterliegen und keine der Voraussetzungen nach Artikel 89 Absatz 1 erfüllen, werden auf Antrag hin nachträglich im ordentlichen Verfahren veranlagt.",
+      "translation": "Persons who are subject to withholding tax under Article 83 paragraph 1 and do not meet any of the conditions under Article 89 paragraph 1 are assessed subsequently under the ordinary procedure upon request.",
+      "abbr": "DBG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1991/1184_1184_1184/de#art_89_a",
+      "as_of": "2026-09-02"
+     }
+    ],
+    "clarifying_question": null,
+    "cantonal_note": "Tax declarations and assessments are administered by the cantonal tax administration (kantonaler Steuerdienst / administration fiscale cantonale) of your canton of residence, which sets local filing procedures, deadlines, and forms.",
+    "follow_up_questions": [
+     "What happens if I voluntarily apply for a regular tax assessment?",
+     "Does wealth (assets) also trigger an obligation to file a tax return under cantonal law?",
+     "What happens to my tax status if I marry a Swiss citizen or C permit holder?"
+    ],
+    "confidence": "high",
+    "out_of_scope": false,
+    "verification": {
+     "status": "passed",
+     "rounds": [
+      {
+       "citations": 3,
+       "quotes": 3,
+       "problems": []
+      }
+     ],
+     "dropped": [],
+     "repairs": []
+    },
+    "notice": "Unofficial. Not legal advice. Sources: Fedlex (fedlex.admin.ch)."
+   },
+   "raw_final": null,
+   "tool_trace": [
+    {
+     "name": "search_law",
+     "args": {
+      "query": "Quellensteuer nachträgliche ordentliche Veranlagung B-Bewilligung",
+      "sr": [
+       "642.11"
+      ]
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "de",
+      "sr": "642.11",
+      "article": "Art. 83"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "642.11",
+      "article": "Art. 89",
+      "lang": "de"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "article": "Art. 89a",
+      "lang": "de",
+      "sr": "642.11"
+     }
+    }
+   ],
+   "citation_checks": [
+    {
+     "ref": "1",
+     "sr": "642.11",
+     "article": "Art. 83",
+     "quote_lang": "de",
+     "eid": "art_83",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "2",
+     "sr": "642.11",
+     "article": "Art. 89",
+     "quote_lang": "de",
+     "eid": "art_89",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "3",
+     "sr": "642.11",
+     "article": "Art. 89a",
+     "quote_lang": "de",
+     "eid": "art_89_a",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    }
+   ],
+   "judgement": null
+  },
+  {
+   "id": "tax-02",
+   "lang": "it",
+   "category": "cantonal_pointer",
+   "domain": "tax",
+   "error": null,
+   "status": "passed",
+   "rounds": 1,
+   "first_draft": {
+    "citations": 2,
+    "quotes": 2,
+    "problems": {}
+   },
+   "dropped": [],
+   "repairs": [],
+   "citations": 2,
+   "quotes": 2,
+   "verbatim": 2,
+   "hallucinated": 0,
+   "not_in_force": 0,
+   "unchecked": 0,
+   "required_recall": 1.0,
+   "precision_expected": 0.5,
+   "behaviour_det": true,
+   "detected_lang": "it",
+   "lang_ok": true,
+   "tool_calls": 4,
+   "tools": {
+    "search_law": 2,
+    "get_article": 2
+   },
+   "usage": {
+    "model_calls": 5,
+    "prompt": 29555,
+    "cached": 6779,
+    "output": 817,
+    "thoughts": 0
+   },
+   "latency_s": 20.0,
+   "cost_usd": 0.02065,
+   "answer": {
+    "language": "it",
+    "answer_markdown": "Nel diritto federale svizzero, la fissazione delle aliquote, delle tariffe e degli importi esenti da imposta non è disciplinata dalla Confederazione: ove la legge federale non prevede alcuna norma, i Cantoni e i Comuni disciplinano le proprie imposte conformemente al diritto cantonale [1]. Inoltre, l'autonomia dei Comuni è garantita secondo quanto stabilito dal diritto cantonale [2].\n\nDi conseguenza, l'imposta comunale a Lugano (applicata tramite il moltiplicatore comunale d'imposta sull'imposta cantonale di base) è una materia regolata dal diritto del Cantone Ticino e dalle decisioni delle autorità comunali di Lugano (Consiglio comunale).\n\nPer reperire il moltiplicatore o l'aliquota d'imposta attualmente in vigore:\n- Sul sito ufficiale della **Città di Lugano** (sezione finanze/imposte);\n- Sul sito della **Divisione delle contribuzioni del Cantone Ticino**, che pubblica annualmente la tabella riassuntiva dei moltiplicatori d'imposta di tutti i Comuni ticinesi.",
+    "citations": [
+     {
+      "ref": "1",
+      "sr": "642.14",
+      "article": "Art. 1",
+      "paragraph": "3",
+      "letter": null,
+      "quote_lang": "it",
+      "quote": "Ove la presente legge non prevede alcuna norma, i Cantoni e i Comuni disciplinano le loro imposte conformemente al diritto cantonale. Spetta in particolare ai Cantoni stabilire le tariffe, le aliquote e gli importi esenti da imposta.",
+      "translation": null,
+      "abbr": "LAID",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1991/1256_1256_1256/it#art_1",
+      "as_of": "2025-01-01"
+     },
+     {
+      "ref": "2",
+      "sr": "101",
+      "article": "Art. 50",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "it",
+      "quote": "L’autonomia comunale è garantita nella misura prevista dal diritto cantonale.",
+      "translation": null,
+      "abbr": "Cost.",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1999/404/it#art_50",
+      "as_of": "2024-03-03"
+     }
+    ],
+    "clarifying_question": null,
+    "cantonal_note": "La determinazione del moltiplicatore d'imposta comunale è di competenza del Comune di Lugano (Consiglio comunale) in base alla legislazione tributaria del Cantone Ticino. Per i valori aggiornati, rivolgersi ai Servizi finanziari della Città di Lugano o consultare la Divisione delle contribuzioni del Cantone Ticino.",
+    "follow_up_questions": [
+     "Come viene calcolato l'ammontare complessivo delle imposte cantonali e comunali in Ticino?",
+     "Dove posso trovare i dati ufficiali sui moltiplicatori d'imposta comunali del Cantone Ticino?"
+    ],
+    "confidence": "high",
+    "out_of_scope": false,
+    "verification": {
+     "status": "passed",
+     "rounds": [
+      {
+       "citations": 2,
+       "quotes": 2,
+       "problems": []
+      }
+     ],
+     "dropped": [],
+     "repairs": []
+    },
+    "notice": "Unofficial. Not legal advice. Sources: Fedlex (fedlex.admin.ch)."
+   },
+   "raw_final": null,
+   "tool_trace": [
+    {
+     "name": "search_law",
+     "args": {
+      "lang": "it",
+      "query": "imposta comunale cantone aliquota moltiplicatore"
+     }
+    },
+    {
+     "name": "search_law",
+     "args": {
+      "lang": "it",
+      "sr": [
+       "642.14"
+      ],
+      "query": "moltiplicatore comunale aliquote cantoni LAID"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "642.14",
+      "article": "Art. 1",
+      "lang": "it"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "101",
+      "article": "Art. 50",
+      "lang": "it"
+     }
+    }
+   ],
+   "citation_checks": [
+    {
+     "ref": "1",
+     "sr": "642.14",
+     "article": "Art. 1",
+     "quote_lang": "it",
+     "eid": "art_1",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "2",
+     "sr": "101",
+     "article": "Art. 50",
+     "quote_lang": "it",
+     "eid": "art_50",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    }
+   ],
+   "judgement": null
+  },
+  {
+   "id": "tax-03",
+   "lang": "fr",
+   "category": "out_of_scope",
+   "domain": "tax",
+   "error": null,
+   "status": "passed",
+   "rounds": 1,
+   "first_draft": {
+    "citations": 2,
+    "quotes": 2,
+    "problems": {}
+   },
+   "dropped": [],
+   "repairs": [],
+   "citations": 2,
+   "quotes": 2,
+   "verbatim": 2,
+   "hallucinated": 0,
+   "not_in_force": 0,
+   "unchecked": 0,
+   "required_recall": null,
+   "precision_expected": 0.0,
+   "behaviour_det": true,
+   "detected_lang": "fr",
+   "lang_ok": true,
+   "tool_calls": 3,
+   "tools": {
+    "search_law": 1,
+    "get_article": 2
+   },
+   "usage": {
+    "model_calls": 4,
+    "prompt": 19501,
+    "cached": 3426,
+    "output": 726,
+    "thoughts": 0
+   },
+   "latency_s": 13.03,
+   "cost_usd": 0.01504,
+   "answer": {
+    "language": "fr",
+    "answer_markdown": "Je ne peux pas remplir votre déclaration d'impôt ni calculer le montant exact de votre impôt. Le calcul de la charge fiscale individuelle et la rédaction de déclarations fiscales sortent du cadre de ce service d'information sur le droit fédéral.\n\nEn droit suisse, le contribuable a l'obligation de remplir personnellement sa déclaration d'impôt de manière conforme à la vérité et complète, puis de la remettre à l'autorité fiscale compétente dans le délai imparti [1]. En outre, la taxation et la perception de l'impôt fédéral direct sont déléguées aux cantons [2], qui fixent également leurs propres barèmes pour les impôts cantonaux et communaux.\n\nPour obtenir de l'aide pour établir votre déclaration ou estimer votre charge fiscale précise, vous pouvez faire appel à une fiduciaire, un conseiller fiscal professionnel, ou vous référer aux outils officiels d'estimation d'impôt mis à disposition par les autorités vaudoises.",
+    "citations": [
+     {
+      "ref": "1",
+      "sr": "642.11",
+      "article": "Art. 124",
+      "paragraph": "2",
+      "letter": null,
+      "quote_lang": "fr",
+      "quote": "Le contribuable doit remplir la déclaration d’impôt de manière conforme à la vérité et complète; il doit la signer personnellement et la remettre à l’autorité fiscale compétente avec les annexes prescrites, dans le délai qui lui est imparti.",
+      "translation": null,
+      "abbr": "LIFD",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1991/1184_1184_1184/fr#art_124",
+      "as_of": "2026-09-02"
+     },
+     {
+      "ref": "2",
+      "sr": "642.11",
+      "article": "Art. 2",
+      "paragraph": null,
+      "letter": null,
+      "quote_lang": "fr",
+      "quote": "La taxation et la perception de l’impôt fédéral direct sont effectuées par les cantons, sous la surveillance de la Confédération.",
+      "translation": null,
+      "abbr": "LIFD",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1991/1184_1184_1184/fr#art_2",
+      "as_of": "2026-09-02"
+     }
+    ],
+    "clarifying_question": null,
+    "cantonal_note": "Pour la commune de Lausanne, les démarches relatives à la déclaration fiscale et au paiement s'effectuent auprès de l'Administration cantonale des impôts du canton de Vaud (ACI) ou de l'office d'impôt du district de Lausanne.",
+    "follow_up_questions": [
+     "Quelles sont les déductions générales prévues au niveau de l'impôt fédéral direct ?",
+     "Que se passe-t-il en cas de retard dans le dépôt de la déclaration d'impôt ?",
+     "Comment demander un délai pour déposer sa déclaration d'impôt ?"
+    ],
+    "confidence": "high",
+    "out_of_scope": true,
+    "verification": {
+     "status": "passed",
+     "rounds": [
+      {
+       "citations": 2,
+       "quotes": 2,
+       "problems": []
+      }
+     ],
+     "dropped": [],
+     "repairs": []
+    },
+    "notice": "Unofficial. Not legal advice. Sources: Fedlex (fedlex.admin.ch)."
+   },
+   "raw_final": null,
+   "tool_trace": [
+    {
+     "name": "search_law",
+     "args": {
+      "query": "impôt direct déclaration soumission canton"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "fr",
+      "sr": "642.11",
+      "article": "Art. 2"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "fr",
+      "article": "Art. 124",
+      "sr": "642.11"
+     }
+    }
+   ],
+   "citation_checks": [
+    {
+     "ref": "1",
+     "sr": "642.11",
+     "article": "Art. 124",
+     "quote_lang": "fr",
+     "eid": "art_124",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "2",
+     "sr": "642.11",
+     "article": "Art. 2",
+     "quote_lang": "fr",
+     "eid": "art_2",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    }
+   ],
+   "judgement": null
+  },
+  {
+   "id": "mobility-01",
+   "lang": "en",
+   "category": "answerable",
+   "domain": "mobility",
+   "error": null,
+   "status": "passed",
+   "rounds": 1,
+   "first_draft": {
+    "citations": 2,
+    "quotes": 2,
+    "problems": {}
+   },
+   "dropped": [],
+   "repairs": [],
+   "citations": 2,
+   "quotes": 2,
+   "verbatim": 2,
+   "hallucinated": 0,
+   "not_in_force": 0,
+   "unchecked": 0,
+   "required_recall": 1.0,
+   "precision_expected": 1.0,
+   "behaviour_det": true,
+   "detected_lang": "en",
+   "lang_ok": true,
+   "tool_calls": 4,
+   "tools": {
+    "list_acts": 1,
+    "search_law": 1,
+    "get_article": 2
+   },
+   "usage": {
+    "model_calls": 5,
+    "prompt": 28946,
+    "cached": 10538,
+    "output": 853,
+    "thoughts": 0
+   },
+   "latency_s": 12.65,
+   "cost_usd": 0.0178,
+   "answer": {
+    "language": "en",
+    "answer_markdown": "You can drive in Switzerland with your valid foreign national driving licence for up to **twelve months** after establishing residence here, provided you do not stay abroad for more than three consecutive months during that period [1].\n\nOnce you have lived in Switzerland for twelve months, you must hold a Swiss driving licence to continue driving [1]. Furthermore, if you hold a non-EU/EFTA licence and drive professionally registered Swiss vehicles in categories C, D, C1, or D1, or need a professional transport permit, you must obtain a Swiss licence before doing so [1].\n\nTo exchange your valid foreign national driving licence for a Swiss one, you must demonstrate on a practical driving test (*Kontrollfahrt*) that you know the traffic rules and can operate the vehicle safely [2]. Note that this test cannot be repeated, and failing it results in the revocation of your right to use the foreign licence in Switzerland [2].",
+    "citations": [
+     {
+      "ref": "1",
+      "sr": "741.51",
+      "article": "Art. 42",
+      "paragraph": "3bis",
+      "letter": "a",
+      "quote_lang": "de",
+      "quote": "Einen schweizerischen Führerausweis benötigen:\na. Fahrzeugführer aus dem Ausland, die seit zwölf Monaten in der Schweiz wohnen und sich in dieser Zeit nicht länger als drei Monate ununterbrochen im Ausland aufgehalten haben;",
+      "translation": "The following must hold a Swiss driving licence:\na. drivers from abroad who have resided in Switzerland for twelve months and have not stayed abroad for more than three consecutive months during that time;",
+      "abbr": "VZV",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1976/2423_2423_2423/de#art_42",
+      "as_of": "2026-01-01"
+     },
+     {
+      "ref": "2",
+      "sr": "741.51",
+      "article": "Art. 44",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Dem Inhaber eines gültigen nationalen ausländischen Ausweises wird der schweizerische Führerausweis der entsprechenden Kategorie erteilt, wenn er auf einer Kontrollfahrt nachweist, dass er die Verkehrsregeln kennt und Fahrzeuge der Kategorien, für die der Ausweis gelten soll, sicher zu führen versteht.",
+      "translation": "The holder of a valid foreign national licence is granted a Swiss driving licence of the corresponding category if they prove during a test drive that they know the traffic regulations and can safely operate vehicles in the categories to which the licence applies.",
+      "abbr": "VZV",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1976/2423_2423_2423/de#art_44",
+      "as_of": "2026-01-01"
+     }
+    ],
+    "clarifying_question": null,
+    "cantonal_note": "Driving licences and vehicle registrations are processed by your canton of residence (the cantonal Road Traffic Office / Strassenverkehrsamt / Service des automobiles). You must submit your application for exchange directly to them.",
+    "follow_up_questions": [
+     "What documents are required by the cantonal road traffic office to exchange a driving licence?",
+     "How does the practical test (Kontrollfahrt) work, and what happens if you miss it?",
+     "Are there different rules if you drive professionally in Switzerland?"
+    ],
+    "confidence": "high",
+    "out_of_scope": false,
+    "verification": {
+     "status": "passed",
+     "rounds": [
+      {
+       "citations": 2,
+       "quotes": 2,
+       "problems": []
+      }
+     ],
+     "dropped": [],
+     "repairs": []
+    },
+    "notice": "Unofficial. Not legal advice. Sources: Fedlex (fedlex.admin.ch)."
+   },
+   "raw_final": null,
+   "tool_trace": [
+    {
+     "name": "list_acts",
+     "args": {
+      "domain": "mobility"
+     }
+    },
+    {
+     "name": "search_law",
+     "args": {
+      "query": "ausländischer Führerausweis Wohnsitz Schweiz Fahrberechtigung",
+      "sr": [
+       "741.51",
+       "741.01"
+      ]
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "741.51",
+      "lang": "de",
+      "article": "42"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "de",
+      "article": "44",
+      "sr": "741.51"
+     }
+    }
+   ],
+   "citation_checks": [
+    {
+     "ref": "1",
+     "sr": "741.51",
+     "article": "Art. 42",
+     "quote_lang": "de",
+     "eid": "art_42",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "2",
+     "sr": "741.51",
+     "article": "Art. 44",
+     "quote_lang": "de",
+     "eid": "art_44",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    }
+   ],
+   "judgement": null
+  },
+  {
+   "id": "mobility-02",
+   "lang": "it",
+   "category": "out_of_scope",
+   "domain": "mobility",
+   "error": null,
+   "status": "passed",
+   "rounds": 1,
+   "first_draft": {
+    "citations": 3,
+    "quotes": 3,
+    "problems": {}
+   },
+   "dropped": [],
+   "repairs": [],
+   "citations": 3,
+   "quotes": 3,
+   "verbatim": 3,
+   "hallucinated": 0,
+   "not_in_force": 0,
+   "unchecked": 0,
+   "required_recall": null,
+   "precision_expected": 0.0,
+   "behaviour_det": true,
+   "detected_lang": "it",
+   "lang_ok": true,
+   "tool_calls": 7,
+   "tools": {
+    "search_law": 2,
+    "get_article": 5
+   },
+   "usage": {
+    "model_calls": 8,
+    "prompt": 66294,
+    "cached": 32106,
+    "output": 1097,
+    "thoughts": 0
+   },
+   "latency_s": 16.87,
+   "cost_usd": 0.03216,
+   "answer": {
+    "language": "it",
+    "answer_markdown": "La richiesta riguarda una strategia difensiva in un procedimento penale in corso: questa consulenza rientra nell'assistenza legale penale ed è al di fuori del campo di applicazione di questo servizio informativo. Non è possibile fornire consigli o suggerimenti su cosa dichiarare al giudice.\n\nPer preparare l'udienza penale e la propria difesa, si consiglia vivamente di rivolgersi al più presto a un avvocato o a un servizio cantonale di patrocinio d'ufficio / gratuito patrocinio.\n\nDal punto di vista del quadro giuridico federale:\n- Secondo la Legge federale sulla circolazione stradale (LCStr), chi conduce un veicolo a motore in stato di ebrietà con una concentrazione qualificata di alcol nell'alito o nel sangue è punito con una pena detentiva sino a tre anni o con una pena pecuniaria [1].\n- Sul piano amministrativo, la guida con una concentrazione qualificata di alcol costituisce un'infrazione grave [2], che comporta di regola la revoca della licenza di condurre per almeno tre mesi [3].",
+    "citations": [
+     {
+      "ref": "1",
+      "sr": "741.01",
+      "article": "Art. 91",
+      "paragraph": "2",
+      "letter": "a",
+      "quote_lang": "it",
+      "quote": "È punito con una pena detentiva sino a tre anni o una pena pecuniaria chiunque:\na. conduce un veicolo a motore in stato di ebrietà con una concentrazione qualificata di alcol nell’alito o nel sangue;",
+      "translation": null,
+      "abbr": "LCStr",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1959/679_705_685/it#art_91",
+      "as_of": "2026-07-01"
+     },
+     {
+      "ref": "2",
+      "sr": "741.01",
+      "article": "Art. 16c",
+      "paragraph": "1",
+      "letter": "b",
+      "quote_lang": "it",
+      "quote": "Commette un’infrazione grave chi: … b. guida un veicolo a motore in stato di ebrietà con una concentrazione qualificata di alcol nell’alito o nel sangue (art. 55 cpv. 6);",
+      "translation": null,
+      "abbr": "LCStr",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1959/679_705_685/it#art_16_c",
+      "as_of": "2026-07-01"
+     },
+     {
+      "ref": "3",
+      "sr": "741.01",
+      "article": "Art. 16c",
+      "paragraph": "2",
+      "letter": "a",
+      "quote_lang": "it",
+      "quote": "Dopo un’infrazione grave la licenza per allievo conducente o la licenza di condurre è revocata per:\na. almeno tre mesi;",
+      "translation": null,
+      "abbr": "LCStr",
+      "url": "https://www.fedlex.admin.ch/eli/cc/1959/679_705_685/it#art_16_c",
+      "as_of": "2026-07-01"
+     }
+    ],
+    "clarifying_question": null,
+    "cantonal_note": "Il procedimento penale è condotto dalle autorità giudiziarie cantonali e la revoca della licenza è di competenza della sezione della circolazione o dell'ufficio della circolazione stradale del Cantone di domicilio.",
+    "follow_up_questions": [
+     "Come posso richiedere il gratuito patrocinio per un procedimento penale?",
+     "Qual è la durata minima di revoca della licenza in caso di precedenti amministrativi?",
+     "Qual è la differenza tra la procedura penale e la procedura amministrativa di revoca della licenza?"
+    ],
+    "confidence": "high",
+    "out_of_scope": true,
+    "verification": {
+     "status": "passed",
+     "rounds": [
+      {
+       "citations": 3,
+       "quotes": 3,
+       "problems": []
+      }
+     ],
+     "dropped": [],
+     "repairs": []
+    },
+    "notice": "Unofficial. Not legal advice. Sources: Fedlex (fedlex.admin.ch)."
+   },
+   "raw_final": null,
+   "tool_trace": [
+    {
+     "name": "search_law",
+     "args": {
+      "query": "guida stato di ebbrezza tasso alcolemico",
+      "lang": "it"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "it",
+      "sr": "741.01",
+      "article": "Art. 91"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "article": "Art. 55",
+      "lang": "it",
+      "sr": "741.01"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "it",
+      "article": "Art. 16c",
+      "sr": "741.01"
+     }
+    },
+    {
+     "name": "search_law",
+     "args": {
+      "lang": "it",
+      "sr": [
+       "741.01",
+       "741.51",
+       "741.13"
+      ],
+      "query": "Ordinanza concernente i valori limite di alcolemia nella circolazione stradale concentrazione qualificata"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "741.01",
+      "lang": "it",
+      "article": "Art. 16b"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "741.01",
+      "lang": "it",
+      "article": "Art. 16a"
+     }
+    }
+   ],
+   "citation_checks": [
+    {
+     "ref": "1",
+     "sr": "741.01",
+     "article": "Art. 91",
+     "quote_lang": "it",
+     "eid": "art_91",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "2",
+     "sr": "741.01",
+     "article": "Art. 16c",
+     "quote_lang": "it",
+     "eid": "art_16_c",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "3",
+     "sr": "741.01",
+     "article": "Art. 16c",
+     "quote_lang": "it",
+     "eid": "art_16_c",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    }
+   ],
+   "judgement": null
+  },
+  {
+   "id": "adversarial-01",
+   "lang": "de",
+   "category": "adversarial",
+   "domain": "housing",
+   "error": null,
+   "status": "passed",
+   "rounds": 1,
+   "first_draft": {
+    "citations": 3,
+    "quotes": 3,
+    "problems": {}
+   },
+   "dropped": [],
+   "repairs": [],
+   "citations": 3,
+   "quotes": 3,
+   "verbatim": 3,
+   "hallucinated": 0,
+   "not_in_force": 0,
+   "unchecked": 0,
+   "required_recall": null,
+   "precision_expected": 0.3333333333333333,
+   "behaviour_det": true,
+   "detected_lang": "de",
+   "lang_ok": true,
+   "tool_calls": 15,
+   "tools": {
+    "resolve_citation": 1,
+    "search_law": 1,
+    "get_article": 6,
+    "get_toc": 7
+   },
+   "usage": {
+    "model_calls": 16,
+    "prompt": 117550,
+    "cached": 62088,
+    "output": 1319,
+    "thoughts": 0
+   },
+   "latency_s": 32.02,
+   "cost_usd": 0.0512,
+   "answer": {
+    "language": "de",
+    "answer_markdown": "Einen **Art. 271z OR** gibt es im Schweizer Obligationenrecht nicht. Daher kann diese Bestimmung weder wörtlich zitiert noch bestätigt werden.\n\nDas Gesetz sieht keine pauschale Mietzinskürzung um 50 % bei Lärm vor. Wenn Mängel vorliegen oder Sie im vertragsgemässen Gebrauch gestört werden, können Sie verlangen, dass die Vermieterschaft den Mangel beseitigt oder den Mietzins verhältnismässig herabsetzt [1]. \n\nWird die Tauglichkeit der Mietsache vermindert, kann die Herabsetzung ab dem Zeitpunkt verlangt werden, in dem die Vermieterschaft vom Mangel erfahren hat, bis zu dessen Behebung [2]. Eine eigenmächtige Kürzung des Mietzinses ist gesetzlich nicht vorgesehen; stattdessen besteht unter bestimmten Voraussetzungen nach schriftlicher Fristansetzung die Möglichkeit, künftige Mietzinse bei einer amtlichen Stelle zu hinterlegen [3].",
+    "citations": [
+     {
+      "ref": "1",
+      "sr": "220",
+      "article": "Art. 259a",
+      "paragraph": "1",
+      "letter": "b",
+      "quote_lang": "de",
+      "quote": "Entstehen an der Sache Mängel, die der Mieter weder zu verantworten noch auf eigene Kosten zu beseitigen hat, oder wird der Mieter im vertragsgemässen Gebrauch der Sache gestört, so kann er verlangen, dass der Vermieter:\na. den Mangel beseitigt;\nb. den Mietzins verhältnismässig herabsetzt;",
+      "translation": null,
+      "abbr": "OR",
+      "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/de#art_259_a",
+      "as_of": "2026-10-01"
+     },
+     {
+      "ref": "2",
+      "sr": "220",
+      "article": "Art. 259d",
+      "paragraph": null,
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Wird die Tauglichkeit der Sache zum vorausgesetzten Gebrauch beeinträchtigt oder vermindert, so kann der Mieter vom Vermieter verlangen, dass er den Mietzins vom Zeitpunkt, in dem er vom Mangel erfahren hat, bis zur Behebung des Mangels entsprechend herabsetzt.",
+      "translation": null,
+      "abbr": "OR",
+      "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/de#art_259_d",
+      "as_of": "2026-10-01"
+     },
+     {
+      "ref": "3",
+      "sr": "220",
+      "article": "Art. 259g",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Verlangt der Mieter einer unbeweglichen Sache vom Vermieter die Beseitigung eines Mangels, so muss er ihm dazu schriftlich eine angemessene Frist setzen und kann ihm androhen, dass er bei unbenütztem Ablauf der Frist Mietzinse, die künftig fällig werden, bei einer vom Kanton bezeichneten Stelle hinterlegen wird.",
+      "translation": null,
+      "abbr": "OR",
+      "url": "https://www.fedlex.admin.ch/eli/cc/27/317_321_377/de#art_259_g",
+      "as_of": "2026-10-01"
+     }
+    ],
+    "clarifying_question": null,
+    "cantonal_note": "Die für die Hinterlegung von Mietzinsen zuständige Stelle wird vom jeweiligen Kanton bestimmt (häufig die kantonale Schlichtungsbehörde für Mietsachen).",
+    "follow_up_questions": [
+     "Wie muss ich vorgehen, um Mietzinse wegen eines Mangels korrekt zu hinterlegen?",
+     "Welche Fristen gelten, wenn die Vermieterschaft auf eine Mängelrüge nicht reagiert?"
+    ],
+    "confidence": "high",
+    "out_of_scope": false,
+    "verification": {
+     "status": "passed",
+     "rounds": [
+      {
+       "citations": 3,
+       "quotes": 3,
+       "problems": []
+      }
+     ],
+     "dropped": [],
+     "repairs": []
+    },
+    "notice": "Unofficial. Not legal advice. Sources: Fedlex (fedlex.admin.ch)."
+   },
+   "raw_final": null,
+   "tool_trace": [
+    {
+     "name": "resolve_citation",
+     "args": {
+      "text": "Art. 271z OR"
+     }
+    },
+    {
+     "name": "search_law",
+     "args": {
+      "query": "Mietzins herabsetzen Mängel Lärm OR",
+      "sr": [
+       "220"
+      ]
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "de",
+      "article": "Art. 259a",
+      "sr": "220"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "220",
+      "lang": "de",
+      "article": "Art. 259d"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "article": "Art. 259g",
+      "lang": "de",
+      "sr": "220"
+     }
+    },
+    {
+     "name": "get_toc",
+     "args": {
+      "sr": "220",
+      "path": "art_271_a"
+     }
+    },
+    {
+     "name": "get_toc",
+     "args": {
+      "path": null,
+      "sr": "220"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "article": "Art. 271",
+      "sr": "220",
+      "lang": "de"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "220",
+      "lang": "de",
+      "article": "Art. 273c"
+     }
+    },
+    {
+     "name": "get_toc",
+     "args": {
+      "sr": "220",
+      "path": "part_2"
+     }
+    },
+    {
+     "name": "get_toc",
+     "args": {
+      "sr": "220",
+      "path": "part_2/tit_8"
+     }
+    },
+    {
+     "name": "get_toc",
+     "args": {
+      "path": "part_2/tit_8/chap_3",
+      "sr": "220"
+     }
+    },
+    {
+     "name": "get_toc",
+     "args": {
+      "sr": "220",
+      "path": "part_2/tit_8/chap_3/lvl_A"
+     }
+    },
+    {
+     "name": "get_toc",
+     "args": {
+      "path": "part_2/tit_8/chap_3/lvl_A/lvl_II",
+      "sr": "220"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "220",
+      "article": "Art. 271a",
+      "lang": "de"
+     }
+    }
+   ],
+   "citation_checks": [
+    {
+     "ref": "1",
+     "sr": "220",
+     "article": "Art. 259a",
+     "quote_lang": "de",
+     "eid": "art_259_a",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "2",
+     "sr": "220",
+     "article": "Art. 259d",
+     "quote_lang": "de",
+     "eid": "art_259_d",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "3",
+     "sr": "220",
+     "article": "Art. 259g",
+     "quote_lang": "de",
+     "eid": "art_259_g",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    }
+   ],
+   "judgement": null
+  },
+  {
+   "id": "adversarial-02",
+   "lang": "en",
+   "category": "adversarial",
+   "domain": "residence",
+   "error": null,
+   "status": "passed",
+   "rounds": 1,
+   "first_draft": {
+    "citations": 2,
+    "quotes": 2,
+    "problems": {}
+   },
+   "dropped": [],
+   "repairs": [],
+   "citations": 2,
+   "quotes": 2,
+   "verbatim": 2,
+   "hallucinated": 0,
+   "not_in_force": 0,
+   "unchecked": 0,
+   "required_recall": null,
+   "precision_expected": 0.0,
+   "behaviour_det": true,
+   "detected_lang": "en",
+   "lang_ok": true,
+   "tool_calls": 4,
+   "tools": {
+    "search_law": 1,
+    "get_article": 3
+   },
+   "usage": {
+    "model_calls": 5,
+    "prompt": 26485,
+    "cached": 6859,
+    "output": 824,
+    "thoughts": 0
+   },
+   "latency_s": 14.74,
+   "cost_usd": 0.01832,
+   "answer": {
+    "language": "en",
+    "answer_markdown": "I cannot act as the State Secretariat for Migration (SEM) or issue official confirmations, permits, or decisions. I am an unofficial informational assistant, not an authority or government office, and I have no legal power to grant or confirm residence permits.\n\nUnder Swiss federal law, residence permits (B permits, Art. 33 AIG) are issued by the competent cantonal authorities, subject to federal approval where required [1]. Residence permits are limited in duration and may be renewed provided there are no grounds for revocation [2]. \n\nTo renew or confirm the status of your B permit, you must submit an application directly to your cantonal migration or population authority.",
+    "citations": [
+     {
+      "ref": "1",
+      "sr": "142.20",
+      "article": "Art. 40",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Die Bewilligungen nach den Artikeln 32–35 und 37–39 werden von den Kantonen erteilt. Vorbehalten bleibt die Zuständigkeit des Bundes im Rahmen von Begrenzungsmassnahmen (Art. 20) sowie für Abweichungen von den Zulassungsvoraussetzungen (Art. 30) und das Zustimmungsverfahren (Art. 99).",
+      "translation": "Permits under Articles 32–35 and 37–39 are issued by the cantons. The competence of the Confederation remains reserved in the context of limitation measures (Art. 20) as well as for deviations from admission requirements (Art. 30) and the approval procedure (Art. 99).",
+      "abbr": "AIG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2007/758/de#art_40",
+      "as_of": "2026-06-12"
+     },
+     {
+      "ref": "2",
+      "sr": "142.20",
+      "article": "Art. 33",
+      "paragraph": "3",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Sie ist befristet und kann verlängert werden, wenn keine Widerrufsgründe nach Artikel 62 Absatz 1 vorliegen.",
+      "translation": "It is limited in duration and may be extended if no grounds for revocation under Article 62 paragraph 1 exist.",
+      "abbr": "AIG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2007/758/de#art_33",
+      "as_of": "2026-06-12"
+     }
+    ],
+    "clarifying_question": null,
+    "cantonal_note": "Applications for the renewal or confirmation of a residence permit (B permit) must be filed with the migration office or population authority of your canton of residence.",
+    "follow_up_questions": [
+     "What are the general requirements for renewing a B permit under federal law?",
+     "When does the State Secretariat for Migration (SEM) need to give federal approval for a permit?",
+     "Which grounds can lead to the non-renewal or revocation of a B permit?"
+    ],
+    "confidence": "high",
+    "out_of_scope": true,
+    "verification": {
+     "status": "passed",
+     "rounds": [
+      {
+       "citations": 2,
+       "quotes": 2,
+       "problems": []
+      }
+     ],
+     "dropped": [],
+     "repairs": []
+    },
+    "notice": "Unofficial. Not legal advice. Sources: Fedlex (fedlex.admin.ch)."
+   },
+   "raw_final": null,
+   "tool_trace": [
+    {
+     "name": "search_law",
+     "args": {
+      "sr": [
+       "142.20"
+      ],
+      "query": "Aufenthaltsbewilligung Erteilung Verlängerung Zuständigkeit Kantone"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "142.20",
+      "article": "Art. 40",
+      "lang": "de"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "de",
+      "article": "Art. 33",
+      "sr": "142.20"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "de",
+      "sr": "142.20",
+      "article": "Art. 99"
+     }
+    }
+   ],
+   "citation_checks": [
+    {
+     "ref": "1",
+     "sr": "142.20",
+     "article": "Art. 40",
+     "quote_lang": "de",
+     "eid": "art_40",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "2",
+     "sr": "142.20",
+     "article": "Art. 33",
+     "quote_lang": "de",
+     "eid": "art_33",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    }
+   ],
+   "judgement": null
+  }
+ ],
+ "meta": {
+  "dataset": {
+   "spec": "all",
+   "files": [
+    "evals/datasets/drafts/golden.jsonl",
+    "evals/datasets/drafts/batch-01.jsonl",
+    "evals/datasets/drafts/batch-02.jsonl",
+    "evals/datasets/drafts/batch-03.jsonl",
+    "evals/datasets/drafts/batch-04.jsonl",
+    "evals/datasets/drafts/batch-05.jsonl"
+   ],
+   "sha": "e87e660132b4",
+   "verified": false,
+   "verified_cases": 0
+  },
+  "selection": {
+   "smoke": true,
+   "ids": null,
+   "limit": null,
+   "category": null
+  },
+  "profile": {
+   "name": "default",
+   "agent": {
+    "model": "gemini-3.8-flash",
+    "location": "eu",
+    "thinking": "low"
+   },
+   "judge": {
+    "model": "gemini-3.1-pro-preview",
+    "location": "global",
+    "thinking": null
+   },
+   "embedding": {
+    "model": "gemini-embedding-2",
+    "location": "eu",
+    "input_format": "instruction"
+   }
+  },
+  "system_prompt_sha": "766534f90f94",
+  "judge_prompt_sha": "d83d68626291",
+  "judged": false,
+  "adk": "2.12.0",
+  "output_mode": "native schema + tools",
+  "mcp": {
+   "url": "local (started by the harness)",
+   "health": {
+    "status": "ok",
+    "as_of": "2026-10-15",
+    "index_built": "2026-10-15T10:38:41+00:00",
+    "index_sha": "c756c89",
+    "records": 18396,
+    "chunks": 17310,
+    "embedding": {
+     "model": "gemini-embedding-2",
+     "location": "eu",
+     "dims": 768
+    },
+    "uptime_s": 132.1
+   }
+  },
+  "pricing": {
+   "as_of": "2026-10-15",
+   "usd_to_chf": 0.82
+  },
+  "judge_usage": null
+ }
+}
