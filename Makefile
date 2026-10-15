@@ -76,8 +76,8 @@ eval-smoke: ## 20-case smoke eval -> evals/reports/
 eval-full: ## Full golden + adversarial eval
 	$(call todo,M4)
 
-deploy-mcp: ## Cloud Run deploy of the MCP server (asks first; GCP.md §4)
-	$(call todo,M2)
+deploy-mcp: ## Build + push + Cloud Run deploy of the MCP server (ask first; DRY_RUN=1 to preview)
+	bash infra/deploy_mcp.sh
 
 deploy-agent: ## Agent Runtime deploy (asks first; GCP.md §4)
 	$(call todo,M5)
