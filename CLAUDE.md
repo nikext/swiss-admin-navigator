@@ -106,11 +106,14 @@ make resolve      # refresh the lock from Fedlex (AS_OF=YYYY-MM-DD, default toda
 make ingest       # locked corpus → download (cached, sha-checked) + parse → data/articles.jsonl
 make spotcheck    # N random articles vs Fedlex's HTML rendering (N=10)
 make fixtures     # re-cut parser test fixtures from the cache
-make index        # (M2) embed + build data/index.sqlite
-make mcp-dev      # (M2) run MCP server locally (stdio + http)
+make index        # chunk + embed (cached by content) + build data/index.sqlite
+make index-e4     # E4 experiment index (both tokenizers, three vector spaces)
+make eval-retrieval  # recall@k/MRR of the served config (E4=1: the E4 grid)
+make mcp-dev      # MCP server on http://127.0.0.1:8080/mcp (STDIO=1: stdio)
 make eval-smoke   # (M3) 20-case smoke eval → evals/reports/
 make eval-full    # (M4) full golden + adversarial
-make deploy-mcp | deploy-agent | deploy-web   # (M2/M5/M6, ask first)
+make deploy-mcp   # build + push + Cloud Run (ask first; DRY_RUN=1 previews)
+make deploy-agent | deploy-web   # (M5/M6, ask first)
 ```
 
 Integration tests (network/GCP) are marked `@pytest.mark.integration` and

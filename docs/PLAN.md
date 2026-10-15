@@ -9,7 +9,7 @@ what was verified. Update the status table in the same PR.
 |---|---|---|---|
 | M0 | Bootstrap: tooling, CI, GCP project | ✅ done | [#1](https://github.com/nikext/swiss-admin-navigator/pull/1). Gemini isn't served in europe-west6, so model endpoints are `eu`/`global` (ADR-013) |
 | M1 | Corpus pipeline: Fedlex → `articles.jsonl` | ✅ done | #2. 23 acts, 18,396 records; spot-check vs Fedlex HTML 10/10 + 100/100 (DATA.md §6–7, ADR-014) |
-| M2 | Index + swiss-law MCP server (local → Cloud Run) | ⬜ todo | |
+| M2 | Index + swiss-law MCP server (local → Cloud Run) | ✅ done | #3. E4: dense R@8 98.5 on 102 queries, hybrid −13.7 (ADR-016); public at https://swiss-nav-mcp-mdyqt5hgsq-oa.a.run.app/mcp; cold start 2.07 s instance / 2.64 s first response / 3.89 s first search result (ADR-017) |
 | M3 | `navigator_v1` single agent (local) + eval harness v0 | ⬜ todo | |
 | M4 | Golden set (150) + CI eval gates | ⬜ todo | |
 | M5 | Deploy to Agent Runtime + Sessions + tracing | ⬜ todo | |
@@ -86,14 +86,15 @@ Tasks
   and run **experiment E4** (BM25 vs dense vs hybrid; tokenizers; chunk
   headers). Pick the default by measurement and record the numbers in
   DECISIONS.md.
-- `mcp_server/`: FastMCP, Streamable HTTP at `/mcp`, stdio for local, an
-  in-app per-IP rate limit on `search_law`, structured JSON logs, and
-  `/healthz`.
+- `mcp_server/`: `MCPServer` (the `mcp` 2.x name for FastMCP), stateless
+  Streamable HTTP at `/mcp`, stdio for local, an in-app per-IP rate limit on
+  `search_law`, structured JSON logs, and `/health` (Cloud Run reserves
+  `/healthz`; ADR-017).
 - `resolve_citation`: a parser for DE/FR/IT citation styles with ≥ 40
   unit-test cases ("Art. 271a Abs. 1 lit. a OR", "art. 271a al. 1 let. a CO",
   "art. 30 cpv. 1 lett. a LStrI", "Art. 329g bis OR").
-- Dockerfile with the index baked in. Deploy to Cloud Run (GCP.md §4, ask
-  first).
+- Dockerfile with the index baked in (built from the repo root). Deploy to
+  Cloud Run gen2 with `make deploy-mcp` (GCP.md §4, ask first).
 - Add the server to Claude Code (`claude mcp add --transport http swiss-law <url>/mcp`)
   and test a few questions by hand.
 

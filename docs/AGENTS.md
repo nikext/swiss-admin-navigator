@@ -25,21 +25,27 @@ Framework: **Google ADK (Python) 2.x**. Latest is `google-adk 2.12.0`
 
 ## 2. Tools (served by the MCP server)
 
-All tools are read-only and return JSON. Expose them through `McpToolset` with
-an explicit `tool_filter`.
+All tools are read-only (MCP `readOnlyHint`) and return JSON objects
+(structured content). Expose them through `McpToolset` with an explicit
+`tool_filter`. As built and verified in M2 (`mcp_server/tools.py`); `sr`
+accepts an SR number or any official abbreviation/alias (`"220"`, `"OR"`,
+`"CO"`, `"AuG"`).
 
 | Tool | Signature | Returns | Notes |
 |---|---|---|---|
-| `search_law` | `(query: str, lang: str \| None, sr: list[str] \| None, k: int = 8)` | `[{sr, abbr, label, eid, lang, heading_path, snippet, score, url, as_of}]` | Hybrid: FTS5 (BM25) + vector, fused with RRF. Returns only `status: in_force` articles by default (repealed and omitted are excluded, DATA.md §3). Cross-lingual: an EN query may retrieve DE/FR/IT text. |
-| `get_article` | `(sr: str, article: str, lang: str = "de")` | `{sr, abbr, label, lang, heading_path, text, paragraphs[], notes[], url, as_of, available_langs[]}` | `article` accepts `"271a"`, `"Art. 271a"` and `"art_271_a"`. Falls back to `de` when the requested language is missing and says so. |
-| `get_toc` | `(sr: str, lang: str = "de", path: str \| None = None, depth: int = 1)` | `{node, children: [{path, num, heading, kind: level\|article, label?}]}` | Tree navigation, so the agent can browse ("vectorless" / PageIndex-style retrieval). Measure whether it helps (EVALS.md exp. E3). |
-| `list_acts` | `(domain: str \| None = None)` | `[{sr, abbr{de,fr,it}, title, domain, langs, as_of}]` | Cheap orientation. |
-| `resolve_citation` | `(text: str)` | `[{sr, abbr, article, paragraph?, letter?, eid, url}]` | Deterministic parser for "Art. 271a Abs. 1 lit. a OR", "art. 271a al. 1 let. a CO", "art. 33 LEI", "§"-free Swiss style. Covers DE/FR/IT abbreviations. Unit-tested heavily. |
+| `search_law` | `(query: str, lang: str \| None, sr: list[str] \| None, k: int = 8)` | `{results: [{sr, abbr, label, eid, paragraph_eid?, lang, heading, heading_path, snippet, score, url, as_of}], mode, notice, degraded?}` | **Dense** retrieval (gemini-embedding-2, 768 dims) over in-force chunks; BM25 only as fallback when the query embedding fails (`mode: "bm25"`, `degraded` says why). ADR-016. One result per article (chunks and language versions collapse). Cross-lingual. With `lang` unset, each hit is shown in the question's language when the article exists in it. `k` ≤ 20; rate-limited per client IP. |
+| `get_article` | `(sr: str, article: str, lang: str = "de")` | `{sr, abbr, act_title, label, eid, lang, status, heading, heading_path, text, paragraphs[{eid, num, text}], notes[], url, as_of, available_langs[], fallback?, translation_note?, other_matches?, status_note?}` | `article` accepts `"271a"`, `"Art. 271a"`, `"art. 329 g bis"` and eIds like `"art_271_a"` or `"disp_u2/art_1"`. Falls back to DE (then any language) and says so. Repealed/omitted articles are returned with their status. `other_matches` lists scoped namesakes (`disp_u2/art_1` for "Art. 1"). |
+| `get_toc` | `(sr: str, lang: str = "de", path: str \| None = None, depth: int = 1)` | `{sr, abbr, act_title, lang, path, children: [{path, kind: level\|article, title, label?, children?}], as_of, truncated?}` | `path` is a container eId from a previous call (`part_2/tit_8/chap_3`); Fedlex reuses a few, those get `~2`. `depth` ≤ 3, at most 300 nodes. For E3 ("vectorless" browsing). |
+| `list_acts` | `(domain: str \| None = None)` | `{acts: [{sr, abbr{de,fr,it,en?}, title, titles{…}, domain[], langs[], as_of}], notice}` | Domains: general, residence, work, housing, tax, mobility. |
+| `resolve_citation` | `(text: str)` | `{citations: [{text, sr, abbr, article, eid, exists, status?, url?, lang?, paragraph?, paragraph_eid?, paragraph_exists?, letter?, letter_exists?, range_end?, following?, scope?, other_matches?, error?}]}` | Deterministic parser for DE/FR/IT/EN styles ("Art. 271a Abs. 1 lit. a OR", "art. 271a al. 1 let. a CO", "art. 30 cpv. 1 lett. a LStrI", "Art. 329g bis OR", ranges, "ff.", "SchlT ZGB", "Anhang I FZA") checked against the index. Never guesses: a non-existent article is `exists: false`. 57 parser test cases + 7 resolver tests. |
 
-MCP server implementation: the official `mcp` Python SDK (FastMCP API) with
-Streamable HTTP transport. Use stdio for local dev. The ADK page recommends
-checking `K_SERVICE` to switch transports on Cloud Run. **Agents deployed to
-Agent Runtime must define `McpToolset` synchronously in `agent.py`.**
+MCP server implementation (ADR-017): the official `mcp` Python SDK **2.x**,
+where FastMCP is now `mcp.server.mcpserver.MCPServer` and transport options
+moved to `run()` / `streamable_http_app()`. Streamable HTTP at `/mcp`,
+stateless with JSON responses (any instance answers any request), stdio for
+local clients; `K_SERVICE` switches to HTTP on Cloud Run. Health: `/health`
+(Cloud Run reserves `/healthz`, verified: 404). **Agents deployed to Agent
+Runtime must define `McpToolset` synchronously in `agent.py`.**
 
 ## 3. `navigator_v1` instruction outline
 

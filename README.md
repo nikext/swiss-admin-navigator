@@ -52,7 +52,7 @@ Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
 | Choice | Reason |
 |---|---|
 | Fedlex Akoma Ntoso XML, article-level chunks | Laws are structured. The article is the citation unit. Federal enactments are copyright-free (Art. 5 URG). |
-| Hybrid retrieval (BM25 + vectors) + tree navigation | German compounds defeat pure BM25, and legal hierarchy helps the agent browse. Each part is justified by ablation. |
+| Dense retrieval with contextual chunk headers + tree navigation | Measured, not assumed: on 102 DE/FR/IT/EN questions, dense recall@8 was 98.5% while BM25 got 51% and BM25+dense fusion *lowered* recall to 85% (ADR-016). BM25 stays as the fallback. The legal hierarchy helps the agent browse. |
 | MCP server as the retrieval boundary | Reusable by any MCP client, independently testable and deployable. |
 | SQLite baked into the image, not a vector DB | ~30k records don't justify a vector database's cost floor. |
 | Single agent first, multi-agent only if evals say so | Complexity has to earn its place. |
@@ -71,7 +71,7 @@ Methodology: [docs/EVALS.md](docs/EVALS.md)
 ```
 corpus/        acts.yaml (23 federal acts), SPARQL queries, manifest.lock.json
 ingest/        Fedlex → articles.jsonl → index.sqlite
-mcp_server/    swiss-law MCP server (FastMCP, Streamable HTTP)
+mcp_server/    swiss-law MCP server (mcp SDK 2.x, Streamable HTTP, Cloud Run)
 agents/        ADK navigator agent(s), prompts, model profiles
 evals/         datasets, harness, reports
 web/           Next.js UI + BFF

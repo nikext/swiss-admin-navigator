@@ -1,0 +1,13 @@
+# E4 only (docs/EVALS.md §4): the default profile, but with gemini-embedding-001,
+# the only embedding model served in europe-west6 (Zürich) for this project
+# (ADR-013). It honours task_type and batches, unlike gemini-embedding-2.
+agent:
+  model: gemini-3.8-flash
+  location: eu
+judge:
+  model: gemini-3.1-pro-preview
+  location: global
+embedding:
+  model: gemini-embedding-001
+  location: europe-west6
+  input_format: task_type

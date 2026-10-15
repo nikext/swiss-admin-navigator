@@ -14,3 +14,5 @@ judge:
 embedding:
   model: gemini-embedding-2
   location: eu
+  # Task hint goes into the text; this model ignores task_type (ADR-015).
+  input_format: instruction

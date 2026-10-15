@@ -5,6 +5,7 @@ import pytest
 from agents.navigator.config import (
     PROFILES_DIR,
     ROLES,
+    EmbeddingRef,
     ModelRef,
     Profile,
     ProfileError,
@@ -66,8 +67,18 @@ def test_env_overrides_single_fields(profiles: Path) -> None:
         "name": "default",
         "agent": {"model": "model-x", "location": "eu"},
         "judge": {"model": "model-j", "location": "eu"},
-        "embedding": {"model": "model-e", "location": "eu"},
+        "embedding": {"model": "model-e", "location": "eu", "input_format": "instruction"},
     }
+
+
+def test_embedding_input_format_defaults_and_overrides(profiles: Path) -> None:
+    assert load_profile(env={}, profiles_dir=profiles).embedding == EmbeddingRef(
+        model="model-e", location="eu", input_format="instruction"
+    )
+    (profiles / "default.yaml").write_text(GOOD + "  input_format: task_type\n")
+    assert load_profile(env={}, profiles_dir=profiles).embedding.input_format == "task_type"
+    env = {"EMBEDDING_INPUT_FORMAT": "instruction"}
+    assert load_profile(env=env, profiles_dir=profiles).embedding.input_format == "instruction"
 
 
 def test_unknown_profile_lists_available(profiles: Path) -> None:
@@ -89,6 +100,8 @@ def test_unknown_profile_lists_available(profiles: Path) -> None:
         (GOOD.replace("model-e", "3"), r"embedding.model must be a non-empty string"),
         (GOOD.replace("judge:\n  model: model-j\n  location: global", "judge: x"), "judge must be"),
         ("- a\n- b\n", "expected a mapping"),
+        (GOOD + "  input_format: prefix\n", r"embedding.input_format must be one of"),
+        (GOOD.replace("location: global", "location: global\n  input_format: x"), "judge: unknown"),
     ],
 )
 def test_malformed_profiles_are_rejected(profiles: Path, content: str, message: str) -> None:

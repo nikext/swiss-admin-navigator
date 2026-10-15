@@ -1,7 +1,7 @@
 """Akoma Ntoso (Fedlex) -> one record per article per language (docs/DATA.md §3-4).
 
 Usage: uv run python -m ingest.parse   (reads the lock + cache, writes
-data/articles.jsonl and corpus/stats.md)
+data/articles.jsonl, data/acts.json and corpus/stats.md)
 
 Rules, all verified against the 2026-10-15 corpus:
 - Footnotes (`authorialNote`) appear in article bodies *and* inside `<num>` and
@@ -41,6 +41,7 @@ log = logging.getLogger(__name__)
 AKN = "http://docs.oasis-open.org/legaldocml/ns/akn/3.0"
 FEDLEX = "http://fedlex.admin.ch/"
 OUT_PATH = Path("data/articles.jsonl")
+ACTS_OUT_PATH = Path("data/acts.json")
 STATS_PATH = Path("corpus/stats.md")
 
 _REPEAL_WORD = r"(?:aufgehoben|abrog[ée]e?s?|abrogat[aoie]|repealed)"
@@ -77,6 +78,7 @@ class Article:
     label: str
     heading: str | None
     heading_path: list[str]
+    heading_eids: list[str]  # container eIds parallel to heading_path (for get_toc)
     text: str
     paragraphs: list[Paragraph]
     notes: list[str]
@@ -203,18 +205,24 @@ def _prefix(num: str | None, lines: list[str]) -> list[str]:
 # --- structure ----------------------------------------------------------------
 
 
-def heading_path(article: etree._Element) -> list[str]:
+def heading_path(article: etree._Element) -> list[tuple[str, str]]:
+    """(container eId, "num heading") for every labelled ancestor, outermost first.
+
+    An annex `doc` has no eId of its own in Fedlex's XML; it gets the scope its
+    articles carry (`annex_I` for `annex_I/lvl_u1/lvl_II/art_6`).
+    """
     path = []
     for anc in reversed(list(article.iterancestors())):
         if anc.tag in _SKIP_IN_PATH:
             if anc.tag == q("doc"):  # annex component: "Anhang I"
                 preface = anc.find(q("preface"))
                 if preface is not None:
-                    path.append(preface_label(preface))
+                    scope = (article.get("eId") or "").partition("/")[0]
+                    path.append((anc.get("eId") or scope, preface_label(preface)))
             continue
         label = norm(f"{inline(anc.find(q('num')))} {inline(anc.find(q('heading')))}")
         if label:
-            path.append(label)
+            path.append((anc.get("eId") or "", label))
     return path
 
 
@@ -247,14 +255,52 @@ def article_status(text: str, notes: Iterable[str]) -> str:
     return "in_force"
 
 
-def short_forms(root: etree._Element) -> dict[str, str]:
-    """Per-language abbreviation from FRBRWork/FRBRname/@shortForm (authoritative)."""
+def frbr_names(root: etree._Element, attr: str) -> dict[str, str]:
+    """Per-language FRBRWork/FRBRname attribute: `shortForm` (abbreviation,
+    authoritative) or `value` (full title). Every file lists all languages,
+    including EN abbreviations of acts that have no EN text (AIG: "FNA")."""
     out = {}
     for name in root.iter(q("FRBRname")):
         lang = name.get("{http://www.w3.org/XML/1998/namespace}lang")
-        if lang and name.get("shortForm"):
-            out[lang] = name.get("shortForm", "")
+        if lang and name.get(attr):
+            out[lang] = norm(name.get(attr, ""))
     return out
+
+
+def short_forms(root: etree._Element) -> dict[str, str]:
+    return frbr_names(root, "shortForm")
+
+
+@dataclass
+class ActInfo:
+    """Per-act summary for the index (`list_acts`, chunk headers, abbreviations)."""
+
+    sr: str
+    eli: str
+    consolidation_date: str
+    domain: list[str]
+    langs: list[str]  # languages with article text
+    titles: dict[str, str]  # FRBRname/@value per language (de, fr, it, en, rm)
+    abbrs: dict[str, str]  # FRBRname/@shortForm per language
+
+
+def act_info(act: LockedAct, roots: dict[str, etree._Element]) -> ActInfo:
+    titles: dict[str, str] = {}
+    abbrs: dict[str, str] = {}
+    # A language's own file wins for that language; the other files fill gaps.
+    for lang, root in sorted(roots.items(), key=lambda kv: kv[0] != "de"):
+        for target, attr in ((titles, "value"), (abbrs, "shortForm")):
+            names = frbr_names(root, attr)
+            target.update({k: v for k, v in names.items() if k not in target or k == lang})
+    return ActInfo(
+        sr=act.sr,
+        eli=act.eli,
+        consolidation_date=act.date,
+        domain=act.domain,
+        langs=list(roots),
+        titles=titles,
+        abbrs=abbrs,
+    )
 
 
 def keep_article(art: etree._Element, seen: set[str], stats: FileStats) -> bool:
@@ -275,11 +321,15 @@ def keep_article(art: etree._Element, seen: set[str], stats: FileStats) -> bool:
     return True
 
 
+def parse_xml(data: bytes) -> etree._Element:
+    return etree.fromstring(data, parser=etree.XMLParser(resolve_entities=False, no_network=True))
+
+
 def parse_file(
-    data: bytes, act: LockedAct, lang: str, stats: FileStats | None = None
+    data: bytes | etree._Element, act: LockedAct, lang: str, stats: FileStats | None = None
 ) -> list[Article]:
     stats = stats if stats is not None else FileStats()
-    root = etree.fromstring(data, parser=etree.XMLParser(resolve_entities=False, no_network=True))
+    root = parse_xml(data) if isinstance(data, bytes) else data
     abbr = short_forms(root).get(lang) or act.abbr.get(lang) or act.abbr["de"]
     seen: set[str] = set()
     out = []
@@ -305,6 +355,7 @@ def parse_file(
             f"{p.num} {p.text}" if p.num and p.text else (p.text or p.num or "") for p in paragraphs
         ).strip()
         notes = notes_in(art)
+        path = heading_path(art)
         status = article_status(norm(text), notes)
         stats.articles += 1
         stats.by_status[status] += 1
@@ -317,7 +368,8 @@ def parse_file(
                 eid=eid,
                 label=eid_to_label(eid),
                 heading=article_heading(art),
-                heading_path=heading_path(art),
+                heading_path=[label for _, label in path],
+                heading_eids=[container for container, _ in path],
                 text=text,
                 paragraphs=paragraphs,
                 notes=list(dict.fromkeys(notes)),
@@ -336,15 +388,20 @@ def parse_file(
 
 def parse_corpus(
     manifest: Manifest, cache_dir: Path = CACHE_DIR
-) -> tuple[list[Article], dict[tuple[str, str], FileStats]]:
+) -> tuple[list[Article], list[ActInfo], dict[tuple[str, str], FileStats]]:
     articles: list[Article] = []
+    acts: list[ActInfo] = []
     stats: dict[tuple[str, str], FileStats] = {}
     for act in manifest.acts:
-        for lang in act.files:
-            data = cache_path(act.sr, act.date, lang, cache_dir).read_bytes()
+        roots = {
+            lang: parse_xml(cache_path(act.sr, act.date, lang, cache_dir).read_bytes())
+            for lang in act.files
+        }
+        for lang, root in roots.items():
             fs = stats[(act.sr, lang)] = FileStats()
-            articles += parse_file(data, act, lang, fs)
-    return articles, stats
+            articles += parse_file(root, act, lang, fs)
+        acts.append(act_info(act, roots))
+    return articles, acts, stats
 
 
 def render_stats(manifest: Manifest, stats: dict[tuple[str, str], FileStats]) -> str:
@@ -382,11 +439,15 @@ def render_stats(manifest: Manifest, stats: dict[tuple[str, str], FileStats]) ->
 def main() -> int:
     logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
     manifest = Manifest.load(LOCK_PATH)
-    articles, stats = parse_corpus(manifest)
+    articles, acts, stats = parse_corpus(manifest)
     OUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     with OUT_PATH.open("w", encoding="utf-8") as f:
         for a in articles:
             f.write(a.to_json() + "\n")
+    ACTS_OUT_PATH.write_text(
+        json.dumps([asdict(a) for a in acts], ensure_ascii=False, indent=1) + "\n",
+        encoding="utf-8",
+    )
     STATS_PATH.write_text(render_stats(manifest, stats), encoding="utf-8")
     ids = Counter(a.id for a in articles)
     dupes = [i for i, n in ids.items() if n > 1]

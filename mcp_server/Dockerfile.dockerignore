@@ -1,0 +1,12 @@
+# Whitelist: the build context is the repo root, but the image needs only these.
+*
+!pyproject.toml
+!uv.lock
+!ingest/pyproject.toml
+!ingest/__init__.py
+!ingest/eid.py
+!mcp_server/pyproject.toml
+!mcp_server/*.py
+!agents/navigator/pyproject.toml
+!evals/pyproject.toml
+!data/index.sqlite
