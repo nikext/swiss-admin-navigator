@@ -279,3 +279,36 @@ author (Claude), checked against article text but not by Nikola; dense is
 near the ceiling, so the set must grow harder (target 200) before it can
 separate dense variants. Re-run E4 (`make eval-retrieval E4=1`) when the
 set grows or the embedding model changes.
+
+### ADR-017: The MCP server ships as one image with the index, on Cloud Run gen2
+**Status:** accepted (2026-10-15, M2)
+**Context:** ADR-011 said `mcp_server/` would deploy with
+`gcloud run deploy --source mcp_server`. But the server needs `ingest/eid.py`
+(citation parsing) and the 135 MB `data/index.sqlite` (gitignored), and the
+`mcp` SDK moved to 2.x (`FastMCP` → `MCPServer`; transport options moved to
+`run()`/`streamable_http_app()`). First deploy on the default gen1 runtime:
+the instance needed 6.0 s from "Starting new instance" to a passing startup
+probe, 4.5 s of it in Python imports (~2,000 `.pyc` files; locally 1.0 s).
+**Decision:**
+- `mcp_server/Dockerfile` is built **from the repo root** with a whitelist
+  `Dockerfile.dockerignore`; it copies `mcp_server/*.py`, `ingest/eid.py` and
+  the index, installs only `uv export --package swiss-nav-mcp` pins into a
+  venv with precompiled bytecode, base images pinned by digest, non-root user.
+  `infra/deploy_mcp.sh` (`make deploy-mcp`) builds, tags with the commit,
+  pushes with a short-lived token, deploys and smoke-tests `/health`.
+- Cloud Run **gen2** execution environment, `--cpu-boost`, min 0 / max 2,
+  1 vCPU / 1 GiB, concurrency 40, public (ADR-003).
+- Streamable HTTP is **stateless with JSON responses**: no session affinity
+  needed across two instances.
+- Health is `/health`: Cloud Run itself answers `/healthz` with 404 (paths
+  ending in "z" are reserved; verified on the deployed service).
+- Resilience: the query embedder has a 5 s timeout and a 30 s circuit
+  breaker; while open, `search_law` answers from BM25 in < 10 ms and says
+  `degraded`. Privacy: JSON logs carry a salted per-process client hash, no
+  IP and no query text by default.
+**Measurements (2026-10-15):** gen1 deploy rollout 6.0 s (imports 4.5 s); gen2 4.1 s. A real scale-from-zero start on gen2 (log reason AUTOSCALING, 11:13 UTC): instance start -> probe OK **4.15 s** (imports 3.58, index + vectors 0.20, embedder 0.14); client-side first MCP response (initialize) **4.61 s**; first search_law +0.88 s (embedding client: token + TLS), total to the first search result 5.49 s. To overlap that 0.88 s with the client handshake, the server now warms the embedding client in a background task at startup (not yet re-measured on Cloud Run).
+**Consequences:** Deploys need a local `data/index.sqlite` (rebuilt in
+seconds from the embedding cache, or ~USD 0.8 cold). The image is 560 MB
+uncompressed. If cold start becomes a problem: drop google-genai from the
+server (0.24 s of 0.99 s local import time) in favour of a plain REST call,
+or keep one warm instance (min 1, billed).

@@ -84,3 +84,16 @@ def test_env_can_move_the_endpoint_but_not_change_the_model(fake: FakeModels) ->
     assert QueryEmbedder(SPACE, "p", {"EMBEDDING_MODEL": "gemini-embedding-2"}).model
     with pytest.raises(EmbeddingConfigError, match="index was built with"):
         QueryEmbedder(SPACE, "p", {"EMBEDDING_MODEL": "gemini-embedding-001"})
+
+
+async def test_warm_up_calls_the_endpoint_once_and_never_trips_the_breaker(
+    fake: FakeModels,
+) -> None:
+    e = QueryEmbedder(SPACE, "p", {})
+    fake.fail = True
+    await e.warm()  # logs, does not raise
+    assert e._down_until == 0.0
+    fake.fail = False
+    await e.warm()
+    assert len(fake.calls) == 2
+    assert e._cache == {}  # warm-up results are not cached as a query

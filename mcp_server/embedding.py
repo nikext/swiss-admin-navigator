@@ -84,6 +84,18 @@ class QueryEmbedder:
             self._cache.popitem(last=False)
         return v
 
+    async def warm(self) -> None:
+        """Fetch the access token and open the TLS connection before the first real query.
+
+        On a cold Cloud Run instance this takes ~0.9 s; run as a background task at
+        startup it overlaps with the client's MCP handshake. Best effort: a failure
+        neither trips the breaker nor caches anything. Costs ~3 tokens per start.
+        """
+        try:
+            await self._embed("Art. 1")
+        except Exception as exc:
+            log.warning("embedding warm-up failed: %r", exc)
+
     async def _embed(self, key: str) -> np.ndarray:
         if self.input_format == "instruction":
             content, config = (
