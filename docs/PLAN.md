@@ -11,7 +11,7 @@ what was verified. Update the status table in the same PR.
 | M1 | Corpus pipeline: Fedlex → `articles.jsonl` | ✅ done | #2. 23 acts, 18,396 records; spot-check vs Fedlex HTML 10/10 + 100/100 (DATA.md §6–7, ADR-014) |
 | M2 | Index + swiss-law MCP server (local → Cloud Run) | 🟨 in progress | Branch `m2-index-mcp`, deployed at https://swiss-nav-mcp-mdyqt5hgsq-oa.a.run.app/mcp. E4: dense R@8 98.5 (ADR-016); cold start 4.15 s instance / 4.61 s first response (ADR-017) |
 
-**Next up (M2):** redeploy HEAD (`make deploy-mcp`, background embedding warm-up), wait ≥15 min idle, re-measure a cold session (time an MCP connect (initialize) + first `search_law` with the `mcp` Client) and fill ADR-017; update the M2 section text (FastMCP → MCPServer, `/healthz` → `/health`); set this row to ✅; open the PR (draft body: done-when, E4 table, deviations) and merge on green CI.
+**Next up (M2):** redeploy HEAD (`make deploy-mcp`, background embedding warm-up), wait ≥15 min idle, re-measure a cold session with `make mcp-coldstart URL=…/mcp` (initialize + first `search_law`; server phases from the `ready` log line) and fill ADR-017; set this row to ✅; open the PR (draft body: done-when, E4 table, deviations) and merge on green CI.
 | M3 | `navigator_v1` single agent (local) + eval harness v0 | ⬜ todo | |
 | M4 | Golden set (150) + CI eval gates | ⬜ todo | |
 | M5 | Deploy to Agent Runtime + Sessions + tracing | ⬜ todo | |
@@ -88,14 +88,15 @@ Tasks
   and run **experiment E4** (BM25 vs dense vs hybrid; tokenizers; chunk
   headers). Pick the default by measurement and record the numbers in
   DECISIONS.md.
-- `mcp_server/`: FastMCP, Streamable HTTP at `/mcp`, stdio for local, an
-  in-app per-IP rate limit on `search_law`, structured JSON logs, and
-  `/healthz`.
+- `mcp_server/`: `MCPServer` (the `mcp` 2.x name for FastMCP), stateless
+  Streamable HTTP at `/mcp`, stdio for local, an in-app per-IP rate limit on
+  `search_law`, structured JSON logs, and `/health` (Cloud Run reserves
+  `/healthz`; ADR-017).
 - `resolve_citation`: a parser for DE/FR/IT citation styles with ≥ 40
   unit-test cases ("Art. 271a Abs. 1 lit. a OR", "art. 271a al. 1 let. a CO",
   "art. 30 cpv. 1 lett. a LStrI", "Art. 329g bis OR").
-- Dockerfile with the index baked in. Deploy to Cloud Run (GCP.md §4, ask
-  first).
+- Dockerfile with the index baked in (built from the repo root). Deploy to
+  Cloud Run gen2 with `make deploy-mcp` (GCP.md §4, ask first).
 - Add the server to Claude Code (`claude mcp add --transport http swiss-law <url>/mcp`)
   and test a few questions by hand.
 

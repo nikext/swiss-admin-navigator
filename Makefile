@@ -7,7 +7,7 @@ UV ?= uv
 todo = @echo "make $@: not implemented yet (lands in $(1), see docs/PLAN.md)" >&2; exit 1
 
 .PHONY: help setup lint fmt test check smoke-gemini gcp-setup gcp-budget \
-        resolve ingest spotcheck fixtures index index-e4 eval-retrieval mcp-dev agent-dev \
+        resolve ingest spotcheck fixtures index index-e4 eval-retrieval mcp-dev mcp-coldstart agent-dev \
         eval-smoke eval-full \
         deploy-mcp deploy-agent deploy-web
 
@@ -66,6 +66,9 @@ eval-retrieval: ## Retrieval eval of the served config (E4=1: the whole E4 grid)
 
 mcp-dev: ## swiss-law MCP server on http://127.0.0.1:8080/mcp (STDIO=1: stdio)
 	$(UV) run python -m mcp_server.server $(if $(STDIO),,--http)
+
+mcp-coldstart: ## Time connect + first searches against SWISS_LAW_MCP_URL (or URL=...; ADR-017)
+	$(UV) run python -m scripts.cold_start $(URL)
 
 agent-dev: ## adk web UI for the agents in agents/
 	$(UV) run adk web agents
