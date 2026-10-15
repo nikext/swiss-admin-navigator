@@ -37,6 +37,7 @@ from pydantic import Field
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
+from mcp_server import IMPORT_T0
 from mcp_server.embedding import QueryEmbedder
 from mcp_server.search import Index, served_config
 from mcp_server.tools import DOMAINS, NOTICE, LawTools, ToolInputError
@@ -95,16 +96,6 @@ class RateLimiter:
         return False, (1.0 - tokens) / self.rate
 
 
-def process_age_s() -> float | None:
-    """Seconds since this process started (Linux /proc), for the startup log line."""
-    try:
-        fields = Path("/proc/self/stat").read_text().rsplit(")", 1)[1].split()
-        uptime = float(Path("/proc/uptime").read_text().split()[0])
-        return round(uptime - int(fields[19]) / os.sysconf("SC_CLK_TCK"), 2)
-    except (OSError, ValueError, IndexError):
-        return None
-
-
 def client_ip(ctx: Context | None) -> str:
     """First X-Forwarded-For hop (Cloud Run's front end sets it), else the peer."""
     try:
@@ -124,8 +115,9 @@ class App:
 
     def __init__(self, env: Mapping[str, str]) -> None:
         # Startup phases in seconds, logged in the "ready" line (cold-start budget).
-        # "boot": process start -> here (interpreter + imports); None off Linux.
-        self.phases: dict[str, float | None] = {"boot": process_age_s()}
+        # "imports": third-party + app imports. Interpreter start is not included;
+        # Cloud Run's "Starting new instance" -> probe log lines give the full picture.
+        self.phases: dict[str, float] = {"imports": round(time.perf_counter() - IMPORT_T0, 3)}
         t = time.perf_counter()
 
         def phase(name: str) -> None:
@@ -324,11 +316,7 @@ def main(argv: list[str] | None = None) -> int:
 
     app = App(os.environ)
     mcp = build_server(app)
-    ready = {
-        "transport": "http" if http else "stdio",
-        "startup_s": process_age_s(),
-        "phases": app.phases,
-    }
+    ready = {"transport": "http" if http else "stdio", "phases": app.phases}
     log.info("ready", extra={"fields": app.health() | ready})
     if not http:
         mcp.run("stdio")

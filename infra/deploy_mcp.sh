@@ -49,12 +49,15 @@ if [[ "$DRY_RUN" != 1 ]]; then docker logout "https://${REGISTRY}" >/dev/null; f
 echo "== deploy"
 # Public and read-only by design (ADR-003). Scale to zero; at most 2 instances
 # bound the embedding spend; search_law is also rate-limited per IP in-app.
+# gen2: instance start 4.5 s vs 6.0 s on gen1, whose gVisor sandbox makes the
+# ~2,000 small .pyc imports and the 135 MB index read slow (ADR-017).
 run "$GCLOUD" run deploy "$SERVICE" --project "$PROJECT_ID" --region "$REGION" \
   --image "$IMAGE" \
   --service-account "$SA" \
   --allow-unauthenticated \
   --min-instances 0 --max-instances 2 \
   --cpu 1 --memory 1Gi --concurrency 40 --timeout 60 --cpu-boost \
+  --execution-environment gen2 \
   --set-env-vars "GOOGLE_CLOUD_PROJECT=${PROJECT_ID}" \
   --labels "app=swiss-nav,commit=${SHA}" \
   --quiet
