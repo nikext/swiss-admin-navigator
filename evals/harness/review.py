@@ -121,7 +121,7 @@ class Style:
         return self._wrap("1;31", s)
 
 
-def _block(text: str, indent: str, width: int) -> list[str]:
+def wrap_block(text: str, indent: str, width: int) -> list[str]:
     out = []
     for line in text.splitlines() or [""]:
         out += textwrap.wrap(
@@ -146,7 +146,7 @@ def article_lines(
         lines.append(style.warn(f"    {art['fallback']}"))
     if art.get("status") != "in_force":
         lines.append(style.warn(f"    status: {art.get('status')}"))
-    lines += _block(art.get("text") or "", "    │ ", width)
+    lines += wrap_block(art.get("text") or "", "    │ ", width)
     lines.append(style.dim(f"    {art.get('url')}  (as of {art.get('as_of')})"))
     return lines
 
@@ -166,7 +166,7 @@ def render(
         f"{position}  {style.bold(case.id)}  ·  " + " · ".join(tags),
         "",
         style.bold("Question"),
-        *_block(case.question, "  ", width),
+        *wrap_block(case.question, "  ", width),
         "",
         style.bold(f"Expected citations (article text in {text_lang.upper()}; t = next language)"),
     ]
@@ -185,7 +185,7 @@ def render(
         lines += ["", style.bold("Notes")]
         if "DISPUTED" in case.notes:
             lines.append(style.warn("  DISPUTED: an eval run disagreed with this label; see below"))
-        lines += _block(case.notes, "  ", width)
+        lines += wrap_block(case.notes, "  ", width)
     return "\n".join(lines)
 
 
