@@ -8,7 +8,7 @@ todo = @echo "make $@: not implemented yet (lands in $(1), see docs/PLAN.md)" >&
 
 .PHONY: help setup lint fmt test check smoke-gemini gcp-setup gcp-budget gcp-wif \
         resolve ingest spotcheck fixtures index index-e4 publish-index eval-retrieval mcp-dev mcp-coldstart agent-dev \
-        eval-smoke eval-full review-golden check-cases label-answers judge-study \
+        eval-smoke eval-full eval-multiturn review-golden check-cases label-answers judge-study \
         deploy-mcp deploy-agent deploy-web
 
 help: ## List targets
@@ -81,6 +81,9 @@ agent-dev: ## adk web UI for the agents in agents/
 
 eval-smoke: ## 20-case smoke eval (agent + judge; billable, ~CHF 1) -> evals/reports/ (ARGS=...)
 	$(UV) run python -m evals.harness.answer_eval --smoke $(ARGS)
+
+eval-multiturn: ## 25 simulated conversations via ADK AgentEvaluator + rubric judge (billable, ~CHF 3; ARGS=...)
+	$(UV) run python -m evals.harness.multiturn $(ARGS)
 
 eval-full: ## Every case of golden (drafts until it exists); M4 adds adversarial.jsonl (ARGS=...)
 	$(UV) run python -m evals.harness.answer_eval $(ARGS)

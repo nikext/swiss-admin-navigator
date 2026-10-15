@@ -77,9 +77,9 @@ def _free_port() -> int:
 
 
 @contextlib.contextmanager
-def local_server(log_path: Path, timeout_s: float = 60) -> Iterator[str]:
+def local_server(log_path: Path, timeout_s: float = 60, port: int | None = None) -> Iterator[str]:
     """Run the MCP server from this checkout (needs data/index.sqlite); yields its URL."""
-    port = _free_port()
+    port = port or _free_port()
     env = os.environ | {"SEARCH_RATE_PER_MIN": "6000", "SEARCH_BURST": "200"}
     log_path.parent.mkdir(parents=True, exist_ok=True)
     with log_path.open("w") as log:
