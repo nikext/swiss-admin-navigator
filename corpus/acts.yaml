@@ -1,8 +1,7 @@
 # v1 corpus: Swiss FEDERAL acts relevant to people living and working in
-# Switzerland. Resolved against Fedlex on 2026-10-15 using
-# queries/latest_consolidations.rq. `eli` is the in-force ConsolidationAbstract.
-# `xml_langs` lists the languages with an XML file for the consolidation that
-# applied on 2026-10-15. Re-resolve in M1, because consolidation dates move.
+# Switzerland. `eli` is the in-force ConsolidationAbstract; `make resolve`
+# checks it against Fedlex (SR numbers get reused). Consolidation dates, file
+# URLs, languages and checksums live in manifest.lock.json, not here.
 #
 # DE, FR and IT texts are equally authoritative. EN translations are
 # UNOFFICIAL, exist for only a few acts, and often lag the current
@@ -10,7 +9,6 @@
 #
 # `domain` routes questions to a specialist agent in M8. See docs/AGENTS.md.
 
-as_of: 2026-10-15
 acts:
   # --- Foundations -----------------------------------------------------------
   - sr: "101"
@@ -18,19 +16,16 @@ acts:
     title_de: Bundesverfassung der Schweizerischen Eidgenossenschaft
     eli: https://fedlex.data.admin.ch/eli/cc/1999/404
     domain: general
-    xml_langs: [de, fr, it, rm, en]
   - sr: "210"
     abbr: { de: ZGB, fr: CC, it: CC }
     title_de: Schweizerisches Zivilgesetzbuch
     eli: https://fedlex.data.admin.ch/eli/cc/24/233_245_233
     domain: general
-    xml_langs: [de, fr, it, en]
   - sr: "235.1"
     abbr: { de: DSG, fr: LPD, it: LPD }
     title_de: Bundesgesetz über den Datenschutz
     eli: https://fedlex.data.admin.ch/eli/cc/2022/491
     domain: general
-    xml_langs: [de, fr, it, en]
 
   # --- Residence, permits, citizenship, registration -------------------------
   - sr: "142.20"
@@ -38,43 +33,36 @@ acts:
     title_de: Ausländer- und Integrationsgesetz
     eli: https://fedlex.data.admin.ch/eli/cc/2007/758
     domain: residence
-    xml_langs: [de, fr, it]
   - sr: "142.201"
     abbr: { de: VZAE, fr: OASA, it: OASA }
     title_de: Verordnung über Zulassung, Aufenthalt und Erwerbstätigkeit
     eli: https://fedlex.data.admin.ch/eli/cc/2007/759
     domain: residence
-    xml_langs: [de, fr, it]
   - sr: "142.203"
     abbr: { de: VFP, fr: OLCP, it: OLCP }
     title_de: Verordnung über den freien Personenverkehr
     eli: https://fedlex.data.admin.ch/eli/cc/2002/261
     domain: residence
-    xml_langs: [de, fr, it]
   - sr: "0.142.112.681"
     abbr: { de: FZA, fr: ALCP, it: ALC }
     title_de: Freizügigkeitsabkommen Schweiz–EG
     eli: https://fedlex.data.admin.ch/eli/cc/2002/243
     domain: residence
-    xml_langs: [de, fr, it]
   - sr: "141.0"
     abbr: { de: BüG, fr: LN, it: LCit }
     title_de: Bürgerrechtsgesetz
     eli: https://fedlex.data.admin.ch/eli/cc/2016/404
     domain: residence
-    xml_langs: [de, fr, it, rm, en]
   - sr: "141.01"
     abbr: { de: BüV, fr: OLN, it: OCit }
     title_de: Bürgerrechtsverordnung
     eli: https://fedlex.data.admin.ch/eli/cc/2016/405
     domain: residence
-    xml_langs: [de, fr, it]
   - sr: "431.02"
     abbr: { de: RHG, fr: LHR, it: LArRa }
     title_de: Registerharmonisierungsgesetz
     eli: https://fedlex.data.admin.ch/eli/cc/2006/619
     domain: residence
-    xml_langs: [de, fr, it, en]
 
   # --- Work and social insurance ---------------------------------------------
   - sr: "220"
@@ -82,43 +70,36 @@ acts:
     title_de: Obligationenrecht (employment Art. 319–362, tenancy Art. 253–273c)
     eli: https://fedlex.data.admin.ch/eli/cc/27/317_321_377
     domain: [work, housing]
-    xml_langs: [de, fr, it]
   - sr: "822.11"
     abbr: { de: ArG, fr: LTr, it: LL }
     title_de: Arbeitsgesetz
     eli: https://fedlex.data.admin.ch/eli/cc/1966/57_57_57
     domain: work
-    xml_langs: [de, fr, it]
   - sr: "831.10"
     abbr: { de: AHVG, fr: LAVS, it: LAVS }
     title_de: Bundesgesetz über die Alters- und Hinterlassenenversicherung
     eli: https://fedlex.data.admin.ch/eli/cc/63/837_843_843
     domain: work
-    xml_langs: [de, fr, it, rm]
   - sr: "837.0"
     abbr: { de: AVIG, fr: LACI, it: LADI }
     title_de: Arbeitslosenversicherungsgesetz
     eli: https://fedlex.data.admin.ch/eli/cc/1982/2184_2184_2184
     domain: work
-    xml_langs: [de, fr, it]
   - sr: "834.1"
     abbr: { de: EOG, fr: LAPG, it: LIPG }
     title_de: Erwerbsersatzgesetz (incl. maternity/paternity allowance)
     eli: https://fedlex.data.admin.ch/eli/cc/1952/1021_1046_1050
     domain: work
-    xml_langs: [de, fr, it]
   - sr: "832.10"
     abbr: { de: KVG, fr: LAMal, it: LAMal }
     title_de: Bundesgesetz über die Krankenversicherung
     eli: https://fedlex.data.admin.ch/eli/cc/1995/1328_1328_1328
     domain: work
-    xml_langs: [de, fr, it]
   - sr: "832.102"
     abbr: { de: KVV, fr: OAMal, it: OAMal }
     title_de: Verordnung über die Krankenversicherung
     eli: https://fedlex.data.admin.ch/eli/cc/1995/3867_3867_3867
     domain: work
-    xml_langs: [de, fr, it]
 
   # --- Housing ---------------------------------------------------------------
   - sr: "221.213.11"
@@ -126,7 +107,6 @@ acts:
     title_de: Verordnung über die Miete und Pacht von Wohn- und Geschäftsräumen
     eli: https://fedlex.data.admin.ch/eli/cc/1990/835_835_835
     domain: housing
-    xml_langs: [de, fr, it]
 
   # --- Tax -------------------------------------------------------------------
   - sr: "642.11"
@@ -134,19 +114,16 @@ acts:
     title_de: Bundesgesetz über die direkte Bundessteuer
     eli: https://fedlex.data.admin.ch/eli/cc/1991/1184_1184_1184
     domain: tax
-    xml_langs: [de, fr, it]
   - sr: "642.14"
     abbr: { de: StHG, fr: LHID, it: LAID }
     title_de: Steuerharmonisierungsgesetz
     eli: https://fedlex.data.admin.ch/eli/cc/1991/1256_1256_1256
     domain: tax
-    xml_langs: [de, fr, it]
   - sr: "642.118.2"
     abbr: { de: QStV, fr: OIS, it: OIFo }
     title_de: Quellensteuerverordnung
     eli: https://fedlex.data.admin.ch/eli/cc/2018/274
     domain: tax
-    xml_langs: [de, fr, it]
 
   # --- Mobility --------------------------------------------------------------
   - sr: "741.01"
@@ -154,10 +131,8 @@ acts:
     title_de: Strassenverkehrsgesetz
     eli: https://fedlex.data.admin.ch/eli/cc/1959/679_705_685
     domain: mobility
-    xml_langs: [de, fr, it]
   - sr: "741.51"
     abbr: { de: VZV, fr: OAC, it: OAC }
     title_de: Verkehrszulassungsverordnung (incl. foreign licence exchange)
     eli: https://fedlex.data.admin.ch/eli/cc/1976/2423_2423_2423
     domain: mobility
-    xml_langs: [de, fr, it]

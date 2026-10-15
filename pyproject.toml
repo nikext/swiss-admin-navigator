@@ -10,6 +10,7 @@ license = "Apache-2.0"
 
 [dependency-groups]
 dev = [
+    "lxml-stubs>=0.5.1",
     "pre-commit==4.7.0",
     "pyright[nodejs]==1.1.414",
     "pytest==9.1.1",
@@ -44,6 +45,10 @@ select = [
     "S",             # bandit
     "RUF",
 ]
+
+# Legal text is typographic on purpose: "Art. 226a–226d", «…», ×. Quote fidelity
+# depends on keeping these characters exactly, so the "ambiguous unicode" rules are off.
+ignore = ["RUF001", "RUF002", "RUF003"]
 
 [tool.ruff.lint.per-file-ignores]
 "**/tests/**" = ["S101"]

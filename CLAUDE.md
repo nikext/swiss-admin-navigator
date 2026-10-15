@@ -102,7 +102,10 @@ make smoke-gemini # one tiny call per profile model at its location (ADC)
 make gcp-setup    # infra/setup.sh: APIs, AR, bucket, SAs (DRY_RUN=1 to preview)
 make gcp-budget   # infra/budget.sh: USD 37/month budget (exists already)
 make agent-dev    # adk web agents
-make ingest       # (M1) resolve + download + parse → data/articles.jsonl
+make resolve      # refresh the lock from Fedlex (AS_OF=YYYY-MM-DD, default today)
+make ingest       # locked corpus → download (cached, sha-checked) + parse → data/articles.jsonl
+make spotcheck    # N random articles vs Fedlex's HTML rendering (N=10)
+make fixtures     # re-cut parser test fixtures from the cache
 make index        # (M2) embed + build data/index.sqlite
 make mcp-dev      # (M2) run MCP server locally (stdio + http)
 make eval-smoke   # (M3) 20-case smoke eval → evals/reports/

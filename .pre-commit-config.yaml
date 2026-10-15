@@ -4,7 +4,9 @@ repos:
     rev: v6.0.0
     hooks:
       - id: end-of-file-fixer
+        exclude: ^ingest/tests/fixtures/  # verbatim Fedlex XML
       - id: trailing-whitespace
+        exclude: ^ingest/tests/fixtures/
       - id: check-yaml
       - id: check-toml
       - id: check-merge-conflict

@@ -3,4 +3,8 @@ name = "swiss-nav-ingest"
 version = "0.0.0"
 description = "Fedlex SPARQL + Akoma Ntoso XML -> articles.jsonl -> index.sqlite"
 requires-python = ">=3.12,<3.13"
-dependencies = []
+dependencies = [
+    "httpx>=0.28.1",
+    "lxml>=6",
+    "pyyaml>=6.0.3",
+]
