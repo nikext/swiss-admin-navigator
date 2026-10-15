@@ -7,5 +7,6 @@ dependencies = [
     "google-genai>=2.31.0",
     "mcp==2.3.0",
     "numpy>=2.3",
+    "python-dotenv>=1",
     "uvicorn>=0.34",
 ]

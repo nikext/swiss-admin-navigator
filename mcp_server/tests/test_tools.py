@@ -150,3 +150,16 @@ def test_snippet_cuts_at_a_word() -> None:
     s = snippet("wort " * 100, limit=22)
     assert s.endswith(" …")
     assert len(s) <= 24
+
+
+def test_hits_are_shown_in_the_question_language_when_available(tools: LawTools) -> None:
+    # The vector matches the German wording; the question is French.
+    q = "Kündigung durch den Vermieter Treu und Glauben"
+    de = tools.search(q, bow_vector(q), k=1)["results"][0]
+    fr = tools.search("Le bailleur peut-il résilier le bail ?", bow_vector(q), k=1)["results"][0]
+    assert (de["eid"], de["lang"]) == ("art_271_a", "de")
+    assert (fr["eid"], fr["lang"]) == ("art_271_a", "fr")
+    assert fr["url"].endswith("/fr#art_271_a")
+    # An explicit lang filter is never overridden.
+    only_de = tools.search("Le bailleur peut-il résilier le bail ?", bow_vector(q), lang="de", k=1)
+    assert only_de["results"][0]["lang"] == "de"

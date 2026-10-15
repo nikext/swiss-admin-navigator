@@ -3,7 +3,15 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from mcp_server.search import Index, SearchConfig, Searcher, fts_query, query_terms, served_config
+from mcp_server.search import (
+    Index,
+    SearchConfig,
+    Searcher,
+    fts_query,
+    guess_lang,
+    query_terms,
+    served_config,
+)
 from mcp_server.tests.conftest import bow_vector
 
 
@@ -101,3 +109,18 @@ def test_served_config_follows_index_default_and_env(index: Index) -> None:
 def test_missing_index_is_a_clear_error(tmp_path: Path) -> None:
     with pytest.raises(FileNotFoundError, match="make index"):
         Index(tmp_path / "nope.sqlite")
+
+
+@pytest.mark.parametrize(
+    ("query", "lang"),
+    [
+        ("Wie viele Ferien habe ich pro Jahr?", "de"),
+        ("Combien de temps dure le congé de paternité ?", "fr"),
+        ("Posso cambiare cantone con un permesso B?", "it"),
+        ("La Costituzione protegge la mia sfera privata?", "it"),
+        ("Can my landlord evict me?", "en"),
+        ("Mietkaution", None),  # no function words: no guess
+    ],
+)
+def test_guess_lang(query: str, lang: str | None) -> None:
+    assert guess_lang(query) == lang

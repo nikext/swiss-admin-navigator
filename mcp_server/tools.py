@@ -9,13 +9,14 @@ from __future__ import annotations
 
 import json
 from collections.abc import Sequence
+from dataclasses import replace
 from typing import Any
 
 import numpy as np
 
 from ingest.eid import EidError, label_to_eid
 from mcp_server.citations import abbreviation_table, norm_abbr, parse_citations, resolve
-from mcp_server.search import Hit, Index, SearchConfig, Searcher, served_config
+from mcp_server.search import Hit, Index, SearchConfig, Searcher, guess_lang, served_config
 
 LANGS = ("de", "fr", "it", "en")
 DOMAINS = ("general", "residence", "work", "housing", "tax", "mobility")
@@ -111,11 +112,26 @@ class LawTools:
         if qvec is None and searcher.config.mode != "bm25":
             searcher = Searcher(self.index, SearchConfig(mode="bm25", tokenizer=searcher.tokenizer))
         hits = searcher.search(query, qvec, lang=lang, srs=srs, k=k)
+        if lang is None and (prefer := guess_lang(query)) in ("de", "fr", "it"):
+            hits = [self._in_language(h, prefer) for h in hits]
         return {
             "results": self._render_hits(hits),
             "mode": searcher.config.mode,
             "notice": NOTICE,
         }
+
+    def _in_language(self, hit: Hit, lang: str) -> Hit:
+        """Show the same article in the question's language when it exists (display only)."""
+        if hit.lang == lang:
+            return hit
+        part = self.index.db.execute("SELECT part FROM chunks WHERE rowid = ?", (hit.chunk,))
+        row = self.index.db.execute(
+            "SELECT rowid FROM chunks WHERE sr = ? AND eid = ? AND lang = ? AND part = ?",
+            (hit.sr, hit.eid, lang, part.fetchone()[0]),
+        ).fetchone()
+        if row is None:
+            return hit
+        return replace(hit, chunk=row[0], lang=lang)
 
     def _render_hits(self, hits: list[Hit]) -> list[dict[str, Any]]:
         if not hits:

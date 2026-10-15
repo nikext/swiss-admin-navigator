@@ -46,6 +46,34 @@ STOPWORDS = frozenset(
     w for block in (_STOP_DE, _STOP_FR, _STOP_IT, _STOP_EN) for w in block.split()
 )
 _WORD = re.compile(r"\w+", re.UNICODE)
+_BLOCKS = {"de": _STOP_DE, "fr": _STOP_FR, "it": _STOP_IT, "en": _STOP_EN}
+# Function words that belong to one language only ("le" is FR, "il" is FR and IT: dropped).
+# Extra markers for guess_lang only (not stopwords: BM25 is unaffected).
+_HINTS = {
+    "de": "wann warum welche welcher welches darf muss ab",
+    "fr": "comment quand combien puis dois",
+    "it": "un la e come quando quanto quale cosa posso devo",
+    "en": "can must should",
+}
+_LANG_WORDS = {
+    lang: set(f"{block} {_HINTS[lang]}".split()).difference(
+        *(f"{b} {_HINTS[o]}".split() for o, b in _BLOCKS.items() if o != lang)
+    )
+    for lang, block in _BLOCKS.items()
+}
+
+
+def guess_lang(query: str) -> str | None:
+    """The query's language from function words only it uses, or None if unclear.
+
+    Good enough to pick which language version of a hit to *display*; ranking
+    never depends on it.
+    """
+    words = _WORD.findall(query.lower())
+    counts = {lang: sum(w in vocab for w in words) for lang, vocab in _LANG_WORDS.items()}
+    best = max(counts, key=lambda k: counts[k])
+    ranked = sorted(counts.values(), reverse=True)
+    return best if ranked[0] > 0 and ranked[0] > ranked[1] else None
 
 
 @dataclass(frozen=True)

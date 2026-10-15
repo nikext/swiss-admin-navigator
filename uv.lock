@@ -1085,6 +1085,7 @@ dependencies = [
     { name = "google-genai" },
     { name = "mcp" },
     { name = "numpy" },
+    { name = "python-dotenv" },
     { name = "uvicorn" },
 ]
 
@@ -1093,6 +1094,7 @@ requires-dist = [
     { name = "google-genai", specifier = ">=2.31.0" },
     { name = "mcp", specifier = "==2.3.0" },
     { name = "numpy", specifier = ">=2.3" },
+    { name = "python-dotenv", specifier = ">=1" },
     { name = "uvicorn", specifier = ">=0.34" },
 ]
 

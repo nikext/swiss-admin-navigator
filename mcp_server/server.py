@@ -95,6 +95,16 @@ class RateLimiter:
         return False, (1.0 - tokens) / self.rate
 
 
+def process_age_s() -> float | None:
+    """Seconds since this process started (Linux /proc), for the startup log line."""
+    try:
+        fields = Path("/proc/self/stat").read_text().rsplit(")", 1)[1].split()
+        uptime = float(Path("/proc/uptime").read_text().split()[0])
+        return round(uptime - int(fields[19]) / os.sysconf("SC_CLK_TCK"), 2)
+    except (OSError, ValueError, IndexError):
+        return None
+
+
 def client_ip(ctx: Context | None) -> str:
     """First X-Forwarded-For hop (Cloud Run's front end sets it), else the peer."""
     try:
@@ -195,13 +205,20 @@ def build_server(app: App) -> MCPServer:
             logged("search_law", start, ctx, error="rate_limited")
             raise ToolError(f"rate limit exceeded; retry in {wait:.0f} s")
         qvec, degraded = None, None
+        t_embed = time.perf_counter()
         if app.embedder is not None:
             try:
                 qvec = await app.embedder.embed(query)
             except Exception as exc:  # degrade to keyword search, never fail the call
                 degraded = f"semantic search unavailable ({type(exc).__name__}); keyword only"
                 log.warning("embedding failed", extra={"fields": {"error": repr(exc)[:300]}})
-        fields: dict[str, Any] = {"lang": lang, "k": k, "query_chars": len(query)}
+        fields: dict[str, Any] = {
+            "lang": lang,
+            "k": k,
+            "query_chars": len(query),
+            "embed_ms": round((time.perf_counter() - t_embed) * 1000, 1),
+            "degraded": bool(degraded),
+        }
         if app.log_queries:
             fields["query"] = query
         result = await call("search_law", ctx, app.tools.search, query, qvec, lang, sr, k, **fields)
@@ -292,7 +309,8 @@ def main(argv: list[str] | None = None) -> int:
 
     app = App(os.environ)
     mcp = build_server(app)
-    log.info("ready", extra={"fields": app.health() | {"transport": "http" if http else "stdio"}})
+    ready = {"transport": "http" if http else "stdio", "startup_s": process_age_s()}
+    log.info("ready", extra={"fields": app.health() | ready})
     if not http:
         mcp.run("stdio")
         return 0
