@@ -47,7 +47,8 @@ risk is embedding-cost abuse, mitigated by rate limits, caching and the cap.
 The project's goal includes showcasing Gemini Enterprise Agent Platform.
 Runtime, Sessions and Memory Bank are all available in europe-west6.
 **Decision:** Agent Runtime, deployed with `adk deploy agent_engine` in
-europe-west6, using regional Gemini endpoints.
+europe-west6, using regional Gemini endpoints. **The model-endpoint part is
+superseded by ADR-013** (Gemini isn't served in europe-west6; we use `eu`).
 **Consequences:** Managed Sessions, Memory Bank and tracing. Some lock-in.
 Keep the agent code framework-standard so `adk api_server` on Cloud Run
 remains a fallback.
@@ -103,3 +104,74 @@ wording. The UI, README and every answer carry "Unofficial. Not legal advice.
 Sources: Fedlex." The app links users to official offices for decisions.
 **Consequences:** No impersonation risk. This is a deliberate trust and safety
 point in the write-up.
+
+### ADR-011: Workspace members are virtual uv projects; code imports from the repo root
+**Status:** accepted (2026-10-15, M0)
+**Context:** ADR-009 calls for a uv workspace with `ingest`, `mcp_server`,
+`agents/navigator` and `evals`. The deployable units must stay
+self-contained directories: `adk deploy agent_engine agents/navigator`
+uploads only that folder, `adk web agents` discovers apps by subdirectory,
+and `gcloud run deploy --source mcp_server` builds from that folder. A
+src-layout package per member (`ingest/src/ingest/…`) would fight the paths
+the docs and the ADK tooling expect.
+**Decision:** Each member has a `pyproject.toml` without a `[build-system]`,
+so uv treats it as a virtual project. It declares that component's runtime
+deps, all members share one lockfile and one `.venv`, and nothing is built or
+installed. Code is imported from the repo root (`ingest.parse`,
+`agents.navigator.config`; pytest uses `pythonpath = ["."]`). A deploy gets
+its pinned requirements from `uv export --package <member> --no-dev`
+(verified: 48 pins for the navigator, with no editable line for the member).
+`agents/navigator` must not import from other repo dirs, because Agent
+Runtime gets only that folder. `google-adk` is pinned to **2.12.0**, the
+latest on PyPI on 2026-10-15, as the docs expected.
+**Consequences:** One `uv sync --all-packages --locked` sets everything up,
+and per-component dependency lists stay honest. Under `adk web`, the agent
+package is imported as `navigator`; tests and scripts import it as
+`agents.navigator`. Don't load both in one process.
+
+### ADR-012: Shared GCP project, `swiss-nav` prefix, budget in USD
+**Status:** accepted (2026-10-15, M0)
+**Context:** The user chose the existing `random-projects-509513` over a new
+project (GCP.md §2). It already runs `zuri-sunny` and `epoch-war`. Its
+billing account is billed in USD, and budget filters cover a whole project,
+not one app.
+**Decision:** Every resource is named `swiss-nav*` and labelled
+`app=swiss-nav`. That includes the service accounts (`swiss-nav-mcp@` and
+so on instead of the generic `web@` in the first draft of GCP.md). The
+CHF 30/month guardrail is a project-scoped budget of **USD 37** with alerts
+at 50/90/100%.
+**Consequences:** Teardown and cost attribution work by prefix or label. The
+budget also counts the other apps' spend, so an alert doesn't necessarily
+mean this project overspent. Check the billing report by label or service.
+Revisit with a dedicated project if spend attribution becomes a problem.
+
+### ADR-013: Model endpoints come from the profile: `eu` for agent + embeddings, `global` for the judge
+**Status:** accepted (2026-10-15, M0). Supersedes the "regional Gemini
+endpoints" part of ADR-004.
+**Context:** The M0 smoke call with ADC returned 404 for every profile model
+in europe-west6. A probe (2026-10-15) of `gemini-3.8-flash`,
+`gemini-3.1-pro-preview`, `gemini-3.5-flash-lite`, `gemini-4-argon` and
+`gemini-embedding-2` across europe-west6/3/4/1/9/8, `eu` and `global` found
+**no single EU region serving any of them** to this project. Even
+`gemini-2.5-flash` 404s in europe-west6; only `gemini-embedding-001` answers
+there. All of them answer on `global`. All except `gemini-3.1-pro-preview`
+answer on `eu`. The locations page groups models by continent ("Europe"),
+not by city, so reading it as "listed for europe-west6" was wrong. The
+data-residency page (updated 2026-10-15) says the `eu` endpoint keeps ML
+processing within EU member states and **excludes Switzerland**, and its
+Gemini table has no Zürich column.
+**Decision:** Every profile role carries its own `{model, location}`. In the
+default profile: agent `gemini-3.8-flash@eu`, embedding
+`gemini-embedding-2@eu`, judge `gemini-3.1-pro-preview@global` (it only sees
+eval data, never user questions). The agent passes the location explicitly
+(`Gemini(client_kwargs={"enterprise": True, "location": …})`), so it doesn't
+depend on `GOOGLE_CLOUD_LOCATION`, which stays the infrastructure region
+(Agent Runtime, Cloud Run) and may be set by Agent Runtime itself. Verified
+end to end: the ADK runner answered via `eu` with
+`GOOGLE_CLOUD_LOCATION=europe-west6` set.
+**Consequences:** The residency story becomes "agent in Zürich, model
+processing in the EU", which is honest and still a talking point. `eu` may
+lag `global` in model availability (e.g. the pro preview), so E1 contenders
+must be checked per location. `gemini-embedding-001` is the only Zürich-served
+option we found; E4 (M2) can weigh it if in-country query embedding matters.
+Re-probe when Google adds europe-west6 serving.

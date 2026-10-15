@@ -1,0 +1,6 @@
+[project]
+name = "swiss-nav-evals"
+version = "0.0.0"
+description = "Eval harness, datasets and reports"
+requires-python = ">=3.12,<3.13"
+dependencies = []

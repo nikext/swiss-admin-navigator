@@ -125,15 +125,24 @@ flowchart TD
 
 ## 6. Models (config, not code)
 
-`agents/navigator/config.py` reads these from env vars or a YAML profile.
-Defaults below were taken from the Agent Platform locations page on
-2026-10-15. **Re-verify IDs in M0**, because model names churn monthly.
+`agents/navigator/config.py` loads `profiles/$NAV_PROFILE.yaml` (default
+`default`). Each role (`agent`, `judge`, `embedding`) has a `model` and an
+endpoint `location`. `<ROLE>_MODEL` / `<ROLE>_LOCATION` env vars (e.g.
+`AGENT_MODEL`, `JUDGE_LOCATION`) override single fields for experiments, and
+eval reports record `Profile.as_dict()`. **Live-checked in M0 (2026-10-15)
+with ADC:** none of these models is served in europe-west6 or any single EU
+region for this project. They are served on `eu` (except
+`gemini-3.1-pro-preview`) and on `global`. So the default profile uses
+`eu` for agent and embedding and `global` for the judge (ADR-013).
+`gemini-4-argon` no longer has a preview label. `make smoke-gemini` calls each
+profile model at its location. Model names churn monthly, so re-verify before
+each experiment run.
 
-| Role | Default | Alternatives for experiments |
+| Role | Default (location) | Alternatives for experiments |
 |---|---|---|
-| Agent / orchestrator | `gemini-3.8-flash` | `gemini-3.5-flash-lite` (cheap), `gemini-3.1-pro-preview`, `gemini-4-argon` (if GA) |
-| LLM judge (evals) | `gemini-3.1-pro-preview` | `gemini-4-argon`, or a Claude model via Model Garden for cross-family judging |
-| Embeddings | `gemini-embedding-2` | `gemini-embedding-001` |
+| Agent / orchestrator | `gemini-3.8-flash` (`eu`) | `gemini-3.5-flash-lite` (cheap), `gemini-3.1-pro-preview`, `gemini-4-argon` (if GA) |
+| LLM judge (evals) | `gemini-3.1-pro-preview` (`global` only) | `gemini-4-argon`, or a Claude model via Model Garden for cross-family judging |
+| Embeddings | `gemini-embedding-2` (`eu`) | `gemini-embedding-001` |
 | Sovereign answerer (M9) | `swiss-ai/Apertus-v1.5-8B` via LiteLLM → vLLM | 70B is out of budget (needs 4 GPUs) |
 
 ADK's own examples use `gemini-flash-latest`. Pin concrete IDs instead so eval
