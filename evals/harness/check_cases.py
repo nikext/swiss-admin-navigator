@@ -7,6 +7,10 @@
   never copied);
 - every expected citation exists in the index and is in force;
 - `clarification_expected` is true exactly for `needs_clarification` cases;
+- golden cases whose cited article text changed since the lock
+  (`golden.lock.json`, sha256 per cited article over all languages) are
+  flagged for re-verification; `--update-lock` rewrites the lock (do it in
+  the PR that verifies cases or rebuilds the index, EVALS.md §1 step 5);
 - prints the spread by category, language and domain per file, so the M4
   targets (EVALS.md §1 step 4) are easy to follow.
 
@@ -16,14 +20,18 @@ No model calls; needs `data/index.sqlite` for the citation check.
 from __future__ import annotations
 
 import argparse
+import hashlib
+import json
+import sqlite3
 import sys
 from collections import Counter
 from collections.abc import Callable, Iterable
 from pathlib import Path
 
-from evals.harness.cases import DRAFTS, Case, load_cases
+from evals.harness.cases import DRAFTS, GOLDEN, Case, load_cases
 
 DATASETS = Path("evals/datasets")
+LOCK = DATASETS / "golden.lock.json"
 # Article status by (sr, eid): "in_force", "repealed", ... or None when the article is unknown.
 Status = Callable[[str, str], str | None]
 
@@ -74,9 +82,40 @@ def spread(cases: list[Case]) -> str:
     )
 
 
-def index_status(index_path: Path) -> Status:
-    import sqlite3
+Hashes = dict[str, str | None]
 
+
+def article_hash(db: sqlite3.Connection, sr: str, eid: str) -> str | None:
+    """sha256 over the article's status and text in every language (stable order)."""
+    rows = db.execute(
+        "SELECT lang, status, text FROM articles WHERE sr = ? AND eid = ? ORDER BY lang", (sr, eid)
+    ).fetchall()
+    if not rows:
+        return None
+    return hashlib.sha256(json.dumps(rows, ensure_ascii=False).encode()).hexdigest()[:16]
+
+
+def text_hashes(cases: Iterable[Case], db: sqlite3.Connection) -> Hashes:
+    keys = sorted({(e.sr, e.eid) for c in cases for e in c.expected_citations})
+    return {f"{sr} {eid}": article_hash(db, sr, eid) for sr, eid in keys}
+
+
+def stale_cases(cases: Iterable[Case], locked: Hashes, current: Hashes) -> list[str]:
+    """Golden cases citing an article whose text changed (or is new) since the lock."""
+    out = []
+    for c in cases:
+        changed = [
+            f"{e.sr} {e.eid}"
+            for e in c.expected_citations
+            if locked.get(f"{e.sr} {e.eid}") != current.get(f"{e.sr} {e.eid}")
+        ]
+        if changed:
+            what = ", ".join(changed)
+            out.append(f"{c.id}: cited text changed since verification ({what}); re-verify")
+    return out
+
+
+def index_status(index_path: Path) -> Status:
     db = sqlite3.connect(f"file:{index_path.resolve()}?mode=ro", uri=True)
 
     def status(sr: str, eid: str) -> str | None:
@@ -92,6 +131,8 @@ def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
     ap.add_argument("files", nargs="*", type=Path, help="default: every case file")
     ap.add_argument("--index", type=Path, default=Path("data/index.sqlite"))
+    ap.add_argument("--lock", type=Path, default=LOCK)
+    ap.add_argument("--update-lock", action="store_true", help="rewrite the golden text lock")
     args = ap.parse_args(argv)
 
     errors: list[str] = []
@@ -109,6 +150,15 @@ def main(argv: list[str] | None = None) -> int:
         status = index_status(args.index)
         for cases in files.values():
             errors += citation_problems(cases, status)
+        golden = load_cases(GOLDEN) if GOLDEN.is_file() else []
+        db = sqlite3.connect(f"file:{args.index.resolve()}?mode=ro", uri=True)
+        current = text_hashes(golden, db)
+        if args.update_lock:
+            args.lock.write_text(json.dumps(current, indent=1) + "\n", encoding="utf-8")
+            print(f"wrote {args.lock} ({len(current)} articles)")
+        elif golden:
+            locked = json.loads(args.lock.read_text(encoding="utf-8")) if args.lock.exists() else {}
+            errors += stale_cases(golden, locked, current)
     else:
         print(f"note: {args.index} not found, expected citations not checked")
     for path, cases in files.items():

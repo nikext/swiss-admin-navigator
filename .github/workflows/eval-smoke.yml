@@ -64,6 +64,9 @@ jobs:
       - name: Fetch the published index (sha256-checked)
         run: uv run python -m scripts.ci_index fetch
 
+      - name: Eval cases (schema, ids, expected citations, golden text lock)
+        run: uv run python -m evals.harness.check_cases
+
       - name: Retrieval eval
         run: uv run python -m evals.harness.retrieval_eval --out ci-reports
 

@@ -1,14 +1,18 @@
 from __future__ import annotations
 
+import sqlite3
 from pathlib import Path
 
 from evals.harness.cases import Case
 from evals.harness.check_cases import (
+    article_hash,
     case_files,
     citation_problems,
     duplicate_ids,
     label_problems,
     spread,
+    stale_cases,
+    text_hashes,
 )
 
 
@@ -69,3 +73,26 @@ def test_label_problems() -> None:
         "c: clarification_expected is False for category needs_clarification",
         "d: clarification_expected is True for category answerable",
     ]
+
+
+def test_text_lock_flags_changed_articles(tmp_path: Path) -> None:
+    db = sqlite3.connect(tmp_path / "i.sqlite")
+    db.execute("CREATE TABLE articles (sr TEXT, eid TEXT, lang TEXT, status TEXT, text TEXT)")
+    db.executemany(
+        "INSERT INTO articles VALUES (?, ?, ?, ?, ?)",
+        [
+            ("220", "art_271_a", "de", "in_force", "1 Die Kündigung ist anfechtbar"),
+            ("220", "art_271_a", "fr", "in_force", "1 Le congé est annulable"),
+            ("220", "art_273", "de", "in_force", "1 innert 30 Tagen"),
+        ],
+    )
+    cases = [case("h-1", (("220", "art_271_a"),)), case("h-2", (("220", "art_273"),))]
+    locked = text_hashes(cases, db)
+    assert set(locked) == {"220 art_271_a", "220 art_273"}
+    assert stale_cases(cases, locked, text_hashes(cases, db)) == []
+    db.execute("UPDATE articles SET text = '1 innert 60 Tagen' WHERE eid = 'art_273'")
+    assert stale_cases(cases, locked, text_hashes(cases, db)) == [
+        "h-2: cited text changed since verification (220 art_273); re-verify"
+    ]
+    assert stale_cases(cases, {}, locked)[0].startswith("h-1")  # not in the lock yet
+    assert article_hash(db, "220", "art_999") is None
