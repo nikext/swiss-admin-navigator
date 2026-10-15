@@ -492,3 +492,102 @@ unverified settlement agreement as fact.
   adversarial-01. Its first draft used Art. 999 OR, which exists (bill of
   exchange law). The agent said so and quoted it; the case now uses
   Art. 271z OR.
+
+### ADR-020: Golden set: Claude drafts in batches, Nikola verifies in a CLI; adversarial and silver stay unverified
+**Status:** accepted (2026-10-15, M4)
+**Context:** M4 needs 150 human-verified golden cases (EVALS.md §1), and
+only Nikola may verify them (CLAUDE.md). Agreed on 2026-10-15: all 150 are
+verified before M4 closes, through a local review tool.
+**Decision:**
+- Claude drafts every case from the article text read from the index
+  (`ingest`-built SQLite), never from memory, in topic batches of 24
+  (`evals/datasets/drafts/batch-NN.jsonl`, 6 per language). New batches are new
+  files, so drafting never rewrites a file that is under review.
+- `make check-cases` validates schema, ids unique across all case files,
+  expected citations that exist and are in force, and
+  `clarification_expected` matching the category (it caught housing-20).
+- `make review-golden` shows each draft with the full text of every expected
+  citation (any language on `t`), key facts, must_not and notes (M3 disputes
+  are flagged); `a` stamps `verified_by`/`verified_on` and moves the case to
+  `golden.jsonl`, `e` edits it as JSON with validation, `r` moves it to
+  `drafts/rejected.jsonl` with the reason. Every decision is an atomic write.
+- Until all are verified the harness runs golden + all draft batches
+  (`--dataset all`); the 20 smoke cases stay complete wherever they live, and
+  reports say how many cases are verified.
+- `golden.lock.json` pins a hash of every cited article's text; check-cases
+  flags golden cases whose law changed (EVALS.md §1 step 5).
+- `adversarial.jsonl` (50) and `silver.jsonl` (352, LLM-generated, spot-checked
+  30/30) use the same schema but are not verified and never back headline
+  numbers; the full eval runs adversarial next to golden.
+**Consequences:** The 150 drafts hit the target spread exactly (90/22/15/13/10;
+38/38/37/37). Headline numbers wait for the review (~8-12 h of Nikola's time).
+Clarification cases are the contested label (social-05): the review decides
+whether a complete branching answer counts as good behaviour.
+
+### ADR-021: CI eval gates: WIF, a published index, deterministic gates, smoke only on ready PRs
+**Status:** accepted (2026-10-15, M4); active once `make gcp-wif` has run and the
+`GCP_*` repository variables are set.
+**Context:** EVALS.md §3 asks for retrieval + a 20-case smoke on every PR with
+gates on recall, quote fidelity and hallucinated citations, and a full eval on
+a label. CI has no index (gitignored build artefact, 135 MB), no keys, and a
+CHF 0.50 per-run goal against CHF 0.70 measured for the agent alone.
+**Decision:**
+- Auth by Workload Identity Federation (`infra/wif.sh`): pool
+  `swiss-nav-github`, OIDC provider limited to `nikext/swiss-admin-navigator`,
+  allowed to impersonate `swiss-nav-ci@` only.
+- The index is published to `gs://<project>-swiss-nav/index/<sha256[:16]>/`
+  (`make publish-index`); the committed pointer `evals/ci_index.json` carries
+  the full sha256, and CI refuses a file that does not match.
+- `eval-smoke.yml`: check-cases, retrieval eval, 20-case answer smoke, then
+  `evals/harness/gate.py` against `evals/baselines.yaml`: recall@8 at most 2
+  points below 98.5, quote fidelity 100 % with at least one quote, 0
+  hallucinated citations, at most 1 agent error. Cost and p50 latency go to the
+  job summary. It runs on non-draft PRs that touch agent, MCP, ingest or eval
+  code, and skips until WIF is configured.
+- The gates are deterministic, so the CI smoke can run without the judge
+  (`SMOKE_ARGS` repo variable); judge scores at n=20 are too noisy to gate.
+- `eval-full.yml` on the `full-eval` label: golden + drafts + adversarial,
+  report above the per-case table as a PR comment, label removed afterwards.
+**Consequences:** About CHF 0.70 per smoke run at the served (default) thinking
+level, above the 0.50 goal; low thinking would cost 0.46 but changes the agent
+under test (EVALS.md §3 table), so it is decided on golden, not for CI's sake.
+Docs-only and draft PRs cost nothing. A new index needs `make publish-index` in
+the same PR.
+
+### ADR-022: Multi-turn eval through ADK AgentEvaluator with a rubric judge
+**Status:** accepted (2026-10-15, M4)
+**Context:** EVALS.md asks for `adk eval` with user simulation on
+`multiturn.evalset.json`. Checked in google-adk 2.12.0: the `multi_turn_*_v1`
+metrics delegate to the managed Vertex evaluation service (needs
+`google-cloud-aiplatform[evaluation]` and a supported region);
+`rubric_based_multi_turn_trajectory_quality_v1` is an ADK LLM judge; both the
+user simulator and ADK's judges are built from model names on
+`GOOGLE_CLOUD_LOCATION`, which is europe-west6 here (no Gemini, ADR-013).
+**Decision:**
+- `google-adk[eval]` in the evals package only (the agent package stays lean).
+- `evals/harness/multiturn.py` builds the EvalConfig from the profile: simulator
+  = agent model (thinking low), rubric judge = judge model, 1 sample, both on
+  the judge's location set for this process; the agent keeps its own location.
+- Per-case rubrics in the evalset; they must have type `TRAJECTORY_QUALITY`
+  (ADK filters case rubrics by the evaluator's type, silently).
+- The MCP URL is fixed before anything imports `agents.navigator`, because the
+  package builds `root_agent` at import (two failed trial runs taught this).
+- Results come from ADK's own results manager (`EvalSetResult`), and the
+  report keeps every rubric verdict with the judge's rationale and transcript.
+**Consequences:** Trial on mt-01 and mt-22: 2/2 passed, 7/7 rubrics, 3 turns each,
+agent CHF 0.07 per conversation (simulator and judge extra). The `multi_turn_*`
+metrics stay unused until there is a reason to pay for the managed service.
+
+### ADR-023: Judge choice for CI and the baseline (proposed, pending the agreement study)
+**Status:** proposed (2026-10-15, M4)
+**Context:** The M3 judge (`gemini-3.1-pro-preview@global`) costs about
+CHF 0.03 per answer and is the same family as the agent. Claude in Model
+Garden was agreed as a candidate on 2026-10-15, but the project has zero quota
+for every Claude model (`429 global_online_prediction_requests_per_base_model`,
+base model anthropic-claude-haiku) until the models are enabled.
+**Plan:** Nikola labels the 30 M3 answers; `make judge-study` grades them with
+Gemini Pro (twice, for test-retest noise), 3.8 Flash and 3.5 Flash-Lite and,
+once enabled, Claude Haiku 5.5 and Sonnet 5.5. Pick the cheapest judge whose
+agreement with the human labels is not materially worse than the best one
+(groundedness MAE, kappa on behaviour and key facts), prefer a different
+family at equal agreement, record the numbers here, and set it in the profile.

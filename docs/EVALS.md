@@ -10,11 +10,12 @@ All in `evals/datasets/`, versioned in git.
 | Set | Size (target) | Purpose |
 |---|---|---|
 | `retrieval.jsonl` | 200 queries (102 on 2026-10-15) | Retrieval only: query → expected `(sr, eid)` set, matched per article regardless of language. 55 everyday + 47 `difficulty: hard` queries, DE/EN/FR/IT; expected eIds checked against the article text (drafted by Claude, not yet reviewed by Nikola). Cheap; runs on every PR. `make eval-retrieval`. |
-| `golden.jsonl` | 150 cases (0 verified on 2026-10-15) | End-to-end QA, human-verified. **Gold.** Until it exists the harness runs `drafts/golden.jsonl`: 30 cases drafted by Claude from the article text in M3 (DE 8, EN 8, FR 7, IT 7; 20 answerable, 3 clarification, 3 cantonal, 2 out of scope, 2 adversarial; 20 tagged `smoke`), `verified_by: null`, waiting for Nikola. |
-| `silver.jsonl` | 300–500 cases | LLM-generated from articles, spot-checked. Used for broad regression, never for headline claims. |
-| `multiturn.evalset.json` | 25 sessions | Clarification behaviour and memory use (ADK evalset format, user simulation). |
-| `adversarial.jsonl` | 50 cases | Prompt injection, fake article numbers, out-of-scope, requests for individual legal advice, attempts to make it impersonate an official authority. |
-| `memory.jsonl` | 20 cases | Memory recall, opt-out respected, sensitive facts **not** stored. |
+| `golden.jsonl` | 150 cases | End-to-end QA, human-verified. **Gold.** All 150 are drafted (M4, 2026-10-15) and wait for Nikola's review in `evals/datasets/drafts/`: the 30 M3 drafts (`golden.jsonl`) plus `batch-01` housing, `batch-02` work, `batch-03` residence/citizenship/registration, `batch-04` social insurance, `batch-05` tax/mobility/data protection (24 each). Spread: answerable 90, clarification 22, cantonal 15, out of scope 13, adversarial 10 (60/15/10/15 %); DE 38, EN 38, FR 37, IT 37; 20 tagged `smoke` (5 per language). `make review-golden` moves each accepted case here with `verified_by`. Until all are verified the harness runs golden + every draft batch (`--dataset all`) and labels reports "includes drafts". |
+| `silver.jsonl` | 352 cases | LLM-generated from single articles (`make silver`, profile agent model, thinking low; 410 articles sampled by per-act quotas, 54 skipped as not resident-facing, 4 rejected for naming the article; CHF 0.33). Spot check of 30: key facts supported 30/30. Used for broad regression, never for headline claims. |
+| `multiturn.evalset.json` | 25 sessions | ADK EvalSet with user simulation (`make eval-multiturn`): clarification then answer (12), follow-ups (6), language switches (3), pushback and out of scope (4); per-case rubrics. Memory cases come with M7. Drafted, not verified. |
+| `adversarial.jsonl` | 50 cases | Golden schema. Fake articles/paragraphs/acts (12), prompt injection direct and inside quoted e-mails, contracts, letters and fake tool output (12), impersonation (6), individual advice and acting for the user (8), unlawful requests (4), false premises and pressure (8). Drafted by Claude, not verified; part of the full eval, not of headline numbers. |
+| `memory.jsonl` | 20 cases | Memory recall, opt-out respected, sensitive facts **not** stored (M7). |
+| `judge_labels.jsonl` | 30 answers | Nikola's labels of the 30 M3 answers (`make label-answers`) for the judge-agreement study. |
 
 ### Golden case schema
 
@@ -53,8 +54,18 @@ are errors).
    `silver`.
 4. Spread: 5 domains × 4 languages, with roughly 60% answerable, 15%
    clarification, 10% cantonal pointer, 15% out-of-scope/adversarial.
-5. Re-check `as_of` when the corpus lock changes. A CI job flags golden cases
-   whose cited articles changed text between builds.
+5. Re-check `as_of` when the corpus lock changes. `make check-cases` (also in
+   eval-smoke) flags golden cases whose cited articles changed text since
+   `golden.lock.json` (sha256 per cited article over all languages);
+   `--update-lock` rewrites the lock in the PR that verifies cases or rebuilds
+   the index.
+
+**Workflow (M4, ADR-020).** Claude drafts cases from the article text in
+batches (`drafts/batch-NN.jsonl`, new batches are new files so drafting never
+rewrites a file under review); `make check-cases` validates schema, unique ids,
+existing in-force expected citations and the clarification label;
+`make review-golden` shows each draft with the full cited article text and
+moves it to `golden.jsonl` on Nikola's key press (edit and reject included).
 
 ## 2. Metrics
 
@@ -85,8 +96,13 @@ ADK criteria available in the pinned version (verified list from adk.dev,
 `tool_trajectory_avg_score` and the response-match criteria do **not** work with
 user simulation.
 
-**Approach:** use ADK `adk eval` / `AgentEvaluator` for multi-turn and rubric
-criteria (M4). Single-turn cases run through the custom harness
+**Approach:** ADK `AgentEvaluator` for multi-turn (`evals/harness/multiturn.py`,
+ADR-022): an LLM-backed user simulator, navigator_v1 over a local MCP server,
+and `rubric_based_multi_turn_trajectory_quality_v1` (an ADK LLM judge; per-case
+rubrics must have type `TRAJECTORY_QUALITY` or ADK silently drops them). The
+EvalConfig is built from the profile; simulator and judge run on the judge's
+endpoint location. The `multi_turn_*_v1` metrics call the managed Vertex
+evaluation service and are not used. Single-turn cases run through the custom harness
 `evals/harness/answer_eval.py` (built in M3, ADR-019): it runs the agent with
 the local ADK runner against its own MCP server, re-checks every final
 citation over MCP itself, asks the judge, and writes
@@ -98,7 +114,13 @@ headline numbers.
 **Judge hygiene:** pin the judge model and prompt. Judge with a different model
 family than the one under test where possible (e.g. Claude via Model Garden
 judging Gemini answers, and vice versa). Report judge agreement on a 30-case
-human-labelled subset.
+human-labelled subset: `make label-answers` (Nikola grades each claim of the
+reference split with verdicts hidden, plus key facts, must_not, behaviour),
+then `make judge-study JUDGES=...` re-grades the same stored answers with each
+candidate (`model@location[:thinking]`, Gemini or Claude) and reports MAE,
+bias and Spearman of groundedness, kappa on "fully grounded", key facts and
+behaviour, cost and latency; `--from` re-scores without model calls. The judge
+prompt no longer counts "Art. X does not exist" as a claim (M4).
 
 ## 3. Gates (CI)
 
@@ -109,10 +131,28 @@ human-labelled subset.
 | Manual / before release | full matrix (§4) | Updates the README results table. |
 
 CI auth: GitHub Actions → GCP via **Workload Identity Federation** (no JSON
-keys). Spend cap: the smoke eval should cost under CHF 0.50 per run. Log the
-cost. **Measured in M3:** about CHF 1.4 per smoke run (agent 0.75, judge
-0.66; ADR-019), so M4 has to bring it down: a cheaper CI judge validated
-against the human labels, a lower thinking level, or fewer CI cases.
+keys; `make gcp-wif`). The index comes from the project bucket by sha256
+(`evals/ci_index.json`, `make publish-index`). Workflows: `eval-smoke.yml`
+(check-cases, retrieval, 20-case smoke, gates via `evals/harness/gate.py` and
+`evals/baselines.yaml`; ready PRs that touch agent, MCP, ingest or eval code)
+and `eval-full.yml` (label `full-eval`; golden + drafts + adversarial; comments
+the report). Both skip until the `GCP_*` repo variables exist. The gates are
+deterministic, so the smoke needs no judge (`SMOKE_ARGS=--no-judge`).
+
+Spend cap: the smoke eval should cost under CHF 0.50 per run. Log the cost.
+**Measured in M3:** about CHF 1.4 per smoke run (agent 0.75, judge 0.66;
+ADR-019). **Measured in M4 (20 smoke cases, agent only, no judge):**
+
+| agent thinking | CHF/answer | run | p50 / p95 s | thoughts | behaviour rule | req. recall |
+|---|---|---|---|---|---|---|
+| default (M3 run 3e7e603) | 0.035 | 0.70 | 38 / 82 | 3.6k | 20/20 | 1.00 |
+| medium | 0.034 | 0.68 | 38 / 103 | 4.0k | 20/20 | 1.00 |
+| low | 0.023 | 0.46 | 22 / 34 | 0 | 18/20 | 0.96 |
+
+Low thinking is a third cheaper and much faster, but the agent then gives
+branching answers instead of asking (residence-01, residence-07) and missed
+QStV 9 in tax-01. Whether to serve it is decided with the chosen judge on the
+full golden set (judge scores of these stored answers cost cents).
 
 ## 4. Experiments (README material)
 

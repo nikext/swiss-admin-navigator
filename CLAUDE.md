@@ -111,7 +111,15 @@ make index-e4     # E4 experiment index (both tokenizers, three vector spaces)
 make eval-retrieval  # recall@k/MRR of the served config (E4=1: the E4 grid)
 make mcp-dev      # MCP server on http://127.0.0.1:8080/mcp (STDIO=1: stdio)
 make eval-smoke   # 20 smoke cases: agent + judge, own local MCP server (~CHF 1.4) → evals/reports/
-make eval-full    # every case of golden (drafts until it exists); M4 adds adversarial
+make eval-full    # golden + every draft batch (ARGS="--dataset all+adversarial" for the full eval)
+make eval-multiturn  # 25 simulated conversations, ADK AgentEvaluator + rubric judge (~CHF 3)
+make review-golden   # Nikola: verify drafts against the article text → golden.jsonl
+make check-cases     # schema, ids, expected citations, golden text lock (ARGS=--update-lock)
+make label-answers   # Nikola: human labels for the judge study
+make judge-study JUDGES=model@loc[:thinking],...   # judges vs human labels (billable; --from is free)
+make silver          # regenerate silver.jsonl (~CHF 0.3)
+make publish-index   # upload data/index.sqlite for CI + rewrite evals/ci_index.json
+make gcp-wif         # WIF pool/provider for GitHub Actions (DRY_RUN=1 previews)
 make deploy-mcp   # build + push + Cloud Run (ask first; DRY_RUN=1 previews)
 make deploy-agent | deploy-web   # (M5/M6, ask first)
 ```
