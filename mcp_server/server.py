@@ -123,14 +123,29 @@ class App:
     """Index, tools, embedder and limits for one server process."""
 
     def __init__(self, env: Mapping[str, str]) -> None:
+        # Startup phases in seconds, logged in the "ready" line (cold-start budget).
+        # "boot": process start -> here (interpreter + imports); None off Linux.
+        self.phases: dict[str, float | None] = {"boot": process_age_s()}
+        t = time.perf_counter()
+
+        def phase(name: str) -> None:
+            nonlocal t
+            now = time.perf_counter()
+            self.phases[name] = round(now - t, 3)
+            t = now
+
         index_path = Path(env.get("INDEX_PATH") or "data/index.sqlite")
         self.index = Index(index_path)
+        phase("index")
         self.tools = LawTools(self.index, served_config(self.index, dict(env)))
+        phase("tools")
         self.space = self.index.space_spec() if self.index.meta.get("default_space") else None
         if self.space:
             self.index.space(self.space["name"])  # load vectors now, not on the first query
+        phase("vectors")
         project = env.get("GOOGLE_CLOUD_PROJECT", "")
         self.embedder = QueryEmbedder(self.space, project, env) if self.space and project else None
+        phase("embedder")
         self.limiter = RateLimiter(
             float(env.get("SEARCH_RATE_PER_MIN", "30")), int(env.get("SEARCH_BURST", "10"))
         )
@@ -309,7 +324,11 @@ def main(argv: list[str] | None = None) -> int:
 
     app = App(os.environ)
     mcp = build_server(app)
-    ready = {"transport": "http" if http else "stdio", "startup_s": process_age_s()}
+    ready = {
+        "transport": "http" if http else "stdio",
+        "startup_s": process_age_s(),
+        "phases": app.phases,
+    }
     log.info("ready", extra={"fields": app.health() | ready})
     if not http:
         mcp.run("stdio")

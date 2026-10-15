@@ -44,6 +44,7 @@ if [[ "$DRY_RUN" != 1 ]]; then
     docker login -u oauth2accesstoken --password-stdin "https://${REGISTRY}" >/dev/null
 fi
 run docker push "$IMAGE"
+if [[ "$DRY_RUN" != 1 ]]; then docker logout "https://${REGISTRY}" >/dev/null; fi
 
 echo "== deploy"
 # Public and read-only by design (ADR-003). Scale to zero; at most 2 instances
