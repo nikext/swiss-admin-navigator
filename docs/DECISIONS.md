@@ -591,3 +591,54 @@ once enabled, Claude Haiku 5.5 and Sonnet 5.5. Pick the cheapest judge whose
 agreement with the human labels is not materially worse than the best one
 (groundedness MAE, kappa on behaviour and key facts), prefer a different
 family at equal agreement, record the numbers here, and set it in the profile.
+
+### ADR-024: Golden review and judge labels delegated to Claude; clarification labels follow system-prompt rule 1
+**Status:** accepted (2026-10-15, M4)
+**Context:** ADR-020 and CLAUDE.md had Nikola verify all 150 golden cases and
+label the 30 judge-study answers. On 2026-10-15 Nikola asked Claude to do both
+itself and continue. Reviewing the drafts also showed that 16 of the 22
+`needs_clarification` labels contradicted rule 1 of the agent's own system
+prompt ("ask … if the answer would differ substantially and you cannot cover
+both cases in two short sentences … Do not ask when you can cover both cases
+briefly").
+**Decision:**
+1. Claude (Opus 5.5) reviewed every draft against the full cited article text
+   (the `make review-golden` rendering) and applied the decisions through the
+   review tool's `Store`. Every case carries `verified_by: claude-opus-5-5`;
+   nothing is recorded as Nikola's. Reports and the README call the set
+   **model-verified**, not human-verified.
+2. Outcome: 150 accepted, 0 rejected. 16 relabelled (point 3); work-18 edited
+   (DE/FR "without night-work supplements" vs IT "oltre agli eventuali
+   supplementi", so the key fact no longer fixes how supplements count);
+   social-17 edited (a key fact relied on OAMal 100, which is not an expected
+   citation). Disputes: social-05 stays `needs_clarification` (the answer needs
+   contribution months, age, children and the allowances already drawn);
+   adversarial-01 stays as labelled. Every fake article was re-checked with
+   `resolve_citation` (271z OR, 257z CO, 336z CO, 16z LCR: `exists: false`).
+3. Labelling rule: a case is `needs_clarification` only if a fact the question
+   omits changes the answer materially **and** a correct general answer does
+   not fit in two short sentences. Otherwise it is `answerable`, with a
+   `must_not` against presenting one branch as if it applied to the user.
+   Relabelled to answerable: housing-20, work-22, work-23, residence-20, -22,
+   -23, -24, -25, social-20, -21, -22, -23, tax-10, tax-12, mobility-06,
+   mobility-08. Kept: social-05, residence-01, residence-07, residence-21,
+   social-24, mobility-07.
+4. Judge labels: Claude labelled the 30 M3 answers (`labeled_by:
+   claude-opus-5-5`) without seeing any judge verdict, using the rubric of
+   `prompts/judge.md` (a claim with no ref is `no`; claims the prompt tells
+   judges to skip, such as office pointers or "Art. X does not exist", are
+   `yes` so they are not penalised).
+**Consequences:**
+- Headline numbers are measured against a model-verified reference. A human
+  spot check by Nikola (say 20 random cases via `make review-golden` on a copy)
+  would upgrade this to "model-verified, human spot-checked" and is
+  recommended before the numbers are used outside the repo.
+- Judge agreement is agreement with Claude's labels. Claude judges (Haiku,
+  Sonnet; 429 until the quota request is granted) share a model family with
+  the labeller, so their agreement is not comparable with Gemini's; they are
+  not picked as judge unless a human relabels.
+- Spread is now answerable 106, clarification 6, cantonal 15, out of scope 13,
+  adversarial 10. Six clarification cases give wide uncertainty on that
+  category; drafting more is a follow-up.
+- The thinking-level decision (EVALS.md §3) is judged with this rule: a short
+  branching answer is fine where rule 1 allows it.

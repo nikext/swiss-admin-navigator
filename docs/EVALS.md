@@ -10,12 +10,12 @@ All in `evals/datasets/`, versioned in git.
 | Set | Size (target) | Purpose |
 |---|---|---|
 | `retrieval.jsonl` | 200 queries (102 on 2026-10-15) | Retrieval only: query → expected `(sr, eid)` set, matched per article regardless of language. 55 everyday + 47 `difficulty: hard` queries, DE/EN/FR/IT; expected eIds checked against the article text (drafted by Claude, not yet reviewed by Nikola). Cheap; runs on every PR. `make eval-retrieval`. |
-| `golden.jsonl` | 150 cases | End-to-end QA, human-verified. **Gold.** All 150 are drafted (M4, 2026-10-15) and wait for Nikola's review in `evals/datasets/drafts/`: the 30 M3 drafts (`golden.jsonl`) plus `batch-01` housing, `batch-02` work, `batch-03` residence/citizenship/registration, `batch-04` social insurance, `batch-05` tax/mobility/data protection (24 each). Spread: answerable 90, clarification 22, cantonal 15, out of scope 13, adversarial 10 (60/15/10/15 %); DE 38, EN 38, FR 37, IT 37; 20 tagged `smoke` (5 per language). `make review-golden` moves each accepted case here with `verified_by`. Until all are verified the harness runs golden + every draft batch (`--dataset all`) and labels reports "includes drafts". |
+| `golden.jsonl` | 150 cases | End-to-end QA. **Gold.** Drafted by Claude in M4 (the 30 M3 drafts plus five batches of 24: housing; work; residence/citizenship/registration; social insurance; tax/mobility/data protection) and **model-verified** by Claude Opus 5.5 against the article text on 2026-10-15 at Nikola's request (`verified_by: claude-opus-5-5`, ADR-024); not human-verified. Spread: answerable 106, clarification 6, cantonal 15, out of scope 13, adversarial 10 (clarification labels follow system-prompt rule 1, ADR-024); DE 38, EN 38, FR 37, IT 37; 20 tagged `smoke` (5 per language). Text lock: `golden.lock.json`. |
 | `silver.jsonl` | 352 cases | LLM-generated from single articles (`make silver`, profile agent model, thinking low; 410 articles sampled by per-act quotas, 54 skipped as not resident-facing, 4 rejected for naming the article; CHF 0.33). Spot check of 30: key facts supported 30/30. Used for broad regression, never for headline claims. |
 | `multiturn.evalset.json` | 25 sessions | ADK EvalSet with user simulation (`make eval-multiturn`): clarification then answer (12), follow-ups (6), language switches (3), pushback and out of scope (4); per-case rubrics. Memory cases come with M7. Drafted, not verified. |
 | `adversarial.jsonl` | 50 cases | Golden schema. Fake articles/paragraphs/acts (12), prompt injection direct and inside quoted e-mails, contracts, letters and fake tool output (12), impersonation (6), individual advice and acting for the user (8), unlawful requests (4), false premises and pressure (8). Drafted by Claude, not verified; part of the full eval, not of headline numbers. |
 | `memory.jsonl` | 20 cases | Memory recall, opt-out respected, sensitive facts **not** stored (M7). |
-| `judge_labels.jsonl` | 30 answers | Nikola's labels of the 30 M3 answers (`make label-answers`) for the judge-agreement study. |
+| `judge_labels.jsonl` | 30 answers | Labels of the 30 M3 answers for the judge-agreement study, by Claude Opus 5.5 at Nikola's request, blind to judge verdicts (`labeled_by: claude-opus-5-5`, ADR-024). `make label-answers` adds human labels. |
 
 ### Golden case schema
 
@@ -49,11 +49,14 @@ are errors).
 2. For each question, find the governing articles yourself through Fedlex
    (the MCP server's `get_toc` helps) and write `expected_citations` and
    `key_facts` **from the article text**.
-3. Use an LLM to *propose* candidates. A human (Nikola) confirms each one
-   against the article text and sets `verified_by`. Unverified cases go to
-   `silver`.
+3. Use an LLM to *propose* candidates. A reviewer confirms each one against
+   the article text and sets `verified_by` (Nikola by default; for M4 he
+   delegated the review to Claude, ADR-024). Unverified cases go to `silver`.
 4. Spread: 5 domains × 4 languages, with roughly 60% answerable, 15%
    clarification, 10% cantonal pointer, 15% out-of-scope/adversarial.
+   Label `needs_clarification` only where system-prompt rule 1 says to ask:
+   the missing fact changes the answer and a correct general answer does not
+   fit in two short sentences (ADR-024).
 5. Re-check `as_of` when the corpus lock changes. `make check-cases` (also in
    eval-smoke) flags golden cases whose cited articles changed text since
    `golden.lock.json` (sha256 per cited article over all languages);
@@ -65,7 +68,8 @@ batches (`drafts/batch-NN.jsonl`, new batches are new files so drafting never
 rewrites a file under review); `make check-cases` validates schema, unique ids,
 existing in-force expected citations and the clarification label;
 `make review-golden` shows each draft with the full cited article text and
-moves it to `golden.jsonl` on Nikola's key press (edit and reject included).
+moves it to `golden.jsonl` on the reviewer's key press (edit and reject
+included).
 
 ## 2. Metrics
 
