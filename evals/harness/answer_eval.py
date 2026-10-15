@@ -4,6 +4,7 @@
     uv run python -m evals.harness.answer_eval                  # golden + all draft batches
     uv run python -m evals.harness.answer_eval --dataset all+adversarial   # the full eval
     uv run python -m evals.harness.answer_eval --ids work-01,housing-02 --no-judge
+    uv run python -m evals.harness.answer_eval --dataset golden --from A.json --from B.json
 
 Runs each case through the agent (local ADK runner), re-checks every final
 citation against the law over MCP, asks the judge (profile `judge` role) for
@@ -11,6 +12,10 @@ groundedness, key facts, must_not and behaviour, and writes
 `evals/reports/<date>-<sha>-<name>.{json,md}`. By default it starts its own
 MCP server from this checkout (needs `data/index.sqlite`); `--mcp-url` uses a
 running one instead. Costs money: model calls for the agent and the judge.
+
+`--from` re-scores stored reports instead (no model calls): rows are merged by
+case id, later reports win (so a rerun of errored cases replaces them), and
+only cases of `--dataset` (and the usual selection) are kept.
 """
 
 from __future__ import annotations
@@ -246,6 +251,18 @@ def fmt_ci(m: dict[str, Any]) -> str:
     return f"**{fmt(m['mean'])}** ({fmt(lo)}–{fmt(hi)}, n={m['n']})"
 
 
+def verified_by(ds: dict[str, Any]) -> str:
+    who = ds.get("verified_by") or []
+    return f" by {', '.join(who)}" if who else ""
+
+
+def rescored_note(meta: dict[str, Any]) -> list[str]:
+    src = meta.get("rescored_from")
+    if not src:
+        return []
+    return [f"- re-scored without model calls from {', '.join(f'`{x}`' for x in src)}"]
+
+
 def render_markdown(report: dict[str, Any]) -> str:
     s, meta = report["summary"], report["meta"]
     qf, hc = s["quote_fidelity"], s["hallucinated_citations"]
@@ -254,9 +271,10 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"# Answer eval: {report['name']}",
         "",
         f"- dataset: `{ds['spec']}` ({s['cases']} cases selected, "
-        f"{ds['verified_cases']} human-verified; sha {ds['sha']} over "
+        f"{ds['verified_cases']} verified{verified_by(ds)}; sha {ds['sha']} over "
         f"{', '.join(Path(f).name for f in ds['files'])})"
         + ("" if ds["verified"] else " — **includes drafts: not a headline number**"),
+        *rescored_note(meta),
         f"- agent: `{model_label(meta['profile']['agent'])}`, "
         f"prompt sha {meta['system_prompt_sha']}, google-adk {meta['adk']}, structured output "
         f"{meta['output_mode']}",
@@ -425,6 +443,7 @@ async def evaluate(
                 "sha": dataset.sha,
                 "verified": all(c.verified_by for c in cases),
                 "verified_cases": sum(bool(c.verified_by) for c in cases),
+                "verified_by": sorted({c.verified_by for c in cases if c.verified_by}),
             },
             "selection": {
                 "smoke": args.smoke,
@@ -450,6 +469,42 @@ async def evaluate(
     }
 
 
+def rescore(
+    reports: list[dict[str, Any]], names: list[str], dataset: Dataset, cases: list[Case]
+) -> dict[str, Any]:
+    """A report over `cases` from stored rows; later reports override earlier ones by id."""
+    rows: dict[str, dict[str, Any]] = {}
+    origin: dict[str, int] = {}
+    for i, rep in enumerate(reports):
+        for row in rep["cases"]:
+            rows[row["id"]] = row
+            origin[row["id"]] = i
+    missing = [c.id for c in cases if c.id not in rows]
+    if missing:
+        raise SystemExit(f"no stored row for {len(missing)} cases, e.g. {missing[:5]}")
+    kept = [rows[c.id] for c in cases]
+    pricing = yaml.safe_load(PRICING.read_text(encoding="utf-8"))
+    judged = all(r["meta"]["judged"] for r in reports)
+    summary = summarize(kept, judged, Usage(), pricing)
+    if judged:  # judge cost is only stored per run: prorate by the rows taken from each
+        share = Counter(origin[c.id] for c in cases)
+        summary["run_cost_chf"]["judge"] = sum(
+            (rep["summary"]["run_cost_chf"].get("judge") or 0) * share[i] / len(rep["cases"])
+            for i, rep in enumerate(reports)
+        )
+    meta = dict(reports[-1]["meta"])
+    meta["dataset"] = {
+        "spec": dataset.spec,
+        "files": [str(f) for f in dataset.files],
+        "sha": dataset.sha,
+        "verified": all(c.verified_by for c in cases),
+        "verified_cases": sum(bool(c.verified_by) for c in cases),
+        "verified_by": sorted({c.verified_by for c in cases if c.verified_by}),
+    }
+    meta["rescored_from"] = names
+    return {"summary": summary, "cases": kept, "meta": meta}
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
     ap.add_argument(
@@ -466,6 +521,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--mcp-url", default=None, help="use this MCP server instead of a local one")
     ap.add_argument("--name", default=None)
     ap.add_argument("--out", type=Path, default=REPORTS)
+    ap.add_argument(
+        "--from", dest="from_", type=Path, action="append", help="re-score stored reports"
+    )
     args = ap.parse_args(argv)
     load_dotenv(".env")
     dataset = load_dataset(args.dataset)
@@ -473,11 +531,15 @@ def main(argv: list[str] | None = None) -> int:
     if not cases:
         raise SystemExit("no cases selected")
 
-    with ExitStack() as stack:
-        url = args.mcp_url or stack.enter_context(
-            local_server(Path("data/logs/eval-mcp-server.log"))
-        )
-        report = asyncio.run(evaluate(args, dataset, cases, url))
+    if args.from_:
+        stored = [json.loads(f.read_text(encoding="utf-8")) for f in args.from_]
+        report = rescore(stored, [f.name for f in args.from_], dataset, cases)
+    else:
+        with ExitStack() as stack:
+            url = args.mcp_url or stack.enter_context(
+                local_server(Path("data/logs/eval-mcp-server.log"))
+            )
+            report = asyncio.run(evaluate(args, dataset, cases, url))
 
     name = args.name or ("smoke" if args.smoke else "answers")
     if not report["meta"]["dataset"]["verified"]:
