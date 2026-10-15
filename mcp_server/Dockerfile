@@ -23,7 +23,11 @@ FROM python:3.12-slim@sha256:a6e34c598f2467ed0e9a8d349809fcd8b5c603269512df273a0
 LABEL org.opencontainers.image.source="https://github.com/nikext/swiss-admin-navigator" \
       org.opencontainers.image.description="Unofficial swiss-law MCP server (Fedlex). Not legal advice." \
       org.opencontainers.image.licenses="Apache-2.0"
-RUN useradd --system --uid 10001 --no-create-home app
+# The official image ships the stdlib without .pyc (42 of 686 modules), and the
+# app user can't write them, so every cold start recompiled asyncio, json, email,
+# http...: 0.83 s -> 0.61 s for the server's imports in this container (ADR-017).
+RUN python -m compileall -q -j0 /usr/local/lib/python3.12 \
+ && useradd --system --uid 10001 --no-create-home app
 WORKDIR /app
 COPY --from=deps /venv /venv
 COPY ingest/__init__.py ingest/eid.py ingest/

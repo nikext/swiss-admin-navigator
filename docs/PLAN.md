@@ -11,7 +11,7 @@ what was verified. Update the status table in the same PR.
 | M1 | Corpus pipeline: Fedlex → `articles.jsonl` | ✅ done | #2. 23 acts, 18,396 records; spot-check vs Fedlex HTML 10/10 + 100/100 (DATA.md §6–7, ADR-014) |
 | M2 | Index + swiss-law MCP server (local → Cloud Run) | 🟨 in progress | Branch `m2-index-mcp`, deployed at https://swiss-nav-mcp-mdyqt5hgsq-oa.a.run.app/mcp. E4: dense R@8 98.5 (ADR-016); cold start 4.15 s instance / 4.61 s first response (ADR-017) |
 
-**Next up (M2):** redeploy HEAD (`make deploy-mcp`, background embedding warm-up), wait ≥15 min idle, re-measure a cold session with `make mcp-coldstart URL=…/mcp` (initialize + first `search_law`; server phases from the `ready` log line) and fill ADR-017; set this row to ✅; open the PR (draft body: done-when, E4 table, deviations) and merge on green CI.
+**Next up (M2):** redeploy HEAD (`make deploy-mcp`: stdlib bytecode, no listen stream; ADR-017), wait ≥15 min idle, re-measure a cold session with `make mcp-coldstart URL=…/mcp` (initialize + first `search_law`; server phases from the `ready` log line) and fill ADR-017; set this row to ✅; open the PR (draft body: done-when, E4 table, deviations) and merge on green CI.
 | M3 | `navigator_v1` single agent (local) + eval harness v0 | ⬜ todo | |
 | M4 | Golden set (150) + CI eval gates | ⬜ todo | |
 | M5 | Deploy to Agent Runtime + Sessions + tracing | ⬜ todo | |

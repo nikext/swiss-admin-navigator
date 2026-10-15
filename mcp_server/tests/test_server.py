@@ -88,22 +88,9 @@ def test_json_log_lines_carry_fields_but_no_raw_ip(app: App) -> None:
     assert len(line["client"]) == 12
 
 
-def test_background_job_starts_with_the_app_and_does_not_block_startup() -> None:
-    import asyncio
-
-    from starlette.applications import Starlette
-    from starlette.testclient import TestClient
-
-    from mcp_server.server import run_in_background_on_startup
-
-    started, release = [], asyncio.Event()
-
-    async def job() -> None:
-        started.append(True)
-        await release.wait()  # never released: startup must not wait for it
-
-    asgi = Starlette()
-    run_in_background_on_startup(asgi, job)
-    with TestClient(asgi):
-        pass
-    assert started == [True]
+@pytest.mark.parametrize("mode", ["auto", "legacy"])
+async def test_no_list_changed_so_clients_open_no_listen_stream(app: App, mode: str) -> None:
+    async with Client(build_server(app), mode=mode) as client:
+        caps = client.server_capabilities
+    assert caps.tools is not None
+    assert not caps.tools.list_changed

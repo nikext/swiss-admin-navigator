@@ -17,8 +17,6 @@ IP, and no query text unless LOG_QUERIES=1: questions can be personal.
 from __future__ import annotations
 
 import argparse
-import asyncio
-import contextlib
 import hashlib
 import json
 import logging
@@ -26,7 +24,7 @@ import os
 import secrets
 import sys
 import time
-from collections.abc import AsyncIterator, Callable, Coroutine, Mapping
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -36,7 +34,6 @@ from mcp.server.mcpserver import Context, MCPServer
 from mcp.server.mcpserver.exceptions import ToolError
 from mcp.types import ToolAnnotations
 from pydantic import Field
-from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
@@ -171,6 +168,10 @@ def build_server(app: App) -> MCPServer:
         instructions=INSTRUCTIONS,
         version="0.2.0",
         website_url="https://github.com/nikext/swiss-admin-navigator",
+        # The tool list never changes, so serve no `subscriptions/listen`: on Cloud Run
+        # every open client session held one until the 60 s timeout and re-listened,
+        # keeping an instance up and billed (ADR-017).
+        subscriptions=False,
     )
 
     def logged(tool: str, start: float, ctx: Context | None, **fields: Any) -> None:
@@ -293,24 +294,6 @@ def build_server(app: App) -> MCPServer:
     return mcp
 
 
-def run_in_background_on_startup(
-    asgi: Starlette, job: Callable[[], Coroutine[Any, Any, None]]
-) -> None:
-    """Start `job` as a task once the app is up, without delaying startup (or the probe)."""
-    inner = asgi.router.lifespan_context
-
-    @contextlib.asynccontextmanager
-    async def lifespan(app: Starlette) -> AsyncIterator[Any]:
-        async with inner(app) as state:
-            task = asyncio.create_task(job())
-            try:
-                yield state
-            finally:
-                task.cancel()
-
-    asgi.router.lifespan_context = lifespan
-
-
 def configure_logging(json_logs: bool) -> None:
     # stderr always: in stdio mode stdout is the MCP channel, and Cloud Run parses
     # structured JSON from stderr as well.
@@ -352,8 +335,6 @@ def main(argv: list[str] | None = None) -> int:
     # Stateless + JSON responses: any instance can answer any request (no session
     # affinity needed with max-instances 2), and responses are plain JSON.
     asgi = mcp.streamable_http_app(stateless_http=True, json_response=True, host=host)
-    if app.embedder is not None:
-        run_in_background_on_startup(asgi, app.embedder.warm)
     uvicorn.run(asgi, host=host, port=port, log_config=None, access_log=False)
     return 0
 
