@@ -79,8 +79,12 @@ if [[ "${SKIP_IMPORT_CHECK:-0}" != 1 ]]; then
     python -c 'import sys, navigator.agent as a; print("  ", sys.version.split()[0], a.root_agent.name, a.profile.agent)')
 fi
 
+# --display_name must be passed: ADK otherwise overrides the config's with the folder name.
+DISPLAY_NAME="$(python3 -I -c 'import json, sys; print(json.load(open(sys.argv[1]))["display_name"])' \
+  infra/agent_runtime.json)"
 DEPLOY=("$UV" run adk deploy agent_engine
   --project "$PROJECT_ID" --region "$REGION"
+  --display_name "$DISPLAY_NAME"
   --service_account "$SA"
   --otel_to_cloud
   --agent_engine_config_file "$STAGE/agent_runtime.json")

@@ -92,6 +92,11 @@ flags plus a manual read found one must_not violation the judge missed
 now fixed by a prompt rule and a verifier check (0 of 15 cantonal answers
 with contact details after the fix).
 CI runs the 20-case smoke set with hard gates on every ready PR.
+**Deployed (M5):** the agent runs on Agent Runtime in europe-west6 with
+managed Sessions and Cloud Trace spans per model and tool call; on the smoke
+set the deployed agent matches the local one within noise (quote fidelity
+100%, 0 hallucinated, CHF 0.030 per answer, p50 66 s) and scales to zero
+(ADR-027).
 Reports: [`evals/reports/`](evals/reports/) · methodology: [docs/EVALS.md](docs/EVALS.md)
 
 ## Repository layout (target)

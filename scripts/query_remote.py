@@ -4,9 +4,12 @@
     uv run python -m scripts.query_remote --traces "..."   # then look the run up in Cloud Trace
 
 Prints every tool call as its event arrives, then the answer, its citations and
-the verifier's verdict. `--traces` waits for the exporter and lists the spans
-Cloud Trace recorded for the run's time window: the M5 check that model and tool
-spans are visible. The agent is `AGENT_RUNTIME_ID` (or `--runtime`). One answer
+the verifier's verdict. `--traces` waits for the exporter and shows the spans
+Cloud Trace recorded for the run: the M5 check that model and tool spans are
+visible. Cloud Trace's `traces.list` doesn't return OTLP-ingested traces (it
+found none of them on 2026-10-16, while `traces.get` returned all 19 spans), so
+the trace ids come from the agent's OTel log records in Cloud Logging, which
+carry them. The agent is `AGENT_RUNTIME_ID` (or `--runtime`). One answer
 costs about CHF 0.04 in model calls.
 """
 
@@ -32,7 +35,8 @@ from evals.harness.agent_run import Trace, record
 from evals.harness.cases import Case
 from evals.harness.remote_run import RemoteAgent
 
-TRACE_API = "https://cloudtrace.googleapis.com/v1/projects/{project}/traces"
+TRACE_API = "https://cloudtrace.googleapis.com/v1/projects/{project}/traces/{trace_id}"
+LOGS_API = "https://logging.googleapis.com/v2/entries:list"
 
 
 def span_kind(name: str) -> str:
@@ -40,27 +44,38 @@ def span_kind(name: str) -> str:
     return name.split(" ", 1)[0]
 
 
-def list_spans(project: str, start: datetime, end: datetime) -> list[dict[str, Any]]:
+def _headers(project: str) -> dict[str, str]:
     creds, _ = google.auth.default(scopes=["https://www.googleapis.com/auth/cloud-platform"])
     creds.refresh(google.auth.transport.requests.Request())
-    params = {
-        "startTime": start.isoformat().replace("+00:00", "Z"),
-        "endTime": end.isoformat().replace("+00:00", "Z"),
-        "view": "COMPLETE",
-        "pageSize": "50",
+    return {"Authorization": f"Bearer {creds.token}", "x-goog-user-project": project}
+
+
+def trace_ids(project: str, runtime_id: str, start: datetime) -> list[str]:
+    """Trace ids of the agent's log entries since `start` (newest first)."""
+    since = start.isoformat().replace("+00:00", "Z")
+    body = {
+        "resourceNames": [f"projects/{project}"],
+        "filter": (
+            'resource.type="aiplatform.googleapis.com/ReasoningEngine" '
+            f'resource.labels.reasoning_engine_id="{runtime_id}" '
+            f'timestamp>="{since}" trace:*'
+        ),
+        "orderBy": "timestamp desc",
+        "pageSize": 200,
     }
-    resp = httpx.get(
-        TRACE_API.format(project=project),
-        params=params,
-        headers={"Authorization": f"Bearer {creds.token}", "x-goog-user-project": project},
-        timeout=30,
-    )
+    resp = httpx.post(LOGS_API, json=body, headers=_headers(project), timeout=30)
     resp.raise_for_status()
-    return [
-        span | {"trace_id": t["traceId"]}
-        for t in resp.json().get("traces", [])
-        for span in t.get("spans", [])
-    ]
+    ids = [e["trace"].rsplit("/", 1)[-1] for e in resp.json().get("entries", [])]
+    return list(dict.fromkeys(ids))
+
+
+def get_spans(project: str, trace_id: str) -> list[dict[str, Any]]:
+    url = TRACE_API.format(project=project, trace_id=trace_id)
+    resp = httpx.get(url, headers=_headers(project), timeout=30)
+    if resp.status_code == 404:  # not exported (yet)
+        return []
+    resp.raise_for_status()
+    return resp.json().get("spans", [])
 
 
 async def ask(agent: RemoteAgent, question: str) -> Trace:
@@ -123,21 +138,28 @@ def main(argv: list[str] | None = None) -> int:
     if args.traces:
         print(f"\nwaiting {args.trace_wait:.0f} s for the trace export ...", flush=True)
         time.sleep(args.trace_wait)
-        spans = list_spans(project, started - timedelta(seconds=5), datetime.now(UTC))
-        if not spans:
-            print("no spans in Cloud Trace for this window (exporter, IAM or delay?)")
-            return 1
-        kinds = Counter(span_kind(s["name"]) for s in spans)
-        tools = Counter(
-            s["name"].split(" ", 1)[1] for s in spans if s["name"].startswith("execute_tool ")
-        )
-        traces = sorted({s["trace_id"] for s in spans})
-        print(f"{len(spans)} spans in {len(traces)} trace(s): {dict(kinds)}")
-        print(f"tool spans: {dict(tools)}")
-        for t in traces:
-            print(
-                f"  https://console.cloud.google.com/traces/explorer;traceId={t}?project={project}"
+        runtime_id = agent.name.rsplit("/", 1)[-1]
+        ids = trace_ids(project, runtime_id, started - timedelta(seconds=5))
+        found = 0
+        for tid in ids:
+            spans = get_spans(project, tid)
+            if not any(s["name"].startswith("invoke_agent") for s in spans):
+                continue  # session calls etc.; the agent run is the trace with invoke_agent
+            found += 1
+            kinds = Counter(span_kind(s["name"]) for s in spans)
+            tools = Counter(
+                s["name"].split(" ", 1)[1] for s in spans if s["name"].startswith("execute_tool ")
             )
+            print(f"trace {tid}: {len(spans)} spans {dict(kinds)}")
+            print(f"  tool spans: {dict(tools)}")
+            print(
+                f"  https://console.cloud.google.com/traces/explorer;traceId={tid}?project={project}"
+            )
+        if not found:
+            print(
+                f"no agent trace found ({len(ids)} trace ids in the logs; exporter, IAM or delay?)"
+            )
+            return 1
     return 0
 
 

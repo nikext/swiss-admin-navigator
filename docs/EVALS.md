@@ -170,6 +170,18 @@ with the chosen judge on the final golden definitions: groundedness default
 0.76, medium 0.86, low 0.91; key facts 100% each; behaviour 20/20, 20/20,
 18/20. The served level stays at the default (ADR-025).
 
+### Deployed target (M5)
+
+`make eval-smoke-remote` (`answer_eval --target remote`) runs the same cases
+against the agent on Agent Runtime (`AGENT_RUNTIME_ID`): one Agent Platform
+session per case, streamed through `async_stream_query`, scored by the same
+code as the local runner. The citation re-check still uses its own MCP
+server, so the check stays independent of the deployed one. Reports record
+the deployed commit, identity, scaling and env, and refuse to run when the
+deployed `NAV_PROFILE` differs from the local one (cost and model labels come
+from the profile). Latency includes the network and session creation.
+First comparison: ADR-027 (within noise of local).
+
 ## 4. Experiments (README material)
 
 | ID | Question | Configs |
