@@ -810,3 +810,78 @@ about 10 s. The 503 shows that the model client needs retries with backoff
 on 429/503 (M4 follow-up), now in production too: a failed model call ends
 the stream without a final event. Deploys need Cloud Build and a few
 minutes; Nikola runs them (`make deploy-agent`).
+
+### ADR-028: Web = Next.js BFF that relays Agent Runtime as progress events; access code + Firestore quotas
+**Status:** accepted (2026-10-16, M6)
+**Context:** M6 needs a demo people can use on a phone without exposing the
+service account, the agent's spend or other visitors' conversations. Measured
+facts that shaped it (2026-10-16, deployed agent `5798067860890714112`):
+- `:streamQuery?alt=sse` returns **newline-delimited JSON** (one ADK `Event`
+  per line), not `data:` frames. The answer is one final text event (the
+  verified `Answer` JSON from `output_schema`), so there are no answer tokens
+  to stream; what streams is the tool use (`resolve_citation`, `search_law`,
+  `get_article`, the verifier's `citation_check`).
+- `async_create_session` passes `ttl` to the Sessions API, which rejects
+  anything under 24 h (`` `ttl` must be at least 24 hours ``).
+- A deleted, expired or foreign session id gives an **empty 200 stream**, not
+  an error. ADK's `VertexAiSessionService` refuses a session whose `user_id`
+  differs, so the user id is the isolation boundary.
+- The MCP server (stateless, JSON responses) answers a bare JSON-RPC
+  `tools/call` POST; no MCP client library or `initialize` is needed.
+- npm 10.9 (bundled with Node 22) fails on vitest's optional peer set
+  (`Cannot read properties of null (reading 'edgesOut')`); npm 11.6.2 works.
+**Decision:**
+- `web/`: Next.js 16.3 App Router (TypeScript), standalone output, one Cloud
+  Run service `swiss-nav-web` (europe-west6, 0–2 instances, 512 MiB, request
+  timeout 300 s, concurrency 40) as `swiss-nav-web@`. Route handlers are the
+  BFF; the browser never talks to Google APIs.
+- `/api/chat` calls Agent Runtime REST with the SA's token and relays an SSE
+  stream of small UI events: `session`, `quota`, `progress` (search query,
+  "OR Art. 257e" read, verifier re-check), `answer` (the contract JSON) or
+  `error`. Raw events (law text, thought signatures, token counts) stay on the
+  server. A 15 s SSE comment keeps proxies from closing a quiet stream.
+- Sessions: created by the BFF with `ttl` 24 h, one per conversation; "New
+  conversation" deletes it. A given session that yields nothing is replaced
+  once by a new one (the browser gets the new id; that answer has no history).
+- Access: one shared access code (Secret Manager `swiss-nav-access-code`) →
+  an httpOnly, SameSite=Lax cookie holding a random anonymous id, HMAC-signed
+  with a key derived from the code (rotating the code signs everyone out).
+  Agent Runtime user id = `web-<anon id>`. Login attempts: 10 per IP per
+  15 min (last `X-Forwarded-For` hop, which Cloud Run's front end appends).
+- Quotas: Firestore database `swiss-nav` (a named database; the project is
+  shared, ADR-012), one transaction checks and increments the per-visitor and
+  the global counter for the Zürich calendar day; docs expire by TTL a week
+  later. Defaults 10 per visitor and 20 per day overall: at CHF 0.03–0.04 per
+  answer the global cap bounds model spend at ~CHF 0.7/day (~CHF 21/month) even
+  if the code leaks. A question that fails before the agent did any work is
+  refunded.
+- Feedback: thumbs up/down to Firestore `feedback` with session id, cited
+  articles, verification status and confidence; **no question or answer
+  text** (questions can be personal; the MCP server doesn't log them either).
+- Citation panel: `/api/article` → MCP `get_article`, opened in the quote's
+  language with DE/FR/IT/EN tabs; DE/FR/IT marked authoritative, EN
+  "unofficial translation", the cited paragraph highlighted, Fedlex link and
+  as-of date. The model's own translation of a quote is labelled "Machine
+  translation (unofficial)".
+- UI strings in EN/DE/FR/IT (switcher stored in a cookie; answers follow the
+  question's language). Neutral teal palette and a "§" mark, no Swiss
+  symbols (ADR-010); "Unofficial. Not legal advice." always visible, in
+  English as well when the UI is in another language.
+- Deps pinned exactly, lock generated with `npm install --before=<2 weeks ago>`
+  by npm 11.6.2 (CI and the Dockerfile use the same npm).
+**Verification:** 40 vitest unit tests (stream parsing on a recorded Agent
+Runtime stream, event mapping, chat relay with session replacement, quota
+logic and Zürich days, cookie signing/tampering/expiry, MCP result parsing,
+citation-marker linking, i18n completeness). Local production build against
+the deployed agent: FR question answered in 27 s with 3 verified citations;
+the follow-up "Et peut-on le prolonger ?" in the same session used the
+context (27.8 s). Phone viewport (Pixel 7, Playwright): login → example →
+answer in 81 s → citation panel → FR tab → close, no console errors, no
+horizontal scroll. Lighthouse (mobile) on login and chat: accessibility 100,
+best practices 100, performance 100; axe-core on the answer view and the
+panel, light and dark: 0 violations.
+**Consequences:** the shared code is the weak point (anyone with it can use
+the daily budget), which the global cap bounds. Per-visitor quotas reset if
+someone clears cookies and logs in again; the global cap still holds. A
+dropped connection doesn't stop the agent run (it is billed anyway), so it is
+not refunded. The in-memory login limiter is per instance (max 2).

@@ -15,11 +15,12 @@ what was verified. Update the status table in the same PR.
 |  | *Follow-ups from M4* | | Nikola spot-checks ~20 golden cases (ADR-024); Claude quota refused, so open models were studied instead and Flash stays (ADR-026, cross-family check on golden: 1 must_not violation the judge missed, #7, fixed: prompt rule + verifier contact check, cantonal re-run clean); human judge labels would make agreement independent of every model family; only 6 clarification cases, draft more; fix annex citations (#6); agent client retries on 429/503 (CI flake).
 | M5 | Deploy to Agent Runtime + Sessions + tracing | ✅ done | #10. `make deploy-agent` (staged folder, Python 3.11 import check, scale to zero at 1 vCPU / 2 GiB: the default would cost ~USD 270/month), instance `5798067860890714112` in europe-west6 as `swiss-nav-agent@`. Deployed vs local smoke: fidelity 61/61 vs 70/70, 0 hallucinated, groundedness 78.5 vs 84.8 (CIs overlap), behaviour 95 both, p50 66 vs 69 s, CHF 0.030 vs 0.034. Traces: `invoke_agent` → `call_llm`/`generate_content` + `execute_tool` spans in Cloud Trace. Cold start 9.8 s to first event (ADR-027) |
 |  | *Follow-ups from M5* | | Model client retries on 429/503 (a Gemini `eu` 503 ended one remote case); redeploy once to apply `--display_name` (instance still shows "navigator"); CLAUDE.md's command list still marks `deploy-agent` as todo and lacks `eval-smoke-remote`/`query-remote` (Nikola edits CLAUDE.md). |
-| M6 | Web UI + BFF on Cloud Run | ⬜ todo | |
+| M6 | Web UI + BFF on Cloud Run | 🟨 in progress | Branch `m6-web` (ADR-028): Next.js BFF relays Agent Runtime as SSE progress + answer; access code (Secret Manager) + Firestore quotas (10/visitor, 20/day overall); citation panel via MCP `get_article`; EN/DE/FR/IT. Verified locally against the deployed agent: phone walkthrough, Lighthouse a11y 100, axe 0 violations, 40 unit tests |
+|  | *Next up (M6)* | | Nikola runs `make gcp-web` (Firestore DB + secret; prints the access code) and `make deploy-web`; then a full Q&A on a real phone, check quota/access-code enforcement on Cloud Run, merge. |
 | M7 | Memory Bank (opt-in) + memory evals | ⬜ todo | |
 | M8 | `navigator_v2` multi-agent + verifier, A/B (E2) | ⬜ todo | |
 | M9 | Model comparison incl. Apertus + Claude via Model Garden (E1) | ⬜ todo | |
-| M10 | Security hardening: Model Armor, injection evals, limits | ⬜ todo | |
+| M10 | Security hardening: Model Armor, injection evals, limits | ⬜ todo | From M6: the MCP server rate-limits on the *first* `X-Forwarded-For` hop, which a client can forge (Cloud Run appends the real IP last; the web BFF uses the last hop). |
 | M11 | Showcase: README results, demo video, write-up | ⬜ todo | |
 
 Legend: ⬜ todo · 🟨 in progress · ✅ done · ⏭️ skipped (say why)

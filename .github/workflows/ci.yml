@@ -35,3 +35,31 @@ jobs:
 
       - name: Unit tests
         run: make test
+
+  web:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      # The lock comes from npm 11; npm 10 (bundled with Node 22) can't resolve its
+      # optional peer set (ADR-028).
+      - name: Install deps (locked)
+        run: npx -y npm@11.6.2 ci
+
+      - name: Lint (eslint + prettier), typecheck, unit tests
+        run: npx -y npm@11.6.2 run check
+
+      - name: Production build
+        run: npx -y npm@11.6.2 run build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
