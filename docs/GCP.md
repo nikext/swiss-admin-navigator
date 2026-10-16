@@ -43,7 +43,7 @@ Ran on 2026-10-15; a second run reported every resource as existing.
 `DRY_RUN=1 make gcp-setup` prints the commands without running them.
 
 - **APIs:** aiplatform, cloudresourcemanager, run, artifactregistry,
-  cloudbuild, secretmanager, firestore (API only, no database), cloudtrace,
+  cloudbuild, secretmanager, firestore (API only; the `swiss-nav` database comes from `make gcp-web`, M6), cloudtrace,
   logging, monitoring, iamcredentials, sts, billingbudgets.
   `modelarmor.googleapis.com` is added in M10 (verify the service name then).
 - **Artifact Registry:** `swiss-nav` (docker, europe-west6). The GPU repo
@@ -61,7 +61,7 @@ All five exist since 2026-10-15.
 |---|---|---|
 | `swiss-nav-mcp@` | Cloud Run MCP | `roles/aiplatform.user` (query embeddings only) |
 | `swiss-nav-agent@` | Agent Runtime (runtime identity, `--service_account`; verified M5) | `roles/aiplatform.user`, `roles/logging.logWriter`, `roles/cloudtrace.agent`, and for the OTLP export to `telemetry.googleapis.com` `roles/telemetry.tracesWriter`, `roles/monitoring.metricWriter`, `roles/serviceusage.serviceUsageConsumer` (M5, ADR-027). Without a custom SA the agent runs as `service-<number>@gcp-sa-aiplatform-re.iam.gserviceaccount.com`. |
-| `swiss-nav-web@` | Cloud Run web | `roles/aiplatform.user` (to call `reasoningEngines:streamQuery`), `roles/datastore.user` |
+| `swiss-nav-web@` | Cloud Run web | `roles/aiplatform.user` (to call `reasoningEngines:streamQuery`), `roles/datastore.user` (Firestore database `swiss-nav`), `roles/secretmanager.secretAccessor` on the secret `swiss-nav-access-code` only (M6, `make gcp-web`) |
 | `swiss-nav-ci@` | GitHub Actions via WIF | `roles/aiplatform.user`, `roles/storage.objectAdmin` on the bucket |
 | `swiss-nav-apertus@` | Cloud Run GPU | none (no GCP API calls) |
 
@@ -216,15 +216,49 @@ folder and scaling/labels from an `.agent_engine_config.json`
 - Delete with the SDK (`client.runtimes.delete(name=…, force=True)`, which also
   removes sessions) if the instance is ever retired.
 
-### Web → Cloud Run
+### Web → Cloud Run (M6, ADR-028)
 
 ```bash
-gcloud run deploy swiss-nav-web --source web --region $REGION \
+DRY_RUN=1 make gcp-web     # Firestore database + TTL, access-code secret, IAM (preview)
+make gcp-web               # once (billable, tiny; Nikola runs it). Prints the access code once.
+DRY_RUN=1 make deploy-web  # preview
+make deploy-web            # infra/deploy_web.sh (billable, public behind the code; Nikola runs it)
+```
+
+- `infra/web_setup.sh` (idempotent): Firestore database **`swiss-nav`**
+  (native, europe-west6, delete protection; a named database because the
+  project is shared) with a TTL policy on `quota.expires`; secret
+  **`swiss-nav-access-code`** (replicated in europe-west6 only; first version
+  from `WEB_ACCESS_CODE` or random, `ROTATE=1` adds a version and signs
+  everyone out); `secretAccessor` for `swiss-nav-web@` on that secret.
+- `infra/deploy_web.sh` builds `web/Dockerfile` (Node 22 slim, Next.js
+  standalone output) tagged with the commit, pushes it like the MCP image, and:
+
+```bash
+gcloud run deploy swiss-nav-web --image … --region europe-west6 \
   --service-account swiss-nav-web@$PROJECT_ID.iam.gserviceaccount.com \
   --allow-unauthenticated --min-instances 0 --max-instances 2 \
-  --set-env-vars AGENT_RUNTIME_ID=…,REGION=$REGION \
-  --set-secrets ACCESS_CODE=swiss-nav-access-code:latest
+  --cpu 1 --memory 512Mi --concurrency 40 --timeout 300 --cpu-boost \
+  --execution-environment gen2 \
+  --set-env-vars GOOGLE_CLOUD_PROJECT=…,AGENT_RUNTIME_ID=…,AGENT_LOCATION=europe-west6,SWISS_LAW_MCP_URL=<mcp>/mcp,USER_DAILY_QUOTA=10,GLOBAL_DAILY_CAP=20,FIRESTORE_DATABASE=swiss-nav \
+  --set-secrets ACCESS_CODE=swiss-nav-access-code:latest --labels app=swiss-nav,commit=<sha>
 ```
+
+  then checks `/api/health` and that `/api/quota` answers 401 without the
+  cookie.
+- **Service (2026-10-16):** https://swiss-nav-web-mdyqt5hgsq-oa.a.run.app
+  (also `https://swiss-nav-web-286937397059.europe-west6.run.app`).
+- **Timeout 300 s:** answers take 30–90 s and up to ~3 min at p95.
+- **Cost guard:** `GLOBAL_DAILY_CAP` (default 20 questions per Zürich day,
+  ~CHF 0.7/day of model calls at most) and `USER_DAILY_QUOTA` (10). Firestore
+  and Cloud Run stay in the free tiers at demo traffic.
+- **Local:** `make web-install`, then `make web-dev` (Next.js dev server on
+  :3000 against `AGENT_RUNTIME_ID` with ADC; quotas in memory; access code
+  `WEB_ACCESS_CODE` or `local-dev-code`). `make web-check` = what CI runs.
+- **npm:** the lock is made by npm 11.6.2 (npm 10 can't resolve it, ADR-028).
+  To add or bump a package, change `web/package.json`, delete the lock and run
+  `npx -y npm@11.6.2 install --before=<date two weeks ago>`; incremental
+  installs have left the lock inconsistent.
 
 ### Apertus → Cloud Run GPU (M9)
 

@@ -9,7 +9,8 @@ todo = @echo "make $@: not implemented yet (lands in $(1), see docs/PLAN.md)" >&
 .PHONY: help setup lint fmt test check smoke-gemini gcp-setup gcp-budget gcp-wif \
         resolve ingest spotcheck fixtures index index-e4 publish-index eval-retrieval mcp-dev mcp-coldstart agent-dev \
         eval-smoke eval-smoke-remote eval-full eval-multiturn silver review-golden check-cases \
-        label-answers judge-study query-remote deploy-mcp deploy-agent deploy-web
+        label-answers judge-study query-remote deploy-mcp deploy-agent deploy-web \
+        web-install web-dev web-check gcp-web
 
 help: ## List targets
 	@grep -E '^[a-z0-9-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-14s %s\n", $$1, $$2}'
@@ -115,5 +116,21 @@ deploy-mcp: ## Build + push + Cloud Run deploy of the MCP server (ask first; DRY
 deploy-agent: ## Stage + deploy navigator to Agent Runtime (ask first; DRY_RUN=1 to preview; GCP.md §4)
 	bash infra/deploy_agent.sh
 
-deploy-web: ## Cloud Run deploy of the web UI (asks first; GCP.md §4)
-	$(call todo,M6)
+deploy-web: ## Build + push + Cloud Run deploy of the web UI (ask first; DRY_RUN=1 to preview; GCP.md §4)
+	bash infra/deploy_web.sh
+
+gcp-web: ## Firestore database, access-code secret, IAM for the web BFF (ask first; DRY_RUN=1; ROTATE=1)
+	bash infra/web_setup.sh
+
+# The lock comes from npm 11: npm 10 (bundled with Node 22) fails on its optional peer set.
+NPM ?= npx -y npm@11.6.2
+
+web-install: ## Install the web app's locked deps (web/node_modules)
+	cd web && $(NPM) ci
+
+web-check: ## web: eslint + prettier, tsc, vitest (what CI runs)
+	cd web && $(NPM) run check
+
+web-dev: ## Next.js dev server on :3000 against AGENT_RUNTIME_ID (memory quotas; code WEB_ACCESS_CODE or local-dev-code)
+	set -a; source .env; set +a; cd web && \
+	  ACCESS_CODE="$${WEB_ACCESS_CODE:-local-dev-code}" QUOTA_BACKEND=memory $(NPM) run dev

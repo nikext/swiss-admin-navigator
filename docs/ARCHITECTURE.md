@@ -88,6 +88,13 @@ sequenceDiagram
   W-->>U: answer, citation chips, "as of 2026-10-01", disclaimer
 ```
 
+As built in M6 (ADR-028): Agent Runtime streams one ADK event per line, and
+the answer is a single final event (the verified contract JSON), so the BFF
+relays **progress** while the agent works (search query, "Reading OR
+Art. 271a", verifier re-check) and then the whole answer. The browser gets
+small SSE events (`session`, `quota`, `progress`, `answer`, `error`), never
+raw ADK events.
+
 ## 4. Answer contract
 
 The agent's final output is **structured**. The UI renders it, and evals score
