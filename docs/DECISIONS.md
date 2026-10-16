@@ -607,9 +607,10 @@ and was never rate-limited. Flash-Lite ranks answers poorly (Spearman ρ 0.28
 vs 0.68).
 **Consequences:** the judge is the agent's own model, so self-preference is
 possible; the deterministic gates do not depend on it. Pro disagrees with
-itself (κ 0.53 vs 0.36), so a few points of agreement are noise at n=30. When
-the Claude quota arrives, rerun the study; a Claude judge can only be picked
-against human labels (ADR-024). The judge client does not retry 429s yet.
+itself (κ 0.53 vs 0.36), so a few points of agreement are noise at n=30. The
+Claude quota was refused; open models from a third family were studied
+instead and Flash stays (ADR-026). The judge client retries each call up to
+three times with backoff.
 
 ### ADR-024: Golden review and judge labels delegated to Claude; clarification labels follow system-prompt rule 1
 **Status:** accepted (2026-10-15, M4)
@@ -684,3 +685,59 @@ buys nothing over default on cost or latency.
 makes it ask reliably; its higher groundedness comes from shorter answers with
 fewer uncited side remarks, which is worth copying into the prompt for every
 level. n=20, so the groundedness gaps are indicative only.
+
+### ADR-026: No Claude judge; open models on MaaS as the cross-family check, Gemini 3.8 Flash stays the judge
+**Status:** accepted (2026-10-16, M4 follow-up)
+**Context:** The Claude quota request (ADR-023) was refused on 2026-10-16;
+every Claude model still returns 429 on `global`, and the 5.5 models are not
+served regionally (404). The remaining worry from ADR-023/024 is that the
+judge is the agent's own model. Open models served as MaaS answer on
+`global` without any enabling step (probed 2026-10-16: GLM-5.2, GLM-5,
+DeepSeek V3.2 and V4.1 Flash, Qwen3 235B and Next 80B, gpt-oss-120b, Kimi K2
+Thinking, MiniMax M2; none in europe-west4, only gpt-oss in us-central1).
+They come from a third family, independent of both the agent (Gemini) and
+the labeller (Claude). The judge client gained a third provider: Vertex's
+OpenAI-compatible endpoint, strict JSON schema via `chat.completions.parse`.
+Prices are from the Cloud Billing catalog (`evals/pricing.yaml`); DeepSeek
+V4.1 Flash has no SKU yet and was left out.
+**Study** (same 30 answers and labels as ADR-023, Flash re-run as reference;
+`evals/reports/2026-10-16-e9f9d3b-judge-study.md`, CHF 0.83):
+
+| judge | USD/1M in/out | CHF/answer | p50 s | grounded MAE | bias | ρ | fully-grounded κ | must_not acc | behaviour acc / κ |
+|---|---|---|---|---|---|---|---|---|---|
+| **Gemini 3.8 Flash** | 0.75 / 3.75 | 0.006 | 11 | 0.10 | −0.09 | 0.64 | 0.65 | 100 | 100 / 1.00 |
+| GLM-5.2 | 1.40 / 4.40 | 0.018 | 42 | 0.16 | −0.07 | 0.27 | 0.18 | 94 | 93 / 0.47 |
+| DeepSeek V3.2 | 0.56 / 1.68 | 0.002 | 47 | 0.14 | −0.06 | 0.34 | 0.25 | 97 | 100 / 1.00 |
+| Qwen3 235B Instruct | 0.22 / 0.88 | 0.001 | 5 | 0.08 | +0.04 | 0.51 | 0.52 | 91 | 97 / 0.65 |
+| gpt-oss-120b | 0.09 / 0.36 | 0.001 | 61 | 0.20 | −0.16 | 0.25 | 0.21 | 91 | 90 / 0.37 |
+
+Cross-check on the 150 golden baseline answers, Flash re-run and Qwen
+(`evals/reports/2026-10-16-e9f9d3b-crosscheck-golden.md`, CHF 1.16):
+Flash test-retest groundedness MAE 0.04 per answer, 150/150 same behaviour
+verdict, mean groundedness 79.7 vs 78.6 in the baseline run. Under Qwen the
+same answers score groundedness 91.5, key facts 95.1, behaviour 95.3, and 8
+must_not violations (Flash: 0). Reading the 8 by hand: 1 real
+(mobility-09 invents a street address for the Ticino office, #7), 3 borderline
+(real offices named without support in the cited law: housing-05,
+residence-28, social-26), 4 false positives (residence-05, mobility-07,
+social-05, mobility-10).
+**Decision:**
+1. The judge stays `gemini-3.8-flash@global`. No open model agrees with the
+   labels as well; Qwen comes closest on groundedness but is weaker on
+   must_not and behaviour, and the others rank answers poorly (ρ ≤ 0.34).
+2. The self-preference worry is answered with data rather than a different
+   judge: the Gemini judge is *stricter* than both the labels (bias −0.09)
+   and the cross-family judge (−0.12 vs Qwen on 150 answers), so its
+   groundedness numbers are not flattering its own model.
+3. Qwen3 235B is the cross-family second opinion, run on stored answers with
+   `make judge-study ARGS="--report <answers.json>" JUDGES="gemini-3.8-flash@global,qwen/qwen3-235b-a22b-instruct-2507-maas@global"`
+   (CHF ≈ 0.001 per answer for Qwen) whenever a headline number is produced.
+   Its must_not and behaviour flags are read by hand; they are a recall aid,
+   not a score.
+**Consequences:** the golden baseline has 1 must_not violation, not 0 (the
+judge missed it; README and PLAN say so). Judge agreement is still measured
+against Claude's labels; human labels (`make label-answers`) remain the way
+to make the comparison independent of every model family. Claude is out of
+M9 (E1) as well unless a quota is granted later; the open models above can
+stand in as the non-Google contenders there. Study reports now also show the
+answers' scores under each judge, with the ids each judge flagged.

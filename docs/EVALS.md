@@ -116,8 +116,12 @@ findings). Reports built on drafts are named `*-drafts` and say they are not
 headline numbers.
 
 **Judge hygiene:** pin the judge model and prompt. Judge with a different model
-family than the one under test where possible (e.g. Claude via Model Garden
-judging Gemini answers, and vice versa). Report judge agreement on a 30-case
+family than the one under test where possible. Claude has no quota in this
+project (ADR-026), so the cross-family judge is Qwen3 235B on MaaS: whenever a
+headline number is produced, re-grade the stored answers with
+`make judge-study ARGS="--report <answers.json>" JUDGES="gemini-3.8-flash@global,qwen/qwen3-235b-a22b-instruct-2507-maas@global"`
+(≈ CHF 0.001 per answer for Qwen) and read its must_not and behaviour flags
+by hand; the report lists them per judge. Report judge agreement on a 30-case
 human-labelled subset: `make label-answers` (Nikola grades each claim of the
 reference split with verdicts hidden, plus key facts, must_not, behaviour),
 then `make judge-study JUDGES=...` re-grades the same stored answers with each
