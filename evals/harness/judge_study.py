@@ -1,6 +1,6 @@
 """Judge study: grade stored answers with candidate judges, compare with human labels.
 
-    make judge-study JUDGES="gemini-3.1-pro-preview@global,claude-haiku-5-5@global:low"
+    make judge-study JUDGES="gemini-3.8-flash@global,deepseek-ai/deepseek-v3.2-maas@global"
     make judge-study ARGS="--from evals/reports/<date>-<sha>-judge-study.json"   # re-score, free
 
 Takes the answers of an existing answer-eval report (default: the 30-case M3
@@ -208,6 +208,21 @@ async def run_judge(
     }
 
 
+def answer_scores(views: Views) -> dict[str, Any]:
+    """What the agent scores under one judge: the answer-eval metrics, plus flagged ids."""
+    grounded = [v["groundedness"] for v in views.values() if v["groundedness"] is not None]
+    facts = [f for v in views.values() for f in v["key_facts"]]
+    return {
+        "n": len(views),
+        "groundedness": sum(grounded) / len(grounded) if grounded else None,
+        "key_facts": sum(facts) / len(facts) if facts else None,
+        "behaviour": sum(v["behaviour_ok"] for v in views.values()) / len(views) if views else None,
+        "must_not_violations": sum(sum(v["must_not"]) for v in views.values()),
+        "must_not_ids": sorted(cid for cid, v in views.items() if any(v["must_not"])),
+        "behaviour_fail_ids": sorted(cid for cid, v in views.items() if not v["behaviour_ok"]),
+    }
+
+
 def score(study: dict[str, Any], labels: dict[str, dict[str, Any]]) -> list[dict[str, Any]]:
     human = {
         cid: human_view(lab)
@@ -231,6 +246,7 @@ def score(study: dict[str, Any], labels: dict[str, dict[str, Any]]) -> list[dict
                 "errors": run["errors"],
                 "vs_human": agreement(views, human),
                 "vs_reference": agreement(views, reference),
+                "answers": answer_scores(views),
             }
         )
     return rows
@@ -284,6 +300,22 @@ def render(study: dict[str, Any], rows: list[dict[str, Any]]) -> str:
             f"| {fmt(ref['groundedness_bias'])} | {fmt(ref['groundedness_spearman'])} "
             f"| {fmt(ref['key_facts_acc'], True)} | {fmt(ref['behaviour_acc'], True)} "
             f"| {r['errors']} |"
+        )
+    lines += [
+        "",
+        "## The answers' scores under each judge",
+        "",
+        "| judge | n | groundedness | key facts | behaviour | must_not violations "
+        "| must_not flagged | behaviour failed |",
+        "|---|---|---|---|---|---|---|---|",
+    ]
+    for r in rows:
+        a = r["answers"]
+        lines.append(
+            f"| `{r['spec']}` | {a['n']} | {fmt(a['groundedness'], True)} "
+            f"| {fmt(a['key_facts'], True)} | {fmt(a['behaviour'], True)} "
+            f"| {a['must_not_violations']} | {', '.join(a['must_not_ids']) or '–'} "
+            f"| {', '.join(a['behaviour_fail_ids']) or '–'} |"
         )
     lines += [
         "",

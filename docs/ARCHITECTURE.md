@@ -28,7 +28,7 @@ flowchart LR
     apertus["Apertus 1.5 8B<br/>vLLM, OpenAI-compatible"]
   end
 
-  mg["Model Garden MaaS<br/>(Claude, for eval comparison)"]
+  mg["Model Garden MaaS<br/>(open models: judge cross-check, eval comparison)"]
   fs[("Firestore<br/>quotas · feedback")]
   trace["Cloud Trace / Logging<br/>(OpenTelemetry)"]
 

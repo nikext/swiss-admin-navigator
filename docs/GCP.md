@@ -88,7 +88,25 @@ called with the bare model id through `AnthropicVertex` on `global` (or `eu`).
 On 2026-10-15 every call returned 429 `Quota exceeded for
 aiplatform.googleapis.com/global_online_prediction_requests_per_base_model`:
 the models must be enabled in the console (partner terms) and may need a quota
-request. europe-west6 returns 404 for all of them.
+request. europe-west6 returns 404 for all of them. The quota request was
+**refused** on 2026-10-16; on that day every Claude model (5.5 and 4.5) still
+returned 429 on `global`, and europe-west1/-west4, us-east5, us-central1 and
+asia-southeast1 returned 404 for the 5.5 models.
+
+### Open models on MaaS (judge cross-check, M9 contenders)
+
+Called through the OpenAI-compatible endpoint
+`https://aiplatform.googleapis.com/v1/projects/<project>/locations/global/endpoints/openapi`
+with an ADC bearer token and ids like `qwen/qwen3-235b-a22b-instruct-2507-maas`
+(`evals/harness/judge.py`). Pay per token, nothing to enable or undeploy.
+Probed 2026-10-16: on `global`, `zai-org/glm-5.2-maas`, `zai-org/glm-5-maas`,
+`deepseek-ai/deepseek-v4.1-flash-maas`, `deepseek-ai/deepseek-v3.2-maas`,
+`qwen/qwen3-235b-a22b-instruct-2507-maas`, `qwen/qwen3-next-80b-a3b-instruct-maas`,
+`openai/gpt-oss-120b-maas`, `moonshotai/kimi-k2-thinking-maas` and
+`minimaxai/minimax-m2-maas` all answered; europe-west4 served none of them,
+us-central1 only gpt-oss. List prices come from the Cloud Billing catalog
+(service `C7E2-9256-1C43`), since the pricing page doesn't render for our
+fetcher.
 
 ### Budget guardrail (done in M0)
 
@@ -206,6 +224,8 @@ gcloud run deploy apertus --image $GPU_REGION-docker.pkg.dev/…/vllm-apertus:<t
   for eval runs.
 
 ### Claude via Model Garden (MaaS, for E1 and cross-family judging)
+
+Quota refused on 2026-10-16 (§ above, ADR-026); kept for reference.
 
 - Enable the Claude model in the Model Garden console (needs the user's
   acceptance). Claude models are listed for European regions including

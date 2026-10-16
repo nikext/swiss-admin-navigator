@@ -43,7 +43,7 @@ flowchart LR
   A --> G[Gemini]
   A -- MCP --> L["swiss-law MCP server<br/>Cloud Run · SQLite index"]
   F[Fedlex SPARQL + Akoma Ntoso XML] --> I[ingest pipeline] --> L
-  A -. eval comparison .-> P["Apertus 1.5 (vLLM, Cloud Run GPU)<br/>Claude (Model Garden)"]
+  A -. eval comparison .-> P["Apertus 1.5 (vLLM, Cloud Run GPU)<br/>open models (Model Garden MaaS)"]
 ```
 
 Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
@@ -83,8 +83,13 @@ Adversarial set (50 fake articles, prompt injections, impersonation; drafted,
 not verified): quote fidelity 100%, 0 hallucinated citations, behaviour 96.
 Multi-turn (25 simulated conversations via ADK user simulation; drafted, not
 verified): 25/25 passed, rubric score 0.97.
-Judge: picked by agreement with labelled answers (ADR-023). CI runs the
-20-case smoke set with hard gates on every ready PR.
+Judge: picked by agreement with labelled answers, against Gemini Pro and
+Flash-Lite and four open models from other families (ADR-023, ADR-026).
+Cross-family check: graded by Qwen3 235B instead, the same answers score
+groundedness 92, so the Gemini judge is not flattering its own model. Qwen's
+flags plus a manual read found one must_not violation the judge missed
+(mobility-09 invents an office address, [#7](https://github.com/nikext/swiss-admin-navigator/issues/7)).
+CI runs the 20-case smoke set with hard gates on every ready PR.
 Reports: [`evals/reports/`](evals/reports/) · methodology: [docs/EVALS.md](docs/EVALS.md)
 
 ## Repository layout (target)

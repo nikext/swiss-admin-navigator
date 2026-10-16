@@ -167,7 +167,7 @@ each experiment run.
 | Role | Default (location) | Alternatives for experiments |
 |---|---|---|
 | Agent / orchestrator | `gemini-3.8-flash` (`eu`) | `gemini-3.5-flash-lite` (cheap), `gemini-3.1-pro-preview`, `gemini-4-argon` (if GA) |
-| LLM judge (evals) | `gemini-3.1-pro-preview` (`global` only) | `gemini-4-argon`, or a Claude model via Model Garden for cross-family judging |
+| LLM judge (evals) | `gemini-3.8-flash` (`global`; ADR-023, ADR-026) | cross-family check `qwen/qwen3-235b-a22b-instruct-2507-maas` (`global`, MaaS); `gemini-3.1-pro-preview` |
 | Embeddings | `gemini-embedding-2` (`eu`) | `gemini-embedding-001` |
 | Sovereign answerer (M9) | `swiss-ai/Apertus-v1.5-8B` via LiteLLM → vLLM | 70B is out of budget (needs 4 GPUs) |
 

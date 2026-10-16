@@ -47,3 +47,20 @@ models:
     input: 4.00
     output: 20.00
     cached_input: 0.20
+  # Open models on Model as a Service (M4 judge candidates after the Claude quota was refused).
+  # USD list prices from the Cloud Billing catalog (service C7E2-9256-1C43, `global` SKUs),
+  # read 2026-10-16. Reasoning tokens are billed as output.
+  zai-org/glm-5.2-maas:
+    input: 1.40
+    output: 4.40
+    cached_input: 0.14
+  deepseek-ai/deepseek-v3.2-maas:
+    input: 0.56
+    output: 1.68
+    cached_input: 0.056
+  qwen/qwen3-235b-a22b-instruct-2507-maas:
+    input: 0.22
+    output: 0.88
+  openai/gpt-oss-120b-maas:
+    input: 0.09
+    output: 0.36

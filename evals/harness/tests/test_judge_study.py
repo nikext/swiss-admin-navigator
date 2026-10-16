@@ -5,8 +5,10 @@ from typing import Any
 import pytest
 
 from agents.navigator.config import LlmRef
+from evals.harness.judge import is_claude, is_maas, openapi_base_url
 from evals.harness.judge_study import (
     agreement,
+    answer_scores,
     human_groundedness,
     human_view,
     judge_view,
@@ -50,6 +52,22 @@ def test_parse_spec() -> None:
         parse_spec("gemini-3.8-flash")
     with pytest.raises(ValueError, match="thinking must be one of"):
         parse_spec("gemini-3.8-flash@eu:max")
+    ref = parse_spec("zai-org/glm-5.2-maas@global:low")
+    assert ref == LlmRef("zai-org/glm-5.2-maas", "global", "low")
+
+
+def test_provider_routing() -> None:
+    models = ("openai/gpt-oss-120b-maas", "claude-sonnet-5-5", "gemini-3.8-flash")
+    route = {m: (is_claude(m), is_maas(m)) for m in models}
+    assert route == {
+        "openai/gpt-oss-120b-maas": (False, True),
+        "claude-sonnet-5-5": (True, False),
+        "gemini-3.8-flash": (False, False),
+    }
+    assert openapi_base_url("p", "global") == (
+        "https://aiplatform.googleapis.com/v1/projects/p/locations/global/endpoints/openapi"
+    )
+    assert openapi_base_url("p", "us-central1").startswith("https://us-central1-aiplatform.")
 
 
 def test_human_groundedness_counts_missed_claims_as_unsupported() -> None:
@@ -77,6 +95,20 @@ def test_views_and_agreement() -> None:
     assert a["key_facts_n"] == 3
     assert a["must_not_acc"] == pytest.approx(0.5)
     assert a["behaviour_acc"] == 1.0
+
+
+def test_answer_scores() -> None:
+    views = {
+        "a": judge_view(judgement(["yes", "no"], ["stated", "missing"], [False], True)),
+        "b": judge_view(judgement(["yes"], ["stated"], [True, True], False)),
+    }
+    s = answer_scores(views)
+    assert s["groundedness"] == pytest.approx(0.75)  # mean of 0.5 and 1
+    assert s["key_facts"] == pytest.approx(2 / 3)
+    assert s["behaviour"] == 0.5
+    assert s["must_not_violations"] == 2
+    assert s["must_not_ids"] == ["b"]
+    assert s["behaviour_fail_ids"] == ["b"]
 
 
 def test_score_uses_only_labels_for_the_same_answer() -> None:

@@ -6,10 +6,13 @@ location, thinking level, prompt sha256). The judge sees the full text of each
 cited article, fetched by the harness, so groundedness is checked against the
 law, not against the agent's own quotes.
 
-Two providers on Agent Platform, picked by the model id: Gemini through
-google-genai (temperature 0, `thinking_level`), and Claude from Model Garden
+Three providers on Agent Platform, picked by the model id: Gemini through
+google-genai (temperature 0, `thinking_level`); Claude from Model Garden
 through `AnthropicVertex` (`effort`; Claude 5.x models reject sampling
-parameters). Both return the same `Judgement` via structured output.
+parameters); and open models served as MaaS (`publisher/model-maas`, e.g.
+GLM, DeepSeek, Qwen, gpt-oss) through Vertex's OpenAI-compatible endpoint
+(temperature 0, `reasoning_effort`). All return the same `Judgement` via
+structured output (a strict JSON schema).
 """
 
 from __future__ import annotations
@@ -20,9 +23,12 @@ import json
 from pathlib import Path
 from typing import Any, Literal
 
+import google.auth
+import google.auth.transport.requests
 from anthropic.lib.vertex import AsyncAnthropicVertex
 from google import genai
 from google.genai import types
+from openai import AsyncOpenAI
 from pydantic import BaseModel
 
 from agents.navigator.config import LlmRef
@@ -93,7 +99,7 @@ def payload(case: Case, answer: dict[str, Any], cited_law: list[dict[str, Any]])
     }
 
 
-# Profile thinking level → Claude effort (Claude has no "minimal").
+# Profile thinking level → Claude `effort` / OpenAI-style `reasoning_effort` (no "minimal").
 CLAUDE_EFFORT = {"minimal": "low", "low": "low", "medium": "medium", "high": "high"}
 
 
@@ -105,6 +111,18 @@ def is_claude(model: str) -> bool:
     return model.startswith("claude-")
 
 
+def is_maas(model: str) -> bool:
+    """Open models on Model as a Service are addressed as `publisher/model`."""
+    return "/" in model
+
+
+def openapi_base_url(project: str, location: str) -> str:
+    host = "aiplatform.googleapis.com"
+    if location != "global":
+        host = f"{location}-{host}"
+    return f"https://{host}/v1/projects/{project}/locations/{location}/endpoints/openapi"
+
+
 class Judge:
     def __init__(self, ref: LlmRef, project: str) -> None:
         self.ref = ref
@@ -112,6 +130,13 @@ class Judge:
         self.usage = Usage()
         if is_claude(ref.model):
             self._claude = AsyncAnthropicVertex(project_id=project, region=ref.location)
+        elif is_maas(ref.model):
+            self._creds, _ = google.auth.default(
+                scopes=["https://www.googleapis.com/auth/cloud-platform"]
+            )
+            self._openai = AsyncOpenAI(
+                base_url=openapi_base_url(project, ref.location), api_key="unset"
+            )
         else:
             self._gemini = genai.Client(vertexai=True, project=project, location=ref.location)
 
@@ -155,9 +180,45 @@ class Judge:
             raise JudgeError(f"judge stopped with {resp.stop_reason}")
         return resp.parsed_output
 
+    async def _maas_grade(self, text: str) -> Judgement:
+        if not self._creds.valid:  # ADC access tokens last an hour
+            await asyncio.to_thread(self._creds.refresh, google.auth.transport.requests.Request())
+        extra: dict[str, Any] = {}
+        if self.ref.thinking:
+            extra["reasoning_effort"] = CLAUDE_EFFORT[self.ref.thinking]
+        resp = await self._openai.chat.completions.parse(
+            model=self.ref.model,
+            messages=[
+                {"role": "system", "content": self.prompt},
+                {"role": "user", "content": text},
+            ],
+            response_format=Judgement,
+            temperature=0,
+            max_tokens=16000,
+            extra_headers={"Authorization": f"Bearer {self._creds.token}"},
+            **extra,
+        )
+        if resp.usage:
+            details = resp.usage.prompt_tokens_details
+            self.usage.add_counts(
+                prompt=resp.usage.prompt_tokens,
+                cached=(details.cached_tokens or 0) if details else 0,
+                output=resp.usage.completion_tokens,  # includes reasoning tokens
+            )
+        choice = resp.choices[0]
+        if choice.finish_reason != "stop" or choice.message.parsed is None:
+            raise JudgeError(f"judge stopped with {choice.finish_reason}")
+        return choice.message.parsed
+
     async def grade(self, data: dict[str, Any], attempts: int = 3) -> Judgement:
         text = json.dumps(data, ensure_ascii=False, indent=1)
-        call = self._claude_grade if is_claude(self.ref.model) else self._gemini_grade
+        call = (
+            self._claude_grade
+            if is_claude(self.ref.model)
+            else self._maas_grade
+            if is_maas(self.ref.model)
+            else self._gemini_grade
+        )
         for attempt in range(attempts):
             try:
                 return await call(text)
