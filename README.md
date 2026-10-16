@@ -88,7 +88,9 @@ Flash-Lite and four open models from other families (ADR-023, ADR-026).
 Cross-family check: graded by Qwen3 235B instead, the same answers score
 groundedness 92, so the Gemini judge is not flattering its own model. Qwen's
 flags plus a manual read found one must_not violation the judge missed
-(mobility-09 invents an office address, [#7](https://github.com/nikext/swiss-admin-navigator/issues/7)).
+(mobility-09 invents an office address, [#7](https://github.com/nikext/swiss-admin-navigator/issues/7)),
+now fixed by a prompt rule and a verifier check (0 of 15 cantonal answers
+with contact details after the fix).
 CI runs the 20-case smoke set with hard gates on every ready PR.
 Reports: [`evals/reports/`](evals/reports/) · methodology: [docs/EVALS.md](docs/EVALS.md)
 

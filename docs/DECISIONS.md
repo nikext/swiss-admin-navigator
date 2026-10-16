@@ -741,3 +741,13 @@ to make the comparison independent of every model family. Claude is out of
 M9 (E1) as well unless a quota is granted later; the open models above can
 stand in as the non-Google contenders there. Study reports now also show the
 answers' scores under each judge, with the ids each judge flagged.
+**Follow-up (2026-10-16, #7):** the prompt now asks for the kind of authority
+instead of a specific office, and the verifier sends back drafts with street
+addresses, postcodes, phone numbers or web addresses (AGENTS.md §7). Re-run
+of the 15 golden cantonal cases (`evals/reports/2026-10-16-5bb5b0a-cantonal-contact.md`,
+CHF 0.66): 0 answers with contact details (baseline 4 of 15, plus social-10
+elsewhere), no draft needed sending back, groundedness 82.9 vs 75.3 and key
+facts 93.3 vs 96.7 on the same cases (n=15, within noise), behaviour 15/15,
+quote fidelity 100%. Qwen flags 0 must_not violations on them (baseline: 4;
+`2026-10-16-5bb5b0a-crosscheck-cantonal.md`). The other 135 golden answers
+were not re-run (M4 spend cap); the CI smoke run covers the prompt change.
