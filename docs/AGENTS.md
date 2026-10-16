@@ -190,9 +190,15 @@ Try two configurations in M9: (a) Apertus as the full agent with tools, and
 
 ## 7. Observability
 
-- Enable ADK/Agent Runtime tracing to Cloud Trace (OpenTelemetry; ADK extra
-  `otel-gcp`, verify the flag name). Each answer's trace shows the tool calls,
-  tokens and latency.
+- **Tracing (M5, verified):** `adk deploy agent_engine --otel_to_cloud` turns
+  on ADK's OpenTelemetry export to Cloud Trace (OTLP to
+  `telemetry.googleapis.com`; the old `--trace_to_cloud` is deprecated). One
+  answer is one trace: `invoke_agent navigator` → `call_llm` /
+  `generate_content gemini-3.8-flash` per model call, `execute_tool <tool>`
+  per tool call, and the MCP client spans (`MCP send tools/call …`). Prompts
+  and answers are not put in spans (`ADK_CAPTURE_MESSAGE_CONTENT_IN_SPANS`
+  stays false). `make query-remote ARGS=--traces Q=…` prints the spans of a
+  run.
 - Log per request: model ID, token usage, tool-call count, latency, citation
   count, verifier outcome. ADK eval also reports `token_usage_v1`,
   `tool_call_count_v1` and `invocation_duration_v1`.

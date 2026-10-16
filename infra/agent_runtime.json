@@ -1,0 +1,9 @@
+{
+  "display_name": "swiss-nav-navigator",
+  "description": "Swiss Admin Navigator (navigator_v1). Unofficial. Not legal advice.",
+  "min_instances": 0,
+  "max_instances": 2,
+  "resource_limits": {"cpu": "1", "memory": "2Gi"},
+  "container_concurrency": 8,
+  "labels": {"app": "swiss-nav"}
+}

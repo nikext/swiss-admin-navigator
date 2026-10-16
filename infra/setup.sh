@@ -53,7 +53,10 @@ fi
 echo "== Service accounts (least privilege, GCP.md §3)"
 declare -A SA_ROLES=(
   [swiss-nav-mcp]="roles/aiplatform.user"
-  [swiss-nav-agent]="roles/aiplatform.user roles/cloudtrace.agent roles/logging.logWriter"
+  # Agent Runtime identity (M5, ADR-027). `adk deploy --otel_to_cloud` exports OTLP spans and
+  # metrics to telemetry.googleapis.com: tracesWriter + metricWriter, and serviceusage for
+  # its quota project. cloudtrace.agent covers the legacy Cloud Trace exporter.
+  [swiss-nav-agent]="roles/aiplatform.user roles/cloudtrace.agent roles/logging.logWriter roles/telemetry.tracesWriter roles/monitoring.metricWriter roles/serviceusage.serviceUsageConsumer"
   [swiss-nav-web]="roles/aiplatform.user roles/datastore.user"
   [swiss-nav-ci]="roles/aiplatform.user"
   [swiss-nav-apertus]=""

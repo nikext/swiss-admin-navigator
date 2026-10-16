@@ -60,7 +60,7 @@ All five exist since 2026-10-15.
 | SA | Used by | Roles |
 |---|---|---|
 | `swiss-nav-mcp@` | Cloud Run MCP | `roles/aiplatform.user` (query embeddings only) |
-| `swiss-nav-agent@` | Agent Runtime | `roles/aiplatform.user`, `roles/cloudtrace.agent`, `roles/logging.logWriter`. Verify which identity Agent Runtime runs as and whether a custom SA is supported. |
+| `swiss-nav-agent@` | Agent Runtime (runtime identity, `--service_account`; verified M5) | `roles/aiplatform.user`, `roles/logging.logWriter`, `roles/cloudtrace.agent`, and for the OTLP export to `telemetry.googleapis.com` `roles/telemetry.tracesWriter`, `roles/monitoring.metricWriter`, `roles/serviceusage.serviceUsageConsumer` (M5, ADR-027). Without a custom SA the agent runs as `service-<number>@gcp-sa-aiplatform-re.iam.gserviceaccount.com`. |
 | `swiss-nav-web@` | Cloud Run web | `roles/aiplatform.user` (to call `reasoningEngines:streamQuery`), `roles/datastore.user` |
 | `swiss-nav-ci@` | GitHub Actions via WIF | `roles/aiplatform.user`, `roles/storage.objectAdmin` on the bucket |
 | `swiss-nav-apertus@` | Cloud Run GPU | none (no GCP API calls) |
@@ -155,29 +155,66 @@ gcloud run deploy swiss-nav-mcp --image … --region europe-west6 \
   (ADR-017).
 - Claude Code: `claude mcp add --scope user --transport http swiss-law <url>/mcp`.
 
-### Agent → Agent Runtime
+### Agent → Agent Runtime (done in M5, ADR-027)
 
 ```bash
-adk deploy agent_engine \
-  --project=$PROJECT_ID --region=$REGION \
-  --display_name="swiss-admin-navigator" \
-  agents/navigator
+DRY_RUN=1 make deploy-agent   # stage + Python 3.11 import check, print the deploy (free)
+make deploy-agent             # infra/deploy_agent.sh (billable; Nikola runs it)
 ```
 
-- Python deployments don't include the ADK API server or web UI; Agent
-  Runtime provides the API.
-- Output contains `projects/…/locations/europe-west6/reasoningEngines/<RESOURCE_ID>`.
-  Store the ID in `.env` as `AGENT_RUNTIME_ID`.
-- Query endpoint:
-  `https://$REGION-aiplatform.googleapis.com/v1/projects/$PROJECT_ID/locations/$REGION/reasoningEngines/$AGENT_RUNTIME_ID:query`
-  (streaming: `:streamQuery`). Check the request body format at
-  <https://adk.dev/deploy/agent-runtime/test/>.
-- Alternative: the "Agents CLI" deployment path (CI/CD and IaC scaffolding) at
-  <https://adk.dev/deploy/agent-runtime/agents-cli/>. Evaluate it in M5 and use
-  it if it fits.
-- Pass config (MCP URL, model IDs) through env vars on deploy. Verify how
-  `adk deploy agent_engine` passes env vars (`.env` in the agent dir vs a
-  flag).
+`adk deploy agent_engine` (ADK 2.12) uploads one folder and builds ADK's own
+Dockerfile on Cloud Build: `python:3.11-slim`, `pip install -r
+requirements.txt`, `adk api_server --a2a` with Sessions and Memory at
+`agentengine://<itself>`. It reads `requirements.txt` and `.env` from the agent
+folder and scaling/labels from an `.agent_engine_config.json`
+(`--agent_engine_config_file`). `infra/deploy_agent.sh` therefore:
+
+1. stages `agents/navigator` from the commit (tracked files, no tests) into a
+   temp dir, with `requirements.txt` = `uv export --package swiss-nav-navigator`
+   (the lock's pins) and a `.env` holding the agent's runtime env:
+   `SWISS_LAW_MCP_URL` (the Cloud Run MCP server, looked up with
+   `gcloud run services describe`, or `AGENT_MCP_URL`), `NAV_PROFILE`,
+   `GOOGLE_GENAI_USE_ENTERPRISE=TRUE`. Nothing secret. **This is the env
+   mechanism** (verified: the deployed spec carries exactly these plus
+   `GOOGLE_CLOUD_AGENT_ENGINE_ENABLE_TELEMETRY`). The Dockerfile itself sets
+   `GOOGLE_CLOUD_PROJECT` and `GOOGLE_CLOUD_LOCATION=europe-west6`; model
+   endpoints still come from the profile (ADR-013).
+2. imports the staged agent under **Python 3.11** with exactly those pins
+   (`uv run --isolated --python 3.11 --with-requirements`): the image is 3.11
+   while the workspace is 3.12, and the shared venv once hid a missing `mcp`
+   dependency;
+3. deploys with `infra/agent_runtime.json` + a `commit` label,
+   `--service_account swiss-nav-agent@…`, `--otel_to_cloud`, `--display_name`
+   (ADK otherwise replaces the config's with the folder name), and
+   `--agent_engine_id $AGENT_RUNTIME_ID` when set (update in place).
+
+- **Instance (2026-10-16):** `projects/random-projects-509513/locations/europe-west6/reasoningEngines/5798067860890714112`
+  (`AGENT_RUNTIME_ID` in `.env`). Build + deploy took about 5 minutes.
+- **Scaling (cost):** the SDK default is `min_instances` 1 at 4 vCPU / 4 GiB,
+  always on: about USD 270/month at list price. `agent_runtime.json` sets
+  `min_instances` 0, `max_instances` 2, 1 vCPU / 2 GiB, concurrency 8. Cold
+  start: first streamed event after 9.8 s (container start + first model call).
+- **Query:** `make query-remote Q="…"` (`scripts/query_remote.py`, streams
+  `async_stream_query` through the `agentplatform` SDK; `ARGS=--traces` then
+  shows the run's Cloud Trace spans). REST equivalent:
+  `POST https://europe-west6-aiplatform.googleapis.com/v1/projects/$PROJECT_ID/locations/europe-west6/reasoningEngines/$AGENT_RUNTIME_ID:query`
+  with `{"class_method": "async_create_session", "input": {"user_id": "u"}}`,
+  then `…:streamQuery?alt=sse` with `{"class_method": "async_stream_query",
+  "input": {"user_id": "u", "session_id": "<id>", "message": "…"}}`. Each
+  streamed item is one ADK `Event` as a snake_case dict.
+- **Eval:** `make eval-smoke-remote` (`--target remote`).
+- **Tracing:** `--otel_to_cloud` exports spans over OTLP to
+  `telemetry.googleapis.com` (not the legacy Cloud Trace API): `invoke_agent`,
+  `call_llm`, `generate_content <model>`, `execute_tool <tool>` and the MCP
+  client spans. Message content is not captured
+  (`ADK_CAPTURE_MESSAGE_CONTENT_IN_SPANS=false`, ADK's default with that flag;
+  the GenAI log records show `<elided>`). Cloud Trace's `traces.list` does
+  not return these traces (verified 2026-10-16); `traces.get` does, and the
+  trace ids are on the agent's log entries.
+- The "Agents CLI" path (<https://adk.dev/deploy/agent-runtime/agents-cli/>)
+  was not adopted: `adk deploy` plus a 100-line script covers what we need.
+- Delete with the SDK (`client.runtimes.delete(name=…, force=True)`, which also
+  removes sessions) if the instance is ever retired.
 
 ### Web → Cloud Run
 
@@ -239,7 +276,7 @@ Quota refused on 2026-10-16 (§ above, ADR-026); kept for reference.
 
 | Item | Driver | Expected monthly |
 |---|---|---|
-| Agent Runtime | vCPU/GB-hours; a no-cost tier exists (third-party sources cite 50 vCPU-h + 100 GB-h/month; verify) | ~0–10 CHF at demo traffic |
+| Agent Runtime | Billing catalog (2026-10-16, `global` SKUs): "Agent Platform Compute" first 50 vCPU-h/month free, then USD 0.085/vCPU-h; "Agent Platform Memory" first 100 GiB-h free, then USD 0.009/GiB-h. Scale to zero at 1 vCPU / 2 GiB (ADR-027) | ~0 CHF at eval/demo traffic; ~USD 70/month if one instance stayed up |
 | Sessions + Memory Bank | billed per event since 2026-02 (third-party source: ~$0.25 / 1k events; verify) | < 5 CHF |
 | Gemini Flash | tokens; an answer ≈ 4–6 LLM calls × 5–10k input tokens | ~0.5–2 Rp. per answer (verify pricing) |
 | Embeddings | one-time corpus embed (~30k chunks) + per query | < 2 CHF build, negligible per query |

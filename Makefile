@@ -8,8 +8,8 @@ todo = @echo "make $@: not implemented yet (lands in $(1), see docs/PLAN.md)" >&
 
 .PHONY: help setup lint fmt test check smoke-gemini gcp-setup gcp-budget gcp-wif \
         resolve ingest spotcheck fixtures index index-e4 publish-index eval-retrieval mcp-dev mcp-coldstart agent-dev \
-        eval-smoke eval-full eval-multiturn silver review-golden check-cases label-answers judge-study \
-        deploy-mcp deploy-agent deploy-web
+        eval-smoke eval-smoke-remote eval-full eval-multiturn silver review-golden check-cases \
+        label-answers judge-study query-remote deploy-mcp deploy-agent deploy-web
 
 help: ## List targets
 	@grep -E '^[a-z0-9-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-14s %s\n", $$1, $$2}'
@@ -82,6 +82,12 @@ agent-dev: ## adk web UI for the agents in agents/
 eval-smoke: ## 20-case smoke eval (agent + judge; billable, ~CHF 1) -> evals/reports/ (ARGS=...)
 	$(UV) run python -m evals.harness.answer_eval --smoke $(ARGS)
 
+eval-smoke-remote: ## The smoke eval against the deployed agent (AGENT_RUNTIME_ID; billable, ~CHF 1; ARGS=...)
+	$(UV) run python -m evals.harness.answer_eval --smoke --target remote $(ARGS)
+
+query-remote: ## One question to the deployed agent, streamed (Q="..."; ARGS=--traces checks Cloud Trace)
+	$(UV) run python -m scripts.query_remote $(ARGS) "$(Q)"
+
 eval-multiturn: ## 25 simulated conversations via ADK AgentEvaluator + rubric judge (billable, ~CHF 3; ARGS=...)
 	$(UV) run python -m evals.harness.multiturn $(ARGS)
 
@@ -106,8 +112,8 @@ check-cases: ## Schema, unique ids and expected citations of every eval case fil
 deploy-mcp: ## Build + push + Cloud Run deploy of the MCP server (ask first; DRY_RUN=1 to preview)
 	bash infra/deploy_mcp.sh
 
-deploy-agent: ## Agent Runtime deploy (asks first; GCP.md §4)
-	$(call todo,M5)
+deploy-agent: ## Stage + deploy navigator to Agent Runtime (ask first; DRY_RUN=1 to preview; GCP.md §4)
+	bash infra/deploy_agent.sh
 
 deploy-web: ## Cloud Run deploy of the web UI (asks first; GCP.md §4)
 	$(call todo,M6)

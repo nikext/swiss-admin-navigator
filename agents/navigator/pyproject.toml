@@ -4,6 +4,10 @@ version = "0.0.0"
 description = "navigator ADK agent (deployed to Agent Runtime as a self-contained folder)"
 requires-python = ">=3.12,<3.13"
 dependencies = [
-    "google-adk==2.12.0",
+    # mcp: McpToolset; a2a: the Agent Runtime image runs `adk api_server --a2a` (M5).
+    "google-adk[a2a,mcp]==2.12.0",
+    # What the Agent Runtime image runs `adk api_server` with (M5); ADK's deploy only
+    # appends an unpinned >=2.2,<3 range, so pin it here through the lock.
+    "google-cloud-aiplatform[adk,agent-engines]==2.5.0",
     "pyyaml>=6.0.3",
 ]

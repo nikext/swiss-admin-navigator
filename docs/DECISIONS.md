@@ -751,3 +751,62 @@ facts 93.3 vs 96.7 on the same cases (n=15, within noise), behaviour 15/15,
 quote fidelity 100%. Qwen flags 0 must_not violations on them (baseline: 4;
 `2026-10-16-5bb5b0a-crosscheck-cantonal.md`). The other 135 golden answers
 were not re-run (M4 spend cap); the CI smoke run covers the prompt change.
+
+### ADR-027: Agent Runtime deploy = `adk deploy agent_engine` from a staged folder; scale to zero; OTLP tracing
+**Status:** accepted (2026-10-16, M5)
+**Context:** ADK 2.12's `adk deploy agent_engine` no longer pickles an
+`AdkApp`: it uploads the agent folder and builds its own Dockerfile on Cloud
+Build (`python:3.11-slim`, `pip install -r requirements.txt`,
+`adk api_server --a2a` with Sessions/Memory at `agentengine://<itself>`). It
+takes runtime env from the folder's `.env`, scaling and labels from an
+`.agent_engine_config.json`, and the identity from `--service_account`. Three
+things in that path would have hurt us:
+1. The image is Python 3.11, the workspace 3.12, and the navigator package
+   never declared `mcp` (the shared venv had it from `mcp_server`/`evals`).
+   Built locally like ADK's Dockerfile, the agent failed on import
+   (`cannot import name 'McpToolset'`).
+2. The deployment default is one always-on instance at 4 vCPU / 4 GiB. At the
+   Billing catalog's list price (USD 0.085/vCPU-h after 50 free, 0.009/GiB-h
+   after 100 free; 2026-10-16) that is about USD 270/month, seven times the
+   project budget (ADR-012).
+3. `--otel_to_cloud` exports OTLP to `telemetry.googleapis.com`, which needs
+   roles the planned SA didn't have; Cloud Trace's `traces.list` then shows
+   none of these traces even though `traces.get` returns them.
+**Decision:**
+- `agents/navigator` declares `google-adk[a2a,mcp]` and pins
+  `google-cloud-aiplatform[adk,agent-engines]` (what the image runs).
+- `infra/deploy_agent.sh` (`make deploy-agent`, `DRY_RUN=1`) stages the folder
+  from the commit with the lock's pins and a non-secret `.env`
+  (`SWISS_LAW_MCP_URL` = Cloud Run MCP, `NAV_PROFILE`), import-checks it under
+  Python 3.11 with exactly those pins, and deploys with
+  `infra/agent_runtime.json`: `min_instances` 0, `max_instances` 2,
+  1 vCPU / 2 GiB, concurrency 8, labels `app`/`commit`. Same instance updated
+  in place via `AGENT_RUNTIME_ID`.
+- Runtime identity `swiss-nav-agent@` plus `roles/telemetry.tracesWriter`,
+  `roles/monitoring.metricWriter`, `roles/serviceusage.serviceUsageConsumer`.
+- Tracing via `--otel_to_cloud`; message content stays out of spans.
+- The harness gets a `Target` protocol: `LocalAgent` (in-memory runner) and
+  `RemoteAgent` (`agentplatform` SDK: `async_create_session`,
+  `async_stream_query`, `async_delete_session` per case). Streamed items are
+  ADK `Event` dicts, so both targets are scored by the same code
+  (`--target remote`, `make eval-smoke-remote`).
+- The Agents CLI path was not needed.
+**Verification (commit 791dd03, instance `…/reasoningEngines/5798067860890714112`):**
+20 smoke cases, same judge, run back to back
+(`evals/reports/2026-10-16-791dd03-smoke-{local,remote}-m5.md`):
+
+| target | quote fidelity | halluc. | req. recall | groundedness | key facts | behaviour | p50 / p95 s | CHF/answer | errors |
+|---|---|---|---|---|---|---|---|---|---|
+| local | 70/70 | 0 | 1.00 | 84.8 (71–95) | 100 | 95 | 69 / 180 | 0.034 | 1 (adversarial-01 timeout at 300 s) |
+| deployed | 61/61 | 0 | 1.00 | 78.5 (65–90) | 100 | 95 | 66 / 115 | 0.030 | 1 (tax-01: Gemini `eu` 503 mid-run) |
+
+Within noise on every metric (overlapping CIs, n=20); each target lost one
+different case to a transient failure. One trace per answer with
+`invoke_agent`, 4× `call_llm` / `generate_content gemini-3.8-flash`,
+`execute_tool` per tool and the MCP client spans (19 spans for a 3-tool
+answer). Cold start: first streamed event after 9.8 s.
+**Consequences:** idle cost is zero; the first question after idling pays
+about 10 s. The 503 shows that the model client needs retries with backoff
+on 429/503 (M4 follow-up), now in production too: a failed model call ends
+the stream without a final event. Deploys need Cloud Build and a few
+minutes; Nikola runs them (`make deploy-agent`).
