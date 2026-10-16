@@ -542,7 +542,7 @@ async def evaluate(
         print(f"  {case.id:<28} {trace.error or status:<20} {trace.latency_s:5.1f}s", flush=True)
 
     print(f"running {len(cases)} cases (concurrency {args.concurrency}) against {where}")
-    traces = await run_cases(target, cases, args.concurrency, progress)
+    traces = await run_cases(target, cases, args.concurrency, progress, args.case_timeout)
 
     judge = None if args.no_judge else Judge(profile.judge, project)
     sem = asyncio.Semaphore(args.concurrency)
@@ -588,6 +588,7 @@ async def evaluate(
                 "verified_cases": sum(bool(c.verified_by) for c in cases),
                 "verified_by": sorted({c.verified_by for c in cases if c.verified_by}),
             },
+            "case_timeout_s": args.case_timeout,
             "selection": {
                 "smoke": args.smoke,
                 "ids": args.ids,
@@ -667,6 +668,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--category", default=None)
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--concurrency", type=int, default=4)
+    ap.add_argument("--case-timeout", type=float, default=300, help="seconds per case")
     ap.add_argument("--no-judge", action="store_true")
     ap.add_argument("--mcp-url", default=None, help="use this MCP server instead of a local one")
     ap.add_argument(

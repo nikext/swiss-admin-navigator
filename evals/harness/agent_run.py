@@ -189,13 +189,17 @@ async def run_case(target: Target, case: Case, timeout_s: float = 300) -> Trace:
 
 
 async def run_cases(
-    target: Target, cases: list[Case], concurrency: int, on_done: Any = None
+    target: Target,
+    cases: list[Case],
+    concurrency: int,
+    on_done: Any = None,
+    timeout_s: float = 300,
 ) -> list[Trace]:
     sem = asyncio.Semaphore(concurrency)
 
     async def one(case: Case) -> Trace:
         async with sem:
-            trace = await run_case(target, case)
+            trace = await run_case(target, case, timeout_s)
         if on_done:
             on_done(case, trace)
         return trace
