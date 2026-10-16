@@ -89,6 +89,7 @@ class Problem(BaseModel):
         "quote",  # quote is not in the article text
         "pinpoint",  # quote is in the article, but not in the cited paragraph
         "fetch",  # the law server could not be reached (not the model's fault)
+        "contact",  # street address, postcode, phone or web address written from memory
     ]
     message: str
 

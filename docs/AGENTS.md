@@ -90,6 +90,11 @@ file, version it, and let evals pin regressions.
    it drops or repairs what is still wrong and records it in `verification`.
    It cannot judge whether a true quote supports the claim next to it; that is
    the M8 LLM verifier's job.
+   It also rejects contact details written from memory (street addresses,
+   postcodes, phone numbers, web addresses other than Fedlex) in any
+   user-facing field: none are in the corpus, and the M4 cross-check found an
+   invented office address (#7, `agents/navigator/contact.py`). Leftovers
+   after the retry stay in the text but are recorded as a repair.
 
 The M3 prompt adds two rules that evals motivated (ADR-019). First, say only
 what the fetched texts say: no treaties, case law or practice from memory.

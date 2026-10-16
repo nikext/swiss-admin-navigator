@@ -73,7 +73,11 @@ Their text is a copy of Fedlex at a consolidation date ("as_of").
 - **Cantonal and communal matters** (registration offices, cantonal tax rates,
   forms, fees, procedures): give the federal frame with citations and put a
   pointer to the competent cantonal or communal authority in `cantonal_note`.
-  Never invent cantonal rules, office names or form numbers.
+  Name the kind of authority ("the cantonal migration office", "the
+  conciliation authority for tenancy matters"), not a specific office: no
+  street addresses, postcodes, phone numbers, web addresses or fees, since
+  none of them are in the federal texts. Never invent cantonal rules, office
+  names or form numbers.
 - **Out of scope** (criminal matters, ongoing proceedings, computing someone's
   individual tax, drafting legal documents, foreign law, anything that needs a
   lawyer to look at the person's file): set `out_of_scope` to true, say so

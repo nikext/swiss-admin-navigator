@@ -39,6 +39,7 @@ import yaml
 from dotenv import load_dotenv
 
 from agents.navigator.agent import build_agent, profile
+from agents.navigator.contact import answer_contact_details
 from evals.harness.agent_run import Trace, Usage, run_cases
 from evals.harness.answer_metrics import (
     CitationCheck,
@@ -125,6 +126,7 @@ def case_row(
         "unchecked": sum(c.exists is None for c in checks),
         **citation_scores(case, checks),
         "behaviour_det": det,
+        "contact_details": [f"{k}: {v}" for k, v in answer_contact_details(answer)],
         "detected_lang": detected,
         "lang_ok": lang_ok,
         "tool_calls": len(trace.tool_calls),
@@ -195,6 +197,7 @@ def summarize(rows: list[dict[str, Any]], judged: bool, judge_usage: Usage, pric
     s["required_recall"] = ci_mean([r["required_recall"] for r in ok])
     s["precision_expected"] = ci_mean([r["precision_expected"] for r in ok])
     s["behaviour_det"] = ci_mean([float(r["behaviour_det"]) for r in rows])
+    s["contact_answers"] = sorted(r["id"] for r in ok if r.get("contact_details"))
     s["lang_match"] = ci_mean([float(r["lang_ok"]) for r in ok])
     if judged:
         s["groundedness"] = ci_mean([r.get("groundedness") for r in ok])
@@ -310,6 +313,9 @@ def render_markdown(report: dict[str, Any]) -> str:
     fd = s["first_draft"]
     lines += [
         f"| behaviour (rule only) | {fmt_ci(s['behaviour_det'])} |",
+        "| answers with contact details (rule: address, postcode, phone, web) | "
+        f"{len(s.get('contact_answers', []))}"
+        f"{' (' + ', '.join(s['contact_answers']) + ')' if s.get('contact_answers') else ''} |",
         f"| language match | {fmt_ci(s['lang_match'])} |",
         f"| errors | {s['errors']} |",
         "",
