@@ -3,6 +3,10 @@
 The answer is structured (`contract.DraftAnswer` as `output_schema`; on Vertex
 Gemini ADK sends it together with the tools, verified in M3) and every final
 answer passes the deterministic citation verifier (`verifier.py`, ADR-018).
+With the user's opt-in (session state set by the web BFF), remembered facts are
+loaded into the instruction and each turn is sent to Memory Bank (`memory.py`,
+M7, ADR-029); the memory service is the runner's (`agentengine://` on Agent
+Runtime).
 
 Config: `NAV_PROFILE` picks the model (profiles/, ADR-008);
 `SWISS_LAW_MCP_URL` the MCP server (`make mcp-dev` locally, Cloud Run
@@ -20,6 +24,7 @@ from google.genai import types
 
 from .config import LlmRef, load_profile
 from .contract import DraftAnswer
+from .memory import MemoryContext, save_memory
 from .verifier import CitationVerifier, compact_tool_result
 
 profile = load_profile()
@@ -60,11 +65,12 @@ def build_agent(mcp_url: str = MCP_URL, model: LlmRef = profile.agent) -> LlmAge
         ),
         instruction=instruction,
         generate_content_config=generate_config(model),
-        tools=[toolset],
+        tools=[toolset, MemoryContext()],
         output_schema=DraftAnswer,
         before_model_callback=verifier.before_model,
         after_model_callback=verifier.after_model,
         after_tool_callback=compact_tool_result,
+        after_agent_callback=save_memory,
     )
 
 

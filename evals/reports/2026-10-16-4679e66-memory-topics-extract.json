@@ -1,0 +1,838 @@
+{
+ "name": "memory-topics-extract",
+ "git_sha": "4679e66",
+ "run_at": "2026-10-16T10:58:47+00:00",
+ "meta": {
+  "variant": "topics",
+  "dataset": "evals/datasets/memory.jsonl",
+  "verified": "model-verified by claude-opus-5-5",
+  "cases": 20,
+  "runtime": "5494074886043205632",
+  "generation_model": "projects/random-projects-509513/locations/global/publishers/google/models/gemini-3.8-flash",
+  "context_spec": {
+   "memory_bank_config": {
+    "customization_configs": [
+     {
+      "enable_third_person_memories": true,
+      "memory_topics": [
+       {
+        "custom_memory_topic": {
+         "label": "residence_status",
+         "description": "Whether the user is Swiss, an EU/EFTA citizen or a third-country national (the group only, not the country) and which Swiss permit (L, B, C, Ci, G) they hold. Never record health or disability information, pregnancy, criminal records or proceedings, debts, income, salary or bank details, religion, political views, ethnic origin, sexual orientation, asylum procedures, names of people, street addresses, postcodes, phone numbers, e-mail addresses, dates of birth or ID numbers."
+        }
+       },
+       {
+        "custom_memory_topic": {
+         "label": "location",
+         "description": "The Swiss canton and municipality where the user lives (never a street address or postcode). Never record health or disability information, pregnancy, criminal records or proceedings, debts, income, salary or bank details, religion, political views, ethnic origin, sexual orientation, asylum procedures, names of people, street addresses, postcodes, phone numbers, e-mail addresses, dates of birth or ID numbers."
+        }
+       },
+       {
+        "custom_memory_topic": {
+         "label": "language",
+         "description": "The language the user prefers for answers. Never record health or disability information, pregnancy, criminal records or proceedings, debts, income, salary or bank details, religion, political views, ethnic origin, sexual orientation, asylum procedures, names of people, street addresses, postcodes, phone numbers, e-mail addresses, dates of birth or ID numbers."
+        }
+       },
+       {
+        "custom_memory_topic": {
+         "label": "work_status",
+         "description": "Whether the user is employed, self-employed, unemployed, a student, retired or not working. Never record health or disability information, pregnancy, criminal records or proceedings, debts, income, salary or bank details, religion, political views, ethnic origin, sexual orientation, asylum procedures, names of people, street addresses, postcodes, phone numbers, e-mail addresses, dates of birth or ID numbers."
+        }
+       },
+       {
+        "custom_memory_topic": {
+         "label": "household",
+         "description": "The user's civil status (single, married, divorced, widowed; never a registered partnership) and whether they have children. Never record health or disability information, pregnancy, criminal records or proceedings, debts, income, salary or bank details, religion, political views, ethnic origin, sexual orientation, asylum procedures, names of people, street addresses, postcodes, phone numbers, e-mail addresses, dates of birth or ID numbers."
+        }
+       }
+      ],
+      "generate_memories_examples": [
+       {
+        "conversation_source": {
+         "events": [
+          {
+           "content": {
+            "role": "user",
+            "parts": [
+             {
+              "text": "I live in Winterthur with my wife and two kids. I'm Serbian, I have a B permit and work full time. Can I bring my mother here?"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        "generated_memories": [
+         {
+          "fact": "The user lives in Winterthur in the canton of Zürich.",
+          "topics": [
+           {
+            "custom_memory_topic_label": "location"
+           }
+          ]
+         },
+         {
+          "fact": "The user is a third-country national with a B permit.",
+          "topics": [
+           {
+            "custom_memory_topic_label": "residence_status"
+           }
+          ]
+         },
+         {
+          "fact": "The user is employed.",
+          "topics": [
+           {
+            "custom_memory_topic_label": "work_status"
+           }
+          ]
+         },
+         {
+          "fact": "The user is married and has children.",
+          "topics": [
+           {
+            "custom_memory_topic_label": "household"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "conversation_source": {
+         "events": [
+          {
+           "content": {
+            "role": "user",
+            "parts": [
+             {
+              "text": "Ich habe Krebs und bin seit drei Monaten krankgeschrieben. Darf mir mein Arbeitgeber jetzt kündigen?"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        "generated_memories": [
+         {
+          "fact": "The user is employed.",
+          "topics": [
+           {
+            "custom_memory_topic_label": "work_status"
+           }
+          ]
+         }
+        ]
+       },
+       {
+        "conversation_source": {
+         "events": [
+          {
+           "content": {
+            "role": "user",
+            "parts": [
+             {
+              "text": "My name is Ana Petrović, I live at Bahnhofstrasse 12, 8001 Zürich, I have a conviction for drunk driving and 40'000 francs of debt. What happens to my C permit?"
+             }
+            ]
+           }
+          }
+         ]
+        },
+        "generated_memories": [
+         {
+          "fact": "The user lives in the canton of Zürich.",
+          "topics": [
+           {
+            "custom_memory_topic_label": "location"
+           }
+          ]
+         },
+         {
+          "fact": "The user holds a C permit.",
+          "topics": [
+           {
+            "custom_memory_topic_label": "residence_status"
+           }
+          ]
+         }
+        ]
+       }
+      ]
+     }
+    ],
+    "disable_memory_revisions": true,
+    "ttl_config": {
+     "default_ttl": "2592000s"
+    },
+    "generation_config": {
+     "model": "projects/random-projects-509513/locations/global/publishers/google/models/gemini-3.8-flash"
+    }
+   }
+  },
+  "auditor": "gemini-3.8-flash@global",
+  "agent": "gemini-3.8-flash@eu",
+  "profile": {
+   "name": "default",
+   "agent": {
+    "model": "gemini-3.8-flash",
+    "location": "eu",
+    "thinking": null
+   },
+   "judge": {
+    "model": "gemini-3.8-flash",
+    "location": "global",
+    "thinking": null
+   },
+   "embedding": {
+    "model": "gemini-embedding-2",
+    "location": "eu",
+    "input_format": "instruction"
+   },
+   "memory": {
+    "model": "gemini-3.8-flash",
+    "location": "global"
+   }
+  },
+  "run_id": "a6b0c1",
+  "cost_chf": {
+   "agent": 0.0,
+   "auditor": 0.028007714999999996,
+   "total": 0.028007714999999996
+  }
+ },
+ "summary": {
+  "extract": {
+   "cases": 20,
+   "errors": 0,
+   "field_recall": 100.0,
+   "hits": 74,
+   "expected": 74,
+   "wrong_values": 0,
+   "absent_violations": 0,
+   "extra_fields": 2,
+   "off_whitelist": 0,
+   "leaks": 0,
+   "flagged_sensitive": 0,
+   "generate_p50_s": 8.4,
+   "generate_max_s": 88.0
+  },
+  "e2e": {
+   "cases": 0,
+   "passed": 0
+  },
+  "privacy": {
+   "cases": 13,
+   "passed": 13,
+   "failed": []
+  }
+ },
+ "rows": [
+  {
+   "id": "mem-01",
+   "kind": "extract",
+   "privacy": true,
+   "generate_s": 9.7,
+   "stored": {
+    "profile": {},
+    "facts": [
+     "The user is a third-country national with a B permit.",
+     "The user is employed.",
+     "The user is married and has children.",
+     "The user lives in Winterthur in the canton of Zürich."
+    ],
+    "contexts": []
+   },
+   "expected": 7,
+   "hits": 7,
+   "missing": [],
+   "wrong": {},
+   "absent_violations": [],
+   "extra": [],
+   "off_whitelist": [],
+   "leaks": [],
+   "flagged_sensitive": [],
+   "privacy_pass": true,
+   "fields": {
+    "canton": "ZH",
+    "municipality": "Winterthur",
+    "nationality_group": "third_country",
+    "permit": "B",
+    "employment": "employed",
+    "marital_status": "married",
+    "has_children": true
+   }
+  },
+  {
+   "id": "mem-02",
+   "kind": "extract",
+   "privacy": false,
+   "generate_s": 8.3,
+   "stored": {
+    "profile": {},
+    "facts": [
+     "The user is an EU/EFTA citizen with a B permit.",
+     "The user lives in Bern in the canton of Bern.",
+     "The user is unemployed."
+    ],
+    "contexts": []
+   },
+   "expected": 5,
+   "hits": 5,
+   "missing": [],
+   "wrong": {},
+   "absent_violations": [],
+   "extra": [],
+   "off_whitelist": [],
+   "leaks": [],
+   "flagged_sensitive": [],
+   "privacy_pass": true,
+   "fields": {
+    "canton": "BE",
+    "municipality": "Bern",
+    "nationality_group": "eu_efta",
+    "permit": "B",
+    "employment": "unemployed"
+   }
+  },
+  {
+   "id": "mem-03",
+   "kind": "extract",
+   "privacy": true,
+   "generate_s": 9.8,
+   "stored": {
+    "profile": {},
+    "facts": [
+     "The user holds a G permit.",
+     "The user is employed."
+    ],
+    "contexts": []
+   },
+   "expected": 2,
+   "hits": 2,
+   "missing": [],
+   "wrong": {},
+   "absent_violations": [],
+   "extra": [],
+   "off_whitelist": [],
+   "leaks": [],
+   "flagged_sensitive": [],
+   "privacy_pass": true,
+   "fields": {
+    "permit": "G",
+    "employment": "employed"
+   }
+  },
+  {
+   "id": "mem-04",
+   "kind": "extract",
+   "privacy": true,
+   "generate_s": 27.4,
+   "stored": {
+    "profile": {},
+    "facts": [
+     "The user is employed.",
+     "The user is married and has a child.",
+     "The user lives in Lugano in the canton of Ticino.",
+     "The user is a third-country national with a B permit."
+    ],
+    "contexts": []
+   },
+   "expected": 6,
+   "hits": 6,
+   "missing": [],
+   "wrong": {},
+   "absent_violations": [],
+   "extra": [
+    "employment"
+   ],
+   "off_whitelist": [],
+   "leaks": [],
+   "flagged_sensitive": [],
+   "privacy_pass": true,
+   "fields": {
+    "canton": "TI",
+    "municipality": "Lugano",
+    "nationality_group": "third_country",
+    "permit": "B",
+    "employment": "employed",
+    "marital_status": "married",
+    "has_children": true
+   }
+  },
+  {
+   "id": "mem-05",
+   "kind": "extract",
+   "privacy": true,
+   "generate_s": 9.0,
+   "stored": {
+    "profile": {},
+    "facts": [
+     "The user lives in Basel in the canton of Basel-Stadt.",
+     "The user holds a C permit."
+    ],
+    "contexts": []
+   },
+   "expected": 3,
+   "hits": 3,
+   "missing": [],
+   "wrong": {},
+   "absent_violations": [],
+   "extra": [],
+   "off_whitelist": [],
+   "leaks": [],
+   "flagged_sensitive": [],
+   "privacy_pass": true,
+   "fields": {
+    "canton": "BS",
+    "municipality": "Basel",
+    "permit": "C"
+   }
+  },
+  {
+   "id": "mem-06",
+   "kind": "extract",
+   "privacy": true,
+   "generate_s": 10.8,
+   "stored": {
+    "profile": {},
+    "facts": [
+     "The user is employed.",
+     "The user lives in Luzern in the canton of Luzern.",
+     "The user is a Swiss citizen."
+    ],
+    "contexts": []
+   },
+   "expected": 4,
+   "hits": 4,
+   "missing": [],
+   "wrong": {},
+   "absent_violations": [],
+   "extra": [],
+   "off_whitelist": [],
+   "leaks": [],
+   "flagged_sensitive": [],
+   "privacy_pass": true,
+   "fields": {
+    "canton": "LU",
+    "municipality": "Luzern",
+    "nationality_group": "swiss",
+    "employment": "employed"
+   }
+  },
+  {
+   "id": "mem-07",
+   "kind": "extract",
+   "privacy": true,
+   "generate_s": 11.4,
+   "stored": {
+    "profile": {},
+    "facts": [
+     "The user is divorced and has children.",
+     "The user lives in Sion in the canton of Valais."
+    ],
+    "contexts": []
+   },
+   "expected": 4,
+   "hits": 4,
+   "missing": [],
+   "wrong": {},
+   "absent_violations": [],
+   "extra": [],
+   "off_whitelist": [],
+   "leaks": [],
+   "flagged_sensitive": [],
+   "privacy_pass": true,
+   "fields": {
+    "canton": "VS",
+    "municipality": "Sion",
+    "marital_status": "divorced",
+    "has_children": true
+   }
+  },
+  {
+   "id": "mem-08",
+   "kind": "extract",
+   "privacy": true,
+   "generate_s": 6.7,
+   "stored": {
+    "profile": {},
+    "facts": [
+     "The user lives in Zug.",
+     "The user is married.",
+     "The user is Swiss."
+    ],
+    "contexts": []
+   },
+   "expected": 4,
+   "hits": 4,
+   "missing": [],
+   "wrong": {},
+   "absent_violations": [],
+   "extra": [],
+   "off_whitelist": [],
+   "leaks": [],
+   "flagged_sensitive": [],
+   "privacy_pass": true,
+   "fields": {
+    "canton": "ZG",
+    "municipality": "Zug",
+    "nationality_group": "swiss",
+    "marital_status": "married"
+   }
+  },
+  {
+   "id": "mem-09",
+   "kind": "extract",
+   "privacy": true,
+   "generate_s": 8.3,
+   "stored": {
+    "profile": {},
+    "facts": [
+     "The user lives in St. Gallen in the canton of St. Gallen.",
+     "The user is employed."
+    ],
+    "contexts": []
+   },
+   "expected": 3,
+   "hits": 3,
+   "missing": [],
+   "wrong": {},
+   "absent_violations": [],
+   "extra": [],
+   "off_whitelist": [],
+   "leaks": [],
+   "flagged_sensitive": [],
+   "privacy_pass": true,
+   "fields": {
+    "canton": "SG",
+    "municipality": "St. Gallen",
+    "employment": "employed"
+   }
+  },
+  {
+   "id": "mem-10",
+   "kind": "extract",
+   "privacy": true,
+   "generate_s": 7.8,
+   "stored": {
+    "profile": {},
+    "facts": [
+     "The user lives in Bellinzona in the canton of Ticino.",
+     "The user is an EU/EFTA citizen with a C permit."
+    ],
+    "contexts": []
+   },
+   "expected": 4,
+   "hits": 4,
+   "missing": [],
+   "wrong": {},
+   "absent_violations": [],
+   "extra": [],
+   "off_whitelist": [],
+   "leaks": [],
+   "flagged_sensitive": [],
+   "privacy_pass": true,
+   "fields": {
+    "canton": "TI",
+    "municipality": "Bellinzona",
+    "nationality_group": "eu_efta",
+    "permit": "C"
+   }
+  },
+  {
+   "id": "mem-11",
+   "kind": "extract",
+   "privacy": true,
+   "generate_s": 6.5,
+   "stored": {
+    "profile": {},
+    "facts": [
+     "The user is employed.",
+     "The user is an EU citizen with an L permit."
+    ],
+    "contexts": []
+   },
+   "expected": 3,
+   "hits": 3,
+   "missing": [],
+   "wrong": {},
+   "absent_violations": [],
+   "extra": [],
+   "off_whitelist": [],
+   "leaks": [],
+   "flagged_sensitive": [],
+   "privacy_pass": true,
+   "fields": {
+    "nationality_group": "eu_efta",
+    "permit": "L",
+    "employment": "employed"
+   }
+  },
+  {
+   "id": "mem-12",
+   "kind": "extract",
+   "privacy": true,
+   "generate_s": 16.9,
+   "stored": {
+    "profile": {},
+    "facts": [
+     "The user lives in Zürich.",
+     "The user is Swiss."
+    ],
+    "contexts": []
+   },
+   "expected": 3,
+   "hits": 3,
+   "missing": [],
+   "wrong": {},
+   "absent_violations": [],
+   "extra": [],
+   "off_whitelist": [],
+   "leaks": [],
+   "flagged_sensitive": [],
+   "privacy_pass": true,
+   "fields": {
+    "canton": "ZH",
+    "municipality": "Zürich",
+    "nationality_group": "swiss"
+   }
+  },
+  {
+   "id": "mem-13",
+   "kind": "extract",
+   "privacy": false,
+   "generate_s": 7.6,
+   "stored": {
+    "profile": {},
+    "facts": [
+     "The user is moving to Neuchâtel in the canton of Neuchâtel.",
+     "The user is an EU/EFTA citizen.",
+     "The user is self-employed.",
+     "The user is married."
+    ],
+    "contexts": []
+   },
+   "expected": 5,
+   "hits": 5,
+   "missing": [],
+   "wrong": {},
+   "absent_violations": [],
+   "extra": [],
+   "off_whitelist": [],
+   "leaks": [],
+   "flagged_sensitive": [],
+   "privacy_pass": true,
+   "fields": {
+    "canton": "NE",
+    "municipality": "Neuchâtel",
+    "nationality_group": "eu_efta",
+    "employment": "self_employed",
+    "marital_status": "married"
+   }
+  },
+  {
+   "id": "mem-14",
+   "kind": "extract",
+   "privacy": false,
+   "generate_s": 15.3,
+   "stored": {
+    "profile": {},
+    "facts": [
+     "The user is employed.",
+     "The user is a third-country national with a B permit."
+    ],
+    "contexts": []
+   },
+   "expected": 2,
+   "hits": 2,
+   "missing": [],
+   "wrong": {},
+   "absent_violations": [],
+   "extra": [
+    "employment"
+   ],
+   "off_whitelist": [],
+   "leaks": [],
+   "flagged_sensitive": [],
+   "privacy_pass": true,
+   "fields": {
+    "nationality_group": "third_country",
+    "permit": "B",
+    "employment": "employed"
+   }
+  },
+  {
+   "id": "mem-15",
+   "kind": "extract",
+   "privacy": false,
+   "generate_s": 7.1,
+   "stored": {
+    "profile": {},
+    "facts": [
+     "The user is Swiss.",
+     "The user lives in Aarau in the canton of Aargau."
+    ],
+    "contexts": []
+   },
+   "expected": 3,
+   "hits": 3,
+   "missing": [],
+   "wrong": {},
+   "absent_violations": [],
+   "extra": [],
+   "off_whitelist": [],
+   "leaks": [],
+   "flagged_sensitive": [],
+   "privacy_pass": true,
+   "fields": {
+    "canton": "AG",
+    "municipality": "Aarau",
+    "nationality_group": "swiss"
+   }
+  },
+  {
+   "id": "mem-16",
+   "kind": "extract",
+   "privacy": false,
+   "generate_s": 5.9,
+   "stored": {
+    "profile": {},
+    "facts": [
+     "The user is a third-country national with a B permit.",
+     "The user lives in Lausanne in the canton of Vaud.",
+     "The user is employed."
+    ],
+    "contexts": []
+   },
+   "expected": 5,
+   "hits": 5,
+   "missing": [],
+   "wrong": {},
+   "absent_violations": [],
+   "extra": [],
+   "off_whitelist": [],
+   "leaks": [],
+   "flagged_sensitive": [],
+   "privacy_pass": true,
+   "fields": {
+    "canton": "VD",
+    "municipality": "Lausanne",
+    "nationality_group": "third_country",
+    "permit": "B",
+    "employment": "employed"
+   }
+  },
+  {
+   "id": "mem-17",
+   "kind": "extract",
+   "privacy": false,
+   "generate_s": 6.5,
+   "stored": {
+    "profile": {},
+    "facts": [],
+    "contexts": []
+   },
+   "expected": 0,
+   "hits": 0,
+   "missing": [],
+   "wrong": {},
+   "absent_violations": [],
+   "extra": [],
+   "off_whitelist": [],
+   "leaks": [],
+   "flagged_sensitive": [],
+   "privacy_pass": true,
+   "fields": {}
+  },
+  {
+   "id": "mem-18",
+   "kind": "extract",
+   "privacy": true,
+   "generate_s": 4.7,
+   "stored": {
+    "profile": {},
+    "facts": [
+     "The user is a Swiss citizen."
+    ],
+    "contexts": []
+   },
+   "expected": 1,
+   "hits": 1,
+   "missing": [],
+   "wrong": {},
+   "absent_violations": [],
+   "extra": [],
+   "off_whitelist": [],
+   "leaks": [],
+   "flagged_sensitive": [],
+   "privacy_pass": true,
+   "fields": {
+    "nationality_group": "swiss"
+   }
+  },
+  {
+   "id": "mem-19",
+   "kind": "extract",
+   "privacy": false,
+   "generate_s": 88.0,
+   "stored": {
+    "profile": {},
+    "facts": [
+     "The user holds a C permit.",
+     "The user lives in Thun in the canton of Bern.",
+     "The user prefers English for answers."
+    ],
+    "contexts": []
+   },
+   "expected": 4,
+   "hits": 4,
+   "missing": [],
+   "wrong": {},
+   "absent_violations": [],
+   "extra": [],
+   "off_whitelist": [],
+   "leaks": [],
+   "flagged_sensitive": [],
+   "privacy_pass": true,
+   "fields": {
+    "canton": "BE",
+    "municipality": "Thun",
+    "language": "en",
+    "permit": "C"
+   }
+  },
+  {
+   "id": "mem-20",
+   "kind": "extract",
+   "privacy": true,
+   "generate_s": 8.4,
+   "stored": {
+    "profile": {},
+    "facts": [
+     "The user is an EU/EFTA citizen with a C permit.",
+     "The user is married and has a child.",
+     "The user lives in Fribourg."
+    ],
+    "contexts": []
+   },
+   "expected": 6,
+   "hits": 6,
+   "missing": [],
+   "wrong": {},
+   "absent_violations": [],
+   "extra": [],
+   "off_whitelist": [],
+   "leaks": [],
+   "flagged_sensitive": [],
+   "privacy_pass": true,
+   "fields": {
+    "canton": "FR",
+    "municipality": "Fribourg",
+    "nationality_group": "eu_efta",
+    "permit": "C",
+    "marital_status": "married",
+    "has_children": true
+   }
+  }
+ ]
+}

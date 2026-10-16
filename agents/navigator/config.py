@@ -16,6 +16,9 @@ The agent and judge roles take an optional `thinking` level (`minimal`, `low`,
 `thinking_level` and to Claude's `effort` (minimal → low), so cost experiments
 can lower it per run (M4).
 
+The optional `memory` role (M7) is the model Memory Bank extracts memories
+with; without it Memory Bank uses its default (ADR-029).
+
 The profile is chosen by `NAV_PROFILE` (default: `default`). Single fields can
 be overridden per run with `<ROLE>_<FIELD>` (e.g. `AGENT_MODEL`,
 `JUDGE_LOCATION`, `EMBEDDING_INPUT_FORMAT`), which is how eval experiments swap
@@ -66,12 +69,14 @@ class Profile:
     agent: LlmRef
     judge: LlmRef
     embedding: EmbeddingRef
+    memory: ModelRef | None = None  # Memory Bank's extraction model; None: Memory Bank's default
 
     def as_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
 ROLES = tuple(f.name for f in fields(Profile) if f.name != "name")
+OPTIONAL_ROLES = {"memory"}
 _REF_KEYS = {f.name for f in fields(ModelRef)}
 # Optional keys per role, with the dataclass default when absent.
 _OPTIONAL_KEYS = {"agent": {"thinking"}, "judge": {"thinking"}, "embedding": {"input_format"}}
@@ -106,10 +111,12 @@ def load_profile(
     raw = yaml.safe_load(path.read_text(encoding="utf-8"))
     if not isinstance(raw, dict):
         raise ProfileError(f"{path}: expected a mapping, got {type(raw).__name__}")
-    _keys_check(str(path), raw, set(ROLES))
+    _keys_check(str(path), raw, set(ROLES) - OPTIONAL_ROLES, OPTIONAL_ROLES)
 
     refs: dict[str, Any] = {}
     for role in ROLES:
+        if role in OPTIONAL_ROLES and role not in raw:
+            continue
         section = raw[role]
         if not isinstance(section, dict):
             raise ProfileError(f"{path}: {role} must be a mapping with {sorted(_REF_KEYS)}")

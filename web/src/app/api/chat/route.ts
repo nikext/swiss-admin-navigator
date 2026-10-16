@@ -1,9 +1,12 @@
+import { cookies } from "next/headers";
+
 import type { UiEvent } from "@/lib/contract";
 import { createSession, streamQuery } from "@/lib/server/agent";
 import { agentUserId } from "@/lib/server/auth";
 import { runChat } from "@/lib/server/chat";
 import { config } from "@/lib/server/config";
 import { fail, identify, log, readJson, SESSION_ID, unauthorized } from "@/lib/server/http";
+import { MEMORY_COOKIE, optedIn, sessionState } from "@/lib/server/memory";
 import { zurichDay } from "@/lib/server/quota";
 import { quotaStore } from "@/lib/server/stores";
 
@@ -27,6 +30,8 @@ export async function POST(req: Request): Promise<Response> {
   }
   if (given !== null && !SESSION_ID.test(given)) return fail(400, "bad_request", "bad session id");
 
+  // Memory (M7): new sessions carry the visitor's switch; the agent reads nothing else.
+  const memory = optedIn((await cookies()).get(MEMORY_COOKIE)?.value, id.uid);
   const c = config();
   const day = zurichDay();
   const quota = await quotaStore().consume(day, id.uid, {
@@ -60,7 +65,7 @@ export async function POST(req: Request): Promise<Response> {
 
       send({ type: "quota", ...quota.remaining });
       const out = await runChat(
-        { createSession, streamQuery },
+        { createSession: (u) => createSession(u, sessionState(memory)), streamQuery },
         agentUserId(id),
         message,
         given,
@@ -75,6 +80,7 @@ export async function POST(req: Request): Promise<Response> {
       log(out.answer ? "INFO" : "ERROR", "chat", {
         uid: id.uid,
         sessionId: out.sessionId,
+        memory,
         ms: Date.now() - started,
         answered: Boolean(out.answer),
         verification: out.answer?.verification?.status,

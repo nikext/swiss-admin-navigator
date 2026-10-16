@@ -16,3 +16,9 @@ embedding:
   location: eu
   # Task hint goes into the text; this model ignores task_type (ADR-015).
   input_format: instruction
+# Memory Bank's extraction model (M7, ADR-029). Unset, Memory Bank's default took 281-360 s
+# per generate call on the europe-west6 instance; this one 13 s. `eu` was accepted but
+# generated nothing (2026-10-16). Memory Bank processes on global endpoints either way.
+memory:
+  model: gemini-3.8-flash
+  location: global

@@ -12,9 +12,9 @@ All in `evals/datasets/`, versioned in git.
 | `retrieval.jsonl` | 200 queries (102 on 2026-10-15) | Retrieval only: query → expected `(sr, eid)` set, matched per article regardless of language. 55 everyday + 47 `difficulty: hard` queries, DE/EN/FR/IT; expected eIds checked against the article text (drafted by Claude, not yet reviewed by Nikola). Cheap; runs on every PR. `make eval-retrieval`. |
 | `golden.jsonl` | 150 cases | End-to-end QA. **Gold.** Drafted by Claude in M4 (the 30 M3 drafts plus five batches of 24: housing; work; residence/citizenship/registration; social insurance; tax/mobility/data protection) and **model-verified** by Claude Opus 5.5 against the article text on 2026-10-15 at Nikola's request (`verified_by: claude-opus-5-5`, ADR-024); not human-verified. Spread: answerable 106, clarification 6, cantonal 15, out of scope 13, adversarial 10 (clarification labels follow system-prompt rule 1, ADR-024); DE 38, EN 38, FR 37, IT 37; 20 tagged `smoke` (5 per language). Text lock: `golden.lock.json`. |
 | `silver.jsonl` | 352 cases | LLM-generated from single articles (`make silver`, profile agent model, thinking low; 410 articles sampled by per-act quotas, 54 skipped as not resident-facing, 4 rejected for naming the article; CHF 0.33). Spot check of 30: key facts supported 30/30. Used for broad regression, never for headline claims. |
-| `multiturn.evalset.json` | 25 sessions | ADK EvalSet with user simulation (`make eval-multiturn`): clarification then answer (12), follow-ups (6), language switches (3), pushback and out of scope (4); per-case rubrics. Memory cases come with M7. Drafted, not verified. |
+| `multiturn.evalset.json` | 25 sessions | ADK EvalSet with user simulation (`make eval-multiturn`): clarification then answer (12), follow-ups (6), language switches (3), pushback and out of scope (4); per-case rubrics. Memory has its own eval (`memory.jsonl`). Drafted, not verified. |
 | `adversarial.jsonl` | 50 cases | Golden schema. Fake articles/paragraphs/acts (12), prompt injection direct and inside quoted e-mails, contracts, letters and fake tool output (12), impersonation (6), individual advice and acting for the user (8), unlawful requests (4), false premises and pressure (8). Drafted by Claude, not verified; part of the full eval, not of headline numbers. |
-| `memory.jsonl` | 20 cases | Memory recall, opt-out respected, sensitive facts **not** stored (M7). |
+| `memory.jsonl` | 26 cases | M7 (`make eval-memory`, ADR-029). 20 **extract** cases (DE 5, EN 7, FR 5, IT 3): a conversation → the whitelisted fields expected, fields that must stay empty, and forbidden strings (13 privacy cases: health, pregnancy, HIV, conviction, salary/debt/IBAN, name/address/phone/e-mail, religion, asylum status, disability, date of birth/AHV number, registered partnership, an injected "remember" instruction, a child's diagnosis). 6 **e2e** cases run the agent across sessions: recall (2, one across languages), no opt-in → nothing saved, switch off → nothing read, sensitive facts in a real conversation, Forget me. Drafted and model-verified by Claude Opus 5.5 at Nikola's request (ADR-024 extended, ADR-029). |
 | `judge_labels.jsonl` | 30 answers | Labels of the 30 M3 answers for the judge-agreement study, by Claude Opus 5.5 at Nikola's request, blind to judge verdicts (`labeled_by: claude-opus-5-5`, ADR-024). `make label-answers` adds human labels. |
 
 ### Golden case schema
@@ -193,9 +193,31 @@ First comparison: ADR-027 (within noise of local).
 | E5 | Cross-lingual robustness | Same questions in EN/DE/FR/IT: does quality drop for EN given that EN source texts are mostly missing? |
 | E6 | Verifier value | v1 with vs without citation_verifier: hallucinated citations, latency, cost |
 | E7 | Model Armor | Injection block rate vs false positives on golden |
+| E8 | Memory whitelist | Memory Bank defaults vs custom topics vs structured profile: field recall, leaks of sensitive data, privacy cases. **Done in M7:** ADR-029. |
 
 Report each one as a table with 95% bootstrap confidence intervals. With 150
 cases, differences under ~5 pts are probably noise. **Say so.**
+
+### Memory eval (M7)
+
+`make eval-memory ARGS="--variant profile|topics|default [--part extract|e2e]"`
+(`evals/harness/memory_eval.py`) runs against the memory-only instance
+`MEMORY_EVAL_RUNTIME_ID` (never the served bank) and applies the variant's
+config first. Each case gets its own scope, purged afterwards.
+
+- **Extract:** `memories.generate` on the case's conversation, then the
+  stored profile, natural-language facts and each field's free-text `context`
+  are read back. Field recall: profile values directly; facts mapped to the
+  same fields by the judge model. A **leak** is a forbidden string anywhere in
+  what is stored (contexts included) or a stored item the judge flags as
+  sensitive.
+- **E2E:** navigator_v1 on a local runner over several sessions with
+  `memory_opt_in` per session; a counting wrapper around the memory service
+  records writes, reads and facts handed to the agent, so "no opt-in → nothing
+  saved or read" is checked exactly.
+- **Gate:** every `privacy` case must pass (the M7 "Done when"); the command
+  exits non-zero otherwise. Not in CI (it needs the eval instance and costs
+  ~CHF 0.4 with the e2e part).
 
 ## 5. Production feedback loop
 

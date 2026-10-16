@@ -76,7 +76,7 @@ if [[ "${SKIP_IMPORT_CHECK:-0}" != 1 ]]; then
   (cd "$STAGE" && env -i HOME="$HOME" PATH="$PATH" SWISS_LAW_MCP_URL="$MCP_URL" \
     "$UV" run --quiet --isolated --no-project --python 3.11 \
     --with-requirements navigator/requirements.txt \
-    python -c 'import sys, navigator.agent as a; print("  ", sys.version.split()[0], a.root_agent.name, a.profile.agent)')
+    python -c 'import sys, agentplatform, navigator.agent as a; print("  ", sys.version.split()[0], a.root_agent.name, a.profile.agent, a.profile.memory)')
 fi
 
 # --display_name must be passed: ADK otherwise overrides the config's with the folder name.
