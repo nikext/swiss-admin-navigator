@@ -984,7 +984,15 @@ epilepsy disclosure stored only `canton`/`permit`. Answer latency in that run
 was 33–662 s (p50 232 s) against 20–100 s in an identical run an hour
 earlier; the opt-out turn, which never touches memory, took 300 s, so the
 slowness was the model endpoint, not Memory Bank (reads add two ~0.3 s calls
-per turn, the write is fire-and-forget).
+per turn, the write is fire-and-forget); the PR's CI smoke an hour later had
+p50 44 s.
+**Deployed (2026-10-16, commit 64d6e77, instance `5798067860890714112`):** an
+opted-in session ("Winterthur, Serbin, B-Bewilligung, Vollzeit, Diabetes")
+left `municipality`, `nationality_group`, `permit`, `employment` in the
+served bank after ~30 s (scope `app_name: navigator`), nothing about diabetes;
+the next session answered "Basierend auf Ihren Angaben
+(Drittstaatsangehörigkeit mit einer Aufenthaltsbewilligung B): …" without a
+clarifying question; a purge by `scope.user_id` left nothing.
 **Consequences:** a remembered fact is available about 10–30 s after the turn
 (extraction runs after the answer). Memory Bank keeps a short template
 `context` per field ("The user lives in Bern."); it is purged with the
