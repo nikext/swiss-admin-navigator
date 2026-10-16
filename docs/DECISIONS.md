@@ -880,6 +880,17 @@ answer in 81 s → citation panel → FR tab → close, no console errors, no
 horizontal scroll. Lighthouse (mobile) on login and chat: accessibility 100,
 best practices 100, performance 100; axe-core on the answer view and the
 panel, light and dark: 0 violations.
+**Deployed (2026-10-16, commit 2c0ef50):** `swiss-nav-web` revision
+`00001` at https://swiss-nav-web-mdyqt5hgsq-oa.a.run.app. Without the cookie
+`/api/chat`, `/api/article`, `/api/quota` answer 401, as do a wrong code and
+a forged cookie; the cookie is httpOnly + Secure. A question from Nikola's
+phone: answered in 70.7 s, 4 citations, verification passed; Firestore then
+held `2026-10-16_global` = 1 and the visitor's counter = 1 (TTL policy on
+`quota.expires` ACTIVE). A feedback POST stored only the whitelisted fields
+(an extra `question` field was dropped). Logins typed from the screen failed
+twice: the dry run of `web_setup.sh` printed a random code that was never
+stored, and the real one had an `l`; dry runs now print no code and
+generated codes skip look-alike characters.
 **Consequences:** the shared code is the weak point (anyone with it can use
 the daily budget), which the global cap bounds. Per-visitor quotas reset if
 someone clears cookies and logs in again; the global cap still holds. A

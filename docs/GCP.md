@@ -246,6 +246,8 @@ gcloud run deploy swiss-nav-web --image … --region europe-west6 \
 
   then checks `/api/health` and that `/api/quota` answers 401 without the
   cookie.
+- **Service (2026-10-16):** https://swiss-nav-web-mdyqt5hgsq-oa.a.run.app
+  (also `https://swiss-nav-web-286937397059.europe-west6.run.app`).
 - **Timeout 300 s:** answers take 30–90 s and up to ~3 min at p95.
 - **Cost guard:** `GLOBAL_DAILY_CAP` (default 20 questions per Zürich day,
   ~CHF 0.7/day of model calls at most) and `USER_DAILY_QUOTA` (10). Firestore
