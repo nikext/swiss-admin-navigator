@@ -992,7 +992,8 @@ left `municipality`, `nationality_group`, `permit`, `employment` in the
 served bank after ~30 s (scope `app_name: navigator`), nothing about diabetes;
 the next session answered "Basierend auf Ihren Angaben
 (Drittstaatsangehörigkeit mit einer Aufenthaltsbewilligung B): …" without a
-clarifying question; a purge by `scope.user_id` left nothing.
+clarifying question; a purge by `scope.user_id` left nothing. Web revision `swiss-nav-web-00003`
+(commit 4afb9a1): the memory routes answer 401 without the session cookie.
 **Consequences:** a remembered fact is available about 10–30 s after the turn
 (extraction runs after the answer). Memory Bank keeps a short template
 `context` per field ("The user lives in Bern."); it is purged with the
