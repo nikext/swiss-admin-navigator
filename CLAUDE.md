@@ -125,7 +125,14 @@ make silver          # regenerate silver.jsonl (~CHF 0.3)
 make publish-index   # upload data/index.sqlite for CI + rewrite evals/ci_index.json
 make gcp-wif         # WIF pool/provider for GitHub Actions (DRY_RUN=1 previews)
 make deploy-mcp   # build + push + Cloud Run (ask first; DRY_RUN=1 previews)
-make deploy-agent | deploy-web   # (M5/M6, ask first)
+make deploy-agent # infra/deploy_agent.sh → Agent Runtime (Nikola runs it; DRY_RUN=1 previews)
+make eval-smoke-remote  # the smoke eval against the deployed agent (~CHF 1)
+make query-remote Q="…" # one question to the deployed agent (ARGS=--traces shows Cloud Trace spans)
+make gcp-web      # Firestore db, access-code secret, IAM for the web BFF (ask first; DRY_RUN=1; ROTATE=1)
+make web-install | web-check | web-dev   # web deps; eslint+prettier+tsc+vitest (= CI); dev server on :3000
+make deploy-web   # build + push + Cloud Run for web/ (Nikola runs it; DRY_RUN=1 previews)
+make eval-memory  # memory eval on the eval Memory Bank (ARGS="--variant profile [--part extract|e2e]"; ~CHF 0.4)
+make memory-bank ARGS="show|apply --variant profile|create-eval|list|purge --user U"   # Memory Bank admin
 ```
 
 Integration tests (network/GCP) are marked `@pytest.mark.integration` and
@@ -143,3 +150,11 @@ skipped by default: `uv run pytest -m integration`.
   closes (Nikola later delegated this to Claude, ADR-024); M4 model spend is capped at CHF 25
   (track it in the PR); Claude in Model Garden is enabled now as a judge
   candidate (Nikola enables it in the console).
+- M7 (agreed 2026-10-16): a memory-only Agent Runtime instance `swiss-nav-memory-eval`
+  (`MEMORY_EVAL_RUNTIME_ID`) for memory experiments and evals, never the served bank; the
+  Memory Bank config of the served instance may be applied by Claude
+  (`make memory-bank ARGS="apply --variant …"`); M7 model spend capped at CHF 10 (used
+  ≈ CHF 2.3); the 26 `memory.jsonl` cases are drafted and model-verified by Claude
+  (ADR-024 extended, ADR-029).
+- Deploys (`make deploy-agent`, `deploy-web`, `deploy-mcp`) are run by Nikola; Claude
+  prepares them (DRY_RUN=1) and verifies afterwards.
