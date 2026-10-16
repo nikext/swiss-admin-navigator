@@ -42,9 +42,13 @@ g firestore fields ttls update expires --collection-group quota --enable-ttl \
   --database "$DB" --async --quiet
 
 echo "== Secret $SECRET"
+# Random codes skip look-alike characters (l/I/1, O/0): people type them off a screen.
 new_code() {
+  if [[ "$DRY_RUN" == 1 ]]; then printf '%s' "<not generated in a dry run>"; return; fi
   if [[ -n "${WEB_ACCESS_CODE:-}" ]]; then printf '%s' "$WEB_ACCESS_CODE"; return; fi
-  python3 -I -c 'import secrets; print(secrets.token_urlsafe(12), end="")'
+  python3 -I -c 'import secrets
+abc = "abcdefghijkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+print("".join(secrets.choice(abc) for _ in range(16)), end="")'
 }
 if exists secrets describe "$SECRET"; then
   echo "   $SECRET exists"
