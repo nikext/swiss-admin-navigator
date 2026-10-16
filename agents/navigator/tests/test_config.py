@@ -47,7 +47,7 @@ def test_profile_location_ignores_infra_region() -> None:
 
 
 def test_roles() -> None:
-    assert ROLES == ("agent", "judge", "embedding", "memory")
+    assert ROLES == ("agent", "judge", "embedding", "memory", "router", "verifier")
 
 
 def test_memory_role_is_optional(profiles: Path) -> None:
@@ -55,6 +55,20 @@ def test_memory_role_is_optional(profiles: Path) -> None:
     (profiles / "default.yaml").write_text(GOOD + "memory:\n  model: model-m\n  location: eu\n")
     p = load_profile(env={"MEMORY_LOCATION": "global"}, profiles_dir=profiles)
     assert p.memory == ModelRef(model="model-m", location="global")
+
+
+def test_router_and_verifier_roles_fall_back_to_the_agent(profiles: Path) -> None:
+    p = load_profile(env={}, profiles_dir=profiles)
+    assert (p.router, p.verifier) == (None, None)
+    assert p.role("router") == LlmRef(model="model-a", location="eu")
+    text = GOOD + "router:\n  model: model-r\n  location: eu\n  thinking: minimal\n"
+    (profiles / "default.yaml").write_text(text)
+    env = {"VERIFIER_MODEL": "model-v", "VERIFIER_LOCATION": "global"}
+    p = load_profile(env=env, profiles_dir=profiles)
+    assert p.role("router") == LlmRef(model="model-r", location="eu", thinking="minimal")
+    assert p.verifier is None  # an env override alone does not create a role
+    with pytest.raises(ProfileError, match=r"router\.thinking must be one of"):
+        load_profile(env={"ROUTER_THINKING": "max"}, profiles_dir=profiles)
 
 
 def test_name_resolution_order(profiles: Path) -> None:
@@ -77,6 +91,8 @@ def test_env_overrides_single_fields(profiles: Path) -> None:
         "judge": {"model": "model-j", "location": "eu", "thinking": None},
         "embedding": {"model": "model-e", "location": "eu", "input_format": "instruction"},
         "memory": None,
+        "router": None,
+        "verifier": None,
     }
 
 

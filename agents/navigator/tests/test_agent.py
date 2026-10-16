@@ -4,6 +4,7 @@ from google.adk.models import Gemini
 from google.adk.tools.mcp_tool import McpToolset
 
 from agents.navigator.agent import PROMPT, TOOLS, build_agent, profile, root_agent
+from agents.navigator.config import RETRY
 from agents.navigator.contract import DraftAnswer
 from agents.navigator.memory import MemoryContext, save_memory
 from agents.navigator.verifier import CitationVerifier, compact_tool_result
@@ -17,6 +18,9 @@ def test_root_agent_uses_profile_model_and_location() -> None:
         "enterprise": True,
         "location": profile.agent.location,
     }
+    assert root_agent.model.retry_options is RETRY
+    assert RETRY.attempts
+    assert RETRY.attempts > 1
 
 
 def test_tools_contract_and_verifier_are_wired() -> None:

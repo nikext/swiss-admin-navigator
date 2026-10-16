@@ -4,7 +4,9 @@ The model fills `DraftAnswer` (ADK `output_schema`). The citation verifier
 (`verifier.py`) checks it against the law text and returns an `Answer`: the
 same fields, plus what code derives instead of the model (each citation's
 abbreviation, Fedlex URL and as-of date, the exact quote span from the
-source), the verification record and the fixed notice (ADR-010).
+source), the verification record and the fixed notice (ADR-010). With the LLM
+claim checker on (M8, ADR-030), each round also records the checker's verdict
+per claim.
 """
 
 from __future__ import annotations
@@ -90,14 +92,38 @@ class Problem(BaseModel):
         "pinpoint",  # quote is in the article, but not in the cited paragraph
         "fetch",  # the law server could not be reached (not the model's fault)
         "contact",  # street address, postcode, phone or web address written from memory
+        "unsupported",  # the LLM claim checker: the cited text does not (fully) support a claim
     ]
     message: str
+
+
+class ClaimCheck(BaseModel):
+    """One legal claim of a draft, as the LLM claim checker graded it (M8)."""
+
+    claim: str = Field(description="The claim, copied exactly from the answer text.")
+    refs: list[str] = Field(description="Citation refs the answer attaches to the claim.")
+    supported: Literal["yes", "partly", "no"]
+    issue: str | None = Field(
+        default=None, description="For partly/no: what the cited text does not support."
+    )
+
+
+class TokenUsage(BaseModel):
+    model_calls: int = 0
+    prompt: int = 0
+    cached: int = 0
+    output: int = 0
+    thoughts: int = 0
 
 
 class Round(BaseModel):
     citations: int
     quotes: int
     problems: list[Problem]
+    check_s: float | None = None  # deterministic check (article fetches) in seconds
+    claims: list[ClaimCheck] | None = None  # None: the claim checker did not run this round
+    claims_s: float | None = None
+    claims_usage: TokenUsage | None = None
 
 
 class Verification(BaseModel):
@@ -105,6 +131,9 @@ class Verification(BaseModel):
     rounds: list[Round] = Field(description="One per checked draft, first draft first.")
     dropped: list[str] = Field(default_factory=list, description="Refs removed from the answer.")
     repairs: list[str] = Field(default_factory=list, description="Deterministic fixes applied.")
+    dropped_claims: list[str] = Field(
+        default_factory=list, description="Unsupported claims removed from the answer text."
+    )
 
 
 class Answer(DraftAnswer):

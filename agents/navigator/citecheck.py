@@ -245,6 +245,67 @@ def strip_markers(markdown: str, refs: set[str]) -> str:
     return re.sub(r"(\s?)" + MARKER.pattern, keep, markdown)
 
 
+# A sentence ends at . ! ? before a capital letter, a quote or the end of the line, so
+# "Art. 271a", "Abs. 1" and "lit. a" do not end one.
+_SENTENCE_END = re.compile(r"[.!?](?=\s+[A-ZÄÖÜÀ-Ý«\"*(]|\s*$)")
+_LIST_ITEM = re.compile(r"[ \t]*(?:[-*+]|\d+[.)])[ \t]+|[ \t]*")
+_TRAILING_MARKERS = re.compile(r"(?:\s*" + MARKER.pattern + r")+[.;,]?")
+
+
+def _locate(claim: str, text: str) -> tuple[int, int] | None:
+    """Span of `claim` in `text`, ignoring whitespace and [n] markers in the claim."""
+    want = normalize(MARKER.sub("", claim)).strip().rstrip(".;")
+    if len(want) < MIN_QUOTE_CHARS:
+        return None
+    norm, idx = normalize_with_map(text)
+    j = norm.find(want)
+    if j < 0:
+        return None
+    return idx[j], idx[j + len(want) - 1] + 1
+
+
+def _remove_one(text: str, a: int, b: int) -> str:
+    """`text` without the sentence around [a, b), its markers, and a list item left empty."""
+    ls = text.rfind("\n", 0, a) + 1
+    le = text.find("\n", b)
+    le = len(text) if le < 0 else le
+    line, a, b = text[ls:le], a - ls, b - ls
+    prefix = _LIST_ITEM.match(line)
+    prefix_end = prefix.end() if prefix else 0
+    start = max([prefix_end, *(m.end() for m in _SENTENCE_END.finditer(line, 0, a))])
+    end_m = _SENTENCE_END.search(line, b)
+    end = end_m.end() if end_m else len(line)
+    if m := _TRAILING_MARKERS.match(line, end):
+        end = m.end()
+    left, right = line[:start], line[end:].lstrip()
+    if start > prefix_end:
+        left = left.rstrip() + (" " if right else "")
+    new_line = left + right
+    if not new_line[prefix_end:].strip():  # nothing left on the line: drop the line
+        return (text[:ls] + text[le + 1 :]).rstrip("\n") if le < len(text) else text[:ls].rstrip()
+    return text[:ls] + new_line + text[le:]
+
+
+def remove_claims(text: str, claims: list[str]) -> tuple[str, list[str]]:
+    """Remove each claim's whole sentence (with its markers) from `text`.
+
+    A claim may be part of a sentence; the sentence goes, since what is left of
+    it would no longer say what the user reads it to say. A list item left empty
+    goes too. Claims that cannot be located are left alone, and the text is
+    never emptied. Returns the new text and the claims removed."""
+    removed: list[str] = []
+    for claim in claims:
+        span = _locate(claim, text)
+        if span is None:
+            continue
+        new = re.sub(r"\n{3,}", "\n\n", _remove_one(text, *span)).strip()
+        if not new:
+            continue
+        text = new
+        removed.append(claim)
+    return text, removed
+
+
 def make_round(checked: list[Checked], answer_problems: list[Problem]) -> Round:
     return Round(
         citations=len(checked),
@@ -302,6 +363,16 @@ def finalize(
     if dangling:
         fields["answer_markdown"] = strip_markers(draft.answer_markdown, dangling)
         repairs.append(f"markers {sorted(dangling)} removed from the answer")
+    unsupported = [c.claim for c in rounds[-1].claims or [] if c.supported == "no"]
+    dropped_claims: list[str] = []
+    if unsupported:
+        for key in ("answer_markdown", "cantonal_note"):
+            if fields.get(key):
+                fields[key], gone = remove_claims(fields[key], unsupported)
+                dropped_claims += gone
+                unsupported = [c for c in unsupported if c not in gone]
+        if unsupported:
+            repairs.append(f"{len(unsupported)} unsupported claim(s) could not be located")
     contact = [p for p in problems if p.kind == "contact"]
     if contact:  # left as written, but flagged: removing words could change the meaning
         repairs.append(f"{len(contact)} contact detail(s) written from memory left in the answer")
@@ -315,5 +386,6 @@ def finalize(
             rounds=rounds,
             dropped=dropped,
             repairs=repairs,
+            dropped_claims=dropped_claims,
         ),
     )

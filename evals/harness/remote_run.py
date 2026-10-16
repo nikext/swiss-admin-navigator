@@ -14,11 +14,14 @@ project and region come from `GOOGLE_CLOUD_PROJECT` / `GOOGLE_CLOUD_LOCATION`.
 from __future__ import annotations
 
 from collections.abc import AsyncIterator, Mapping
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from google.adk.events import Event
 
 from evals.harness.cases import Case
+
+if TYPE_CHECKING:
+    from evals.harness.agent_run import Trace
 
 USER = "eval"
 
@@ -73,7 +76,7 @@ class RemoteAgent:
             "env": {k: env[k] for k in sorted(env) if k in DESCRIBED_ENV},
         }
 
-    async def events(self, case: Case) -> AsyncIterator[Event]:
+    async def events(self, case: Case, trace: Trace | None = None) -> AsyncIterator[Event]:
         session = await self.runtime.async_create_session(user_id=USER)
         try:
             async for item in self.runtime.async_stream_query(
