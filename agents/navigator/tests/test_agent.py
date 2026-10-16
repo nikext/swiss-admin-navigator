@@ -5,6 +5,7 @@ from google.adk.tools.mcp_tool import McpToolset
 
 from agents.navigator.agent import PROMPT, TOOLS, build_agent, profile, root_agent
 from agents.navigator.contract import DraftAnswer
+from agents.navigator.memory import MemoryContext, save_memory
 from agents.navigator.verifier import CitationVerifier, compact_tool_result
 
 
@@ -20,7 +21,9 @@ def test_root_agent_uses_profile_model_and_location() -> None:
 
 def test_tools_contract_and_verifier_are_wired() -> None:
     agent = build_agent("http://127.0.0.1:1/mcp")
-    (toolset,) = agent.tools
+    toolset, memory = agent.tools
+    assert isinstance(memory, MemoryContext)
+    assert agent.after_agent_callback is save_memory
     assert isinstance(toolset, McpToolset)
     assert toolset.tool_filter == TOOLS
     assert toolset._connection_params.url == "http://127.0.0.1:1/mcp"  # type: ignore[attr-defined]

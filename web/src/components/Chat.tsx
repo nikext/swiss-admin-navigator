@@ -9,6 +9,7 @@ import { LineSplitter } from "@/lib/lines";
 
 import AnswerView from "./AnswerView";
 import ArticlePanel from "./ArticlePanel";
+import MemoryPanel from "./MemoryPanel";
 import { Brand, LangSelect, Notice } from "./Shell";
 
 type Msg =
@@ -49,8 +50,18 @@ function save(s: Saved): void {
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 
-export default function Chat({ initialLang, userQuota }: { initialLang: Lang; userQuota: number }) {
+export default function Chat({
+  initialLang,
+  userQuota,
+  initialMemory,
+}: {
+  initialLang: Lang;
+  userQuota: number;
+  initialMemory: boolean;
+}) {
   const [lang, setLang] = useState<Lang>(initialLang);
+  const [memoryOn, setMemoryOn] = useState(initialMemory);
+  const [memoryOpen, setMemoryOpen] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
@@ -187,6 +198,15 @@ export default function Chat({ initialLang, userQuota }: { initialLang: Lang; us
     }
   }
 
+  /** The memory switch changed or everything was forgotten; the BFF ended the sessions. */
+  function memoryReset(enabled: boolean) {
+    abort.current?.abort();
+    setMemoryOn(enabled);
+    setMessages([]);
+    setSessionId(null);
+    setPanel(null);
+  }
+
   async function logout() {
     await newChat();
     await fetch("/api/logout", { method: "POST" }).catch(() => {});
@@ -218,6 +238,14 @@ export default function Chat({ initialLang, userQuota }: { initialLang: Lang; us
         <Brand lang={lang} />
         <div className="actions">
           <LangSelect lang={lang} onChange={setLang} />
+          <button
+            type="button"
+            className="ghost"
+            aria-haspopup="dialog"
+            onClick={() => setMemoryOpen(true)}
+          >
+            {s.memory}: {memoryOn ? s.memoryOn : s.memoryOff}
+          </button>
           {!empty && (
             <button type="button" className="ghost" onClick={newChat}>
               {s.newChat}
@@ -366,6 +394,14 @@ export default function Chat({ initialLang, userQuota }: { initialLang: Lang; us
       </form>
 
       <Notice lang={lang} />
+      {memoryOpen && (
+        <MemoryPanel
+          lang={lang}
+          enabled={memoryOn}
+          onReset={memoryReset}
+          onClose={() => setMemoryOpen(false)}
+        />
+      )}
       {panel && (
         <ArticlePanel
           key={`${panel.sr}-${panel.article}-${panel.ref}`}

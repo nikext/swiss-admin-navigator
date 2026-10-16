@@ -54,6 +54,21 @@ export interface Strings {
   fallback: string;
   you: string;
   assistant: string;
+  memory: string;
+  memoryOn: string;
+  memoryOff: string;
+  memoryIntro: string;
+  memoryKeeps: string;
+  memoryNever: string;
+  memorySwitch: string;
+  memoryRestart: string;
+  rememberTitle: string;
+  rememberEmpty: string;
+  rememberDelay: string;
+  forget: string;
+  forgetConfirm: string;
+  forgotten: string;
+  memoryError: string;
 }
 
 const en: Strings = {
@@ -126,6 +141,24 @@ const en: Strings = {
   fallback: "Not available in this language; showing German.",
   you: "You",
   assistant: "Navigator",
+  memory: "Memory",
+  memoryOn: "on",
+  memoryOff: "off",
+  memoryIntro:
+    "If you turn memory on, the assistant remembers a few facts about your situation between conversations, so it doesn't have to ask again.",
+  memoryKeeps:
+    "It may keep only: canton and municipality, preferred language, nationality group (Swiss, EU/EFTA, other), permit (L, B, C, Ci, G), work status, civil status and whether you have children.",
+  memoryNever:
+    "Never: health, criminal matters, money or bank details, religion, names, addresses or contact details. Memories expire after 30 days; signing out deletes them.",
+  memorySwitch: "Remember facts about my situation",
+  memoryRestart: "Changing this starts a new conversation.",
+  rememberTitle: "What I remember",
+  rememberEmpty: "Nothing yet.",
+  rememberDelay: "New facts can take a minute to appear.",
+  forget: "Forget me",
+  forgetConfirm: "Delete everything remembered about you and end your conversations?",
+  forgotten: "Done. Nothing about you is remembered.",
+  memoryError: "Memory is not available right now. Please try again.",
 };
 
 const de: Strings = {
@@ -198,6 +231,24 @@ const de: Strings = {
   fallback: "In dieser Sprache nicht verfügbar; angezeigt wird Deutsch.",
   you: "Sie",
   assistant: "Navigator",
+  memory: "Gedächtnis",
+  memoryOn: "an",
+  memoryOff: "aus",
+  memoryIntro:
+    "Wenn Sie das Gedächtnis einschalten, merkt sich der Assistent einige Angaben zu Ihrer Situation über Gespräche hinweg und muss nicht erneut fragen.",
+  memoryKeeps:
+    "Gespeichert werden höchstens: Kanton und Gemeinde, bevorzugte Sprache, Staatsangehörigkeit als Gruppe (Schweiz, EU/EFTA, Drittstaat), Bewilligung (L, B, C, Ci, G), Erwerbsstatus, Zivilstand und ob Sie Kinder haben.",
+  memoryNever:
+    "Nie: Gesundheit, Strafsachen, Geld oder Bankangaben, Religion, Namen, Adressen oder Kontaktdaten. Gespeichertes verfällt nach 30 Tagen; Abmelden löscht es.",
+  memorySwitch: "Angaben zu meiner Situation merken",
+  memoryRestart: "Eine Änderung startet ein neues Gespräch.",
+  rememberTitle: "Was ich mir merke",
+  rememberEmpty: "Noch nichts.",
+  rememberDelay: "Neue Angaben können eine Minute brauchen, bis sie erscheinen.",
+  forget: "Alles vergessen",
+  forgetConfirm: "Alles über Sie Gespeicherte löschen und Ihre Gespräche beenden?",
+  forgotten: "Erledigt. Über Sie ist nichts mehr gespeichert.",
+  memoryError: "Das Gedächtnis ist gerade nicht verfügbar. Bitte versuchen Sie es erneut.",
 };
 
 const fr: Strings = {
@@ -272,6 +323,25 @@ const fr: Strings = {
   fallback: "Pas disponible dans cette langue ; affichage en allemand.",
   you: "Vous",
   assistant: "Navigator",
+  memory: "Mémoire",
+  memoryOn: "activée",
+  memoryOff: "désactivée",
+  memoryIntro:
+    "Si vous activez la mémoire, l'assistant retient quelques éléments de votre situation d'une conversation à l'autre et n'a pas besoin de vous les redemander.",
+  memoryKeeps:
+    "Il ne peut retenir que : canton et commune, langue préférée, groupe de nationalité (Suisse, UE/AELE, État tiers), permis (L, B, C, Ci, G), situation professionnelle, état civil et si vous avez des enfants.",
+  memoryNever:
+    "Jamais : santé, affaires pénales, argent ou données bancaires, religion, noms, adresses ou coordonnées. Les données expirent après 30 jours ; la déconnexion les supprime.",
+  memorySwitch: "Retenir des éléments de ma situation",
+  memoryRestart: "Un changement démarre une nouvelle conversation.",
+  rememberTitle: "Ce que je retiens",
+  rememberEmpty: "Rien pour l'instant.",
+  rememberDelay: "Les nouveaux éléments peuvent mettre une minute à apparaître.",
+  forget: "Tout oublier",
+  forgetConfirm:
+    "Supprimer tout ce qui est retenu à votre sujet et mettre fin à vos conversations ?",
+  forgotten: "C'est fait. Plus rien n'est retenu à votre sujet.",
+  memoryError: "La mémoire n'est pas disponible pour le moment. Veuillez réessayer.",
 };
 
 const it: Strings = {
@@ -350,6 +420,25 @@ const it: Strings = {
   fallback: "Non disponibile in questa lingua; viene mostrato il tedesco.",
   you: "Lei",
   assistant: "Navigator",
+  memory: "Memoria",
+  memoryOn: "attiva",
+  memoryOff: "disattiva",
+  memoryIntro:
+    "Se attiva la memoria, l'assistente ricorda alcuni dati sulla sua situazione da una conversazione all'altra e non deve chiederli di nuovo.",
+  memoryKeeps:
+    "Può ricordare solo: cantone e comune, lingua preferita, gruppo di nazionalità (Svizzera, UE/AELS, Stato terzo), permesso (L, B, C, Ci, G), situazione lavorativa, stato civile e se ha figli.",
+  memoryNever:
+    "Mai: salute, questioni penali, denaro o dati bancari, religione, nomi, indirizzi o recapiti. I dati scadono dopo 30 giorni; uscire li cancella.",
+  memorySwitch: "Ricorda dati sulla mia situazione",
+  memoryRestart: "Una modifica avvia una nuova conversazione.",
+  rememberTitle: "Cosa ricordo",
+  rememberEmpty: "Ancora niente.",
+  rememberDelay: "I nuovi dati possono impiegare un minuto ad apparire.",
+  forget: "Dimentica tutto",
+  forgetConfirm:
+    "Cancellare tutto ciò che è memorizzato su di lei e chiudere le sue conversazioni?",
+  forgotten: "Fatto. Non è memorizzato più nulla su di lei.",
+  memoryError: "La memoria non è disponibile al momento. Riprovi.",
 };
 
 export const STRINGS: Record<Lang, Strings> = { en, de, fr, it };

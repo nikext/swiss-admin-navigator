@@ -605,3 +605,49 @@ button:disabled {
 .crumbs {
   margin: 8px 0;
 }
+
+/* Memory panel (M7) */
+.memory h3 {
+  margin: 20px 0 8px;
+  font-size: 1rem;
+}
+
+.switch {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  min-height: 44px;
+  margin-top: 12px;
+  font-weight: 600;
+}
+
+.switch input {
+  width: 22px;
+  height: 22px;
+  accent-color: var(--accent);
+}
+
+.remembered {
+  margin: 0;
+  padding-left: 1.2em;
+}
+
+.remembered li {
+  margin: 4px 0;
+}
+
+.forget {
+  margin-top: 24px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.danger {
+  min-height: 40px;
+  padding: 6px 12px;
+  border: 1px solid var(--error);
+  border-radius: 8px;
+  background: var(--error);
+  color: #ffffff;
+  font-weight: 600;
+}

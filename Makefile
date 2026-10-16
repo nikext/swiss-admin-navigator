@@ -8,7 +8,7 @@ todo = @echo "make $@: not implemented yet (lands in $(1), see docs/PLAN.md)" >&
 
 .PHONY: help setup lint fmt test check smoke-gemini gcp-setup gcp-budget gcp-wif \
         resolve ingest spotcheck fixtures index index-e4 publish-index eval-retrieval mcp-dev mcp-coldstart agent-dev \
-        eval-smoke eval-smoke-remote eval-full eval-multiturn silver review-golden check-cases \
+        eval-smoke eval-smoke-remote eval-full eval-multiturn eval-memory memory-bank silver review-golden check-cases \
         label-answers judge-study query-remote deploy-mcp deploy-agent deploy-web \
         web-install web-dev web-check gcp-web
 
@@ -91,6 +91,12 @@ query-remote: ## One question to the deployed agent, streamed (Q="..."; ARGS=--t
 
 eval-multiturn: ## 25 simulated conversations via ADK AgentEvaluator + rubric judge (billable, ~CHF 3; ARGS=...)
 	$(UV) run python -m evals.harness.multiturn $(ARGS)
+
+eval-memory: ## Memory eval on the eval Memory Bank (MEMORY_EVAL_RUNTIME_ID; billable, < CHF 1; ARGS="--variant profile")
+	$(UV) run python -m evals.harness.memory_eval $(ARGS)
+
+memory-bank: ## Memory Bank admin: ARGS="show|apply --variant profile [--dry-run]|create-eval|list|purge --user U"
+	$(UV) run python -m scripts.memory_bank $(ARGS)
 
 eval-full: ## Every case of golden (drafts until it exists); M4 adds adversarial.jsonl (ARGS=...)
 	$(UV) run python -m evals.harness.answer_eval $(ARGS)

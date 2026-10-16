@@ -7,6 +7,7 @@ from agents.navigator.config import (
     ROLES,
     EmbeddingRef,
     LlmRef,
+    ModelRef,
     Profile,
     ProfileError,
     load_profile,
@@ -46,7 +47,14 @@ def test_profile_location_ignores_infra_region() -> None:
 
 
 def test_roles() -> None:
-    assert ROLES == ("agent", "judge", "embedding")
+    assert ROLES == ("agent", "judge", "embedding", "memory")
+
+
+def test_memory_role_is_optional(profiles: Path) -> None:
+    assert load_profile(env={}, profiles_dir=profiles).memory is None
+    (profiles / "default.yaml").write_text(GOOD + "memory:\n  model: model-m\n  location: eu\n")
+    p = load_profile(env={"MEMORY_LOCATION": "global"}, profiles_dir=profiles)
+    assert p.memory == ModelRef(model="model-m", location="global")
 
 
 def test_name_resolution_order(profiles: Path) -> None:
@@ -68,6 +76,7 @@ def test_env_overrides_single_fields(profiles: Path) -> None:
         "agent": {"model": "model-x", "location": "eu", "thinking": None},
         "judge": {"model": "model-j", "location": "eu", "thinking": None},
         "embedding": {"model": "model-e", "location": "eu", "input_format": "instruction"},
+        "memory": None,
     }
 
 
