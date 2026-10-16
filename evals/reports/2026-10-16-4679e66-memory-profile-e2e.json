@@ -1,0 +1,521 @@
+{
+ "name": "memory-profile-e2e",
+ "git_sha": "4679e66",
+ "run_at": "2026-10-16T11:30:03+00:00",
+ "meta": {
+  "variant": "profile",
+  "dataset": "evals/datasets/memory.jsonl",
+  "verified": "model-verified by claude-opus-5-5",
+  "cases": 6,
+  "runtime": "5494074886043205632",
+  "generation_model": "projects/random-projects-509513/locations/global/publishers/google/models/gemini-3.8-flash",
+  "context_spec": {
+   "memory_bank_config": {
+    "customization_configs": [
+     {
+      "disable_natural_language_memories": true
+     }
+    ],
+    "disable_memory_revisions": true,
+    "ttl_config": {
+     "default_ttl": "2592000s"
+    },
+    "structured_memory_configs": [
+     {
+      "schema_configs": [
+       {
+        "id": "resident-profile",
+        "memory_schema": {
+         "type": "OBJECT",
+         "description": "Facts about a resident of Switzerland that change which federal rules apply to them. Set it only when the user clearly stated it about themselves; never guess it and never take it from facts about other people. Otherwise leave it out. When you explain why a value was extracted, name only that value (e.g. 'The user lives in Winterthur.'); never quote the user and never mention anything else they said.",
+         "properties": {
+          "canton": {
+           "type": "STRING",
+           "description": "Two-letter code of the Swiss canton where the user lives or will live. Set it only when the user clearly stated it about themselves; never guess it and never take it from facts about other people. Otherwise leave it out. Never record health or disability information, pregnancy, criminal records or proceedings, debts, income, salary or bank details, religion, political views, ethnic origin, sexual orientation, asylum procedures, names of people, street addresses, postcodes, phone numbers, e-mail addresses, dates of birth or ID numbers.",
+           "enum": [
+            "AG",
+            "AI",
+            "AR",
+            "BE",
+            "BL",
+            "BS",
+            "FR",
+            "GE",
+            "GL",
+            "GR",
+            "JU",
+            "LU",
+            "NE",
+            "NW",
+            "OW",
+            "SG",
+            "SH",
+            "SO",
+            "SZ",
+            "TG",
+            "TI",
+            "UR",
+            "VD",
+            "VS",
+            "ZG",
+            "ZH"
+           ],
+           "format": "enum"
+          },
+          "municipality": {
+           "type": "STRING",
+           "description": "Name of the Swiss municipality (Gemeinde/commune) where the user lives, e.g. 'Winterthur'. Only the municipality name: never a street, house number or postcode. Set it only when the user clearly stated it about themselves; never guess it and never take it from facts about other people. Otherwise leave it out. Never record health or disability information, pregnancy, criminal records or proceedings, debts, income, salary or bank details, religion, political views, ethnic origin, sexual orientation, asylum procedures, names of people, street addresses, postcodes, phone numbers, e-mail addresses, dates of birth or ID numbers."
+          },
+          "language": {
+           "type": "STRING",
+           "description": "Language the user prefers for answers. Set it only when the user clearly stated it about themselves; never guess it and never take it from facts about other people. Otherwise leave it out. Never record health or disability information, pregnancy, criminal records or proceedings, debts, income, salary or bank details, religion, political views, ethnic origin, sexual orientation, asylum procedures, names of people, street addresses, postcodes, phone numbers, e-mail addresses, dates of birth or ID numbers.",
+           "enum": [
+            "de",
+            "fr",
+            "it",
+            "en"
+           ],
+           "format": "enum"
+          },
+          "nationality_group": {
+           "type": "STRING",
+           "description": "Whether the user is Swiss, a citizen of an EU/EFTA state, or of another state (third country). Only the group, never the country. Set it only when the user clearly stated it about themselves; never guess it and never take it from facts about other people. Otherwise leave it out. Never record health or disability information, pregnancy, criminal records or proceedings, debts, income, salary or bank details, religion, political views, ethnic origin, sexual orientation, asylum procedures, names of people, street addresses, postcodes, phone numbers, e-mail addresses, dates of birth or ID numbers.",
+           "enum": [
+            "swiss",
+            "eu_efta",
+            "third_country"
+           ],
+           "format": "enum"
+          },
+          "permit": {
+           "type": "STRING",
+           "description": "Swiss residence or cross-border permit the user holds (L, B, C, Ci or G). Set it only when the user clearly stated it about themselves; never guess it and never take it from facts about other people. Otherwise leave it out. Never record health or disability information, pregnancy, criminal records or proceedings, debts, income, salary or bank details, religion, political views, ethnic origin, sexual orientation, asylum procedures, names of people, street addresses, postcodes, phone numbers, e-mail addresses, dates of birth or ID numbers.",
+           "enum": [
+            "L",
+            "B",
+            "C",
+            "Ci",
+            "G"
+           ],
+           "format": "enum"
+          },
+          "employment": {
+           "type": "STRING",
+           "description": "The user's employment status. Set it only when the user clearly stated it about themselves; never guess it and never take it from facts about other people. Otherwise leave it out. Never record health or disability information, pregnancy, criminal records or proceedings, debts, income, salary or bank details, religion, political views, ethnic origin, sexual orientation, asylum procedures, names of people, street addresses, postcodes, phone numbers, e-mail addresses, dates of birth or ID numbers.",
+           "enum": [
+            "employed",
+            "self_employed",
+            "unemployed",
+            "student",
+            "retired",
+            "not_working"
+           ],
+           "format": "enum"
+          },
+          "marital_status": {
+           "type": "STRING",
+           "description": "The user's civil status. A registered partnership is not recorded. Set it only when the user clearly stated it about themselves; never guess it and never take it from facts about other people. Otherwise leave it out. Never record health or disability information, pregnancy, criminal records or proceedings, debts, income, salary or bank details, religion, political views, ethnic origin, sexual orientation, asylum procedures, names of people, street addresses, postcodes, phone numbers, e-mail addresses, dates of birth or ID numbers.",
+           "enum": [
+            "single",
+            "married",
+            "divorced",
+            "widowed"
+           ],
+           "format": "enum"
+          },
+          "has_children": {
+           "type": "BOOLEAN",
+           "description": "Whether the user has children. Set it only when the user clearly stated it about themselves; never guess it and never take it from facts about other people. Otherwise leave it out. Never record health or disability information, pregnancy, criminal records or proceedings, debts, income, salary or bank details, religion, political views, ethnic origin, sexual orientation, asylum procedures, names of people, street addresses, postcodes, phone numbers, e-mail addresses, dates of birth or ID numbers."
+          }
+         }
+        },
+        "memory_type": "STRUCTURED_PROFILE"
+       }
+      ]
+     }
+    ],
+    "generation_config": {
+     "model": "projects/random-projects-509513/locations/global/publishers/google/models/gemini-3.8-flash"
+    }
+   }
+  },
+  "auditor": "gemini-3.8-flash@global",
+  "agent": "gemini-3.8-flash@eu",
+  "profile": {
+   "name": "default",
+   "agent": {
+    "model": "gemini-3.8-flash",
+    "location": "eu",
+    "thinking": null
+   },
+   "judge": {
+    "model": "gemini-3.8-flash",
+    "location": "global",
+    "thinking": null
+   },
+   "embedding": {
+    "model": "gemini-embedding-2",
+    "location": "eu",
+    "input_format": "instruction"
+   },
+   "memory": {
+    "model": "gemini-3.8-flash",
+    "location": "global"
+   }
+  },
+  "run_id": "6b0ba8",
+  "cost_chf": {
+   "agent": 0.3918107805,
+   "auditor": 0.0,
+   "total": 0.3918107805
+  }
+ },
+ "summary": {
+  "extract": {
+   "cases": 0,
+   "errors": 0,
+   "field_recall": null,
+   "hits": 0,
+   "expected": 0,
+   "wrong_values": 0,
+   "absent_violations": 0,
+   "extra_fields": 0,
+   "off_whitelist": 0,
+   "leaks": 0,
+   "flagged_sensitive": 0,
+   "generate_p50_s": null,
+   "generate_max_s": null
+  },
+  "e2e": {
+   "cases": 6,
+   "passed": 6
+  },
+  "privacy": {
+   "cases": 4,
+   "passed": 4,
+   "failed": []
+  }
+ },
+ "rows": [
+  {
+   "id": "mem-e2e-01",
+   "kind": "e2e",
+   "privacy": false,
+   "steps": [
+    {
+     "step": 0,
+     "latency_s": 33.2,
+     "opt_in": true,
+     "forget": false,
+     "writes": 1,
+     "reads": 2,
+     "facts_loaded": 0,
+     "stored": [
+      "permit: B",
+      "nationality_group: third_country",
+      "canton: ZH",
+      "employment: employed",
+      "municipality: Zurich",
+      "The user holds a B permit.",
+      "The user belongs to the third country nationality group.",
+      "The user lives in Zurich.",
+      "The user is employed.",
+      "The user lives in ZH."
+     ],
+     "reply": "Under Swiss federal law, your nationality, residence permit (B permit), and canton of residence do not affect your statutory minimum holiday rights.\n\nAccording to the Swiss Code of Obligations:\n\n- **Employees aged 20 and over** are entitled to at least **4 weeks** of holiday per year of service [1].\n- **Employees up to the age of 20** are entitled to at least **5 weeks** of holiday per year of service [1].\n- For an **incomplete year of service** (such as when starting or leaving during the year), holiday is granted proportionally to the duration of the employment in that year [2].\n\nThese statutory amounts are mandatory minimums and cannot be reduced by contract to the employee's disadvantage [3]. However, your employment contract or an applicable collective employment agreement may grant you more weeks than this legal baseline.",
+     "clarifying_question": null,
+     "fails": []
+    },
+    {
+     "step": 1,
+     "latency_s": 205.6,
+     "opt_in": true,
+     "forget": false,
+     "writes": 1,
+     "reads": 2,
+     "facts_loaded": 5,
+     "stored": [
+      "permit: B",
+      "nationality_group: third_country",
+      "canton: ZH",
+      "employment: employed",
+      "municipality: Zurich",
+      "The user holds a B permit.",
+      "The user belongs to the third country nationality group.",
+      "The user lives in Zurich.",
+      "The user is employed.",
+      "The user lives in ZH."
+     ],
+     "reply": "Relying on your remembered details (a third-country national holding a B permit in Zurich):\n\nAs a general statutory rule, holders of a residence permit (B permit) who are admitted to gainful employment can change jobs without requiring a further permit [1].\n\nHowever, this freedom is subject to crucial limitations that often apply to third-country nationals:\n\n- **No statutory right to work:** If you do not possess an entitlement (*Anspruch*) to pursue gainful employment, a job change requires an advance labour market decision from the competent cantonal authority [2].\n- **Conditions and purpose of stay:** A B permit is granted for a specific purpose and can be tied to specific conditions (*Bedingungen und Auflagen*) [3]. For third-country nationals, initial B permits are frequently tied to a specific employer. If the purpose of your stay changes, a new permit is required [4].\n\n**In practice:** You should check your permit card and the original granting decree (*Verfügung*). If your permit is tied to your current employer, you cannot start a new position without prior approval from the cantonal authorities.",
+     "clarifying_question": null,
+     "fails": []
+    }
+   ],
+   "pass": true,
+   "usage": {
+    "model_calls": 19,
+    "prompt": 210589,
+    "cached": 135892,
+    "output": 2355,
+    "thoughts": 11337
+   },
+   "privacy_pass": null
+  },
+  {
+   "id": "mem-e2e-02",
+   "kind": "e2e",
+   "privacy": true,
+   "steps": [
+    {
+     "step": 0,
+     "latency_s": 299.9,
+     "opt_in": false,
+     "forget": false,
+     "writes": 0,
+     "reads": 0,
+     "facts_loaded": 0,
+     "stored": [],
+     "reply": "Im ersten Dienstjahr hängt die gesetzliche Kündigungsfrist davon ab, ob Sie sich noch in der Probezeit befinden:\n\n- **Nach Ablauf der Probezeit:** Die gesetzliche Kündigungsfrist beträgt im ersten Dienstjahr **einen Monat**, jeweils auf das Ende eines Monats [1]. Durch schriftliche Vereinbarung, Normalarbeitsvertrag oder Gesamtarbeitsvertrag (GAV) kann eine andere Frist vereinbart werden; unter einen Monat darf sie jedoch nur mittels GAV herabgesetzt werden [2].\n- **Während der Probezeit:** Gesetzlich gilt der erste Monat als Probezeit [3]. Während dieser Zeit kann das Arbeitsverhältnis jederzeit mit einer Frist von **sieben Tagen** gekündigt werden [3]. Vertraglich darf die Probezeit auf höchstens drei Monate verlängert werden [4].\n\nIhr Wohnsitz im Kanton Bern, Ihre kroatische Staatsangehörigkeit sowie Ihre Niederlassungsbewilligung (C-Ausweis) haben keinen Einfluss auf diese bundesrechtlichen Fristen des Obligationenrechts.",
+     "clarifying_question": null,
+     "fails": []
+    }
+   ],
+   "pass": true,
+   "usage": {
+    "model_calls": 3,
+    "prompt": 12631,
+    "cached": 0,
+    "output": 948,
+    "thoughts": 1933
+   },
+   "privacy_pass": true
+  },
+  {
+   "id": "mem-e2e-03",
+   "kind": "e2e",
+   "privacy": true,
+   "steps": [
+    {
+     "step": 0,
+     "latency_s": 200.3,
+     "opt_in": true,
+     "forget": false,
+     "writes": 1,
+     "reads": 2,
+     "facts_loaded": 0,
+     "stored": [
+      "canton: GE",
+      "nationality_group: third_country",
+      "municipality: Genève",
+      "permit: B",
+      "employment: employed",
+      "The user holds a B permit.",
+      "The user is a citizen of a third country.",
+      "The user lives in Genève.",
+      "The user lives in Geneva.",
+      "The user is employed."
+     ],
+     "reply": "En droit fédéral suisse, votre nationalité et votre statut de séjour n'ont aucune influence sur votre droit aux vacances : les règles du droit du travail s'appliquent à tous les employés de la même manière.\n\nSelon le Code des obligations, votre employeur doit vous accorder pour chaque année de service un minimum légal de :\n- **4 semaines de vacances** par an si vous avez plus de 20 ans [1] (soit au moins 20 jours ouvrables pour un travail à plein temps réparti sur 5 jours par semaine) ;\n- **5 semaines de vacances** par an si vous avez jusqu'à l'âge de 20 ans révolus [1] (soit au moins 25 jours ouvrables).\n\nSi votre année de service n'est pas complète (par exemple en cas de début ou de fin d'emploi en cours d'année), vos vacances sont calculées proportionnellement au temps travaillé [2].\n\nCe nombre de semaines constitue un plancher impératif : votre contrat de travail individuel, une convention collective de travail (CCT) ou un contrat-type peuvent prévoir davantage de vacances, mais tout accord prévoyant moins que ce minimum légal est nul [3].",
+     "clarifying_question": null,
+     "fails": []
+    },
+    {
+     "step": 1,
+     "latency_s": 249.9,
+     "opt_in": false,
+     "forget": false,
+     "writes": 0,
+     "reads": 0,
+     "facts_loaded": 0,
+     "stored": [
+      "canton: GE",
+      "nationality_group: third_country",
+      "municipality: Genève",
+      "permit: B",
+      "employment: employed",
+      "The user holds a B permit.",
+      "The user is a citizen of a third country.",
+      "The user lives in Genève.",
+      "The user lives in Geneva.",
+      "The user is employed."
+     ],
+     "reply": "La possibilité de changer d'employeur sans autorisation préalable dépend de votre nationalité ainsi que de la nature de votre titre de séjour en Suisse. Les règles varient fortement selon que vous êtes citoyen suisse, ressortissant d'un État membre de l'UE/AELE ou d'un pays tiers, et selon le permis dont vous disposez (par exemple un permis B, C ou L).\n\nQuelle est votre nationalité (suisse, UE/AELE ou État tiers) et de quel titre de séjour ou permis (par exemple B, C, L ou frontalier) êtes-vous titulaire ?",
+     "clarifying_question": "Quelle est votre nationalité (suisse, UE/AELE ou État tiers) et de quel titre de séjour ou permis (par exemple B, C, L ou frontalier) êtes-vous titulaire ?",
+     "fails": []
+    }
+   ],
+   "pass": true,
+   "usage": {
+    "model_calls": 10,
+    "prompt": 66862,
+    "cached": 17434,
+    "output": 1351,
+    "thoughts": 6543
+   },
+   "privacy_pass": true
+  },
+  {
+   "id": "mem-e2e-04",
+   "kind": "e2e",
+   "privacy": true,
+   "steps": [
+    {
+     "step": 0,
+     "latency_s": 554.3,
+     "opt_in": true,
+     "forget": false,
+     "writes": 1,
+     "reads": 2,
+     "facts_loaded": 0,
+     "stored": [
+      "permit: C",
+      "municipality: Bern",
+      "canton: BE",
+      "employment: employed",
+      "The user lives in Bern.",
+      "The user lives in Bern.",
+      "The user is employed.",
+      "The user holds a C permit."
+     ],
+     "reply": "Under Swiss federal employment law, you generally do **not** have to answer a blanket question about whether you have an illness.\n\nWhether you must disclose your condition depends on the specific job:\n\n- **Inquiries are strictly limited**: An employer may only collect and process personal data about you to the extent that it directly concerns your suitability for the post or is necessary to perform the employment contract [1]. General health inquiries are not allowed, and health information is classified as sensitive personal data [2].\n- **Duty of loyalty and safety**: As an employee, you must perform your work carefully and safeguard your employer's legitimate interests in good faith [3]. You are only legally obligated to disclose an illness such as epilepsy if:\n  1. It directly prevents or impairs you from performing the agreed job duties, or\n  2. A sudden seizure would create a serious safety hazard for yourself, your colleagues, or third parties (for instance, operating heavy machinery, driving, carrying passengers, or working at heights).\n\nIf the epilepsy does not affect your ability to perform the role safely and effectively, you do not have to disclose it. Your C permit and living in Bern do not change these federal employment law rules.",
+     "clarifying_question": null,
+     "fails": []
+    }
+   ],
+   "pass": true,
+   "usage": {
+    "model_calls": 7,
+    "prompt": 50176,
+    "cached": 24124,
+    "output": 984,
+    "thoughts": 2726
+   },
+   "privacy_pass": true
+  },
+  {
+   "id": "mem-e2e-05",
+   "kind": "e2e",
+   "privacy": true,
+   "steps": [
+    {
+     "step": 0,
+     "latency_s": 662.4,
+     "opt_in": true,
+     "forget": false,
+     "writes": 1,
+     "reads": 2,
+     "facts_loaded": 0,
+     "stored": [
+      "municipality: Luzern",
+      "canton: LU",
+      "nationality_group: eu_efta",
+      "employment: employed",
+      "permit: B",
+      "The user is employed.",
+      "The user lives in the canton of Luzern.",
+      "The user lives in Luzern.",
+      "The user holds a B permit.",
+      "The user is an EU/EFTA citizen."
+     ],
+     "reply": "**Ja, Sie haben grundsätzlich Anspruch auf eine eidgenössische Mutterschaftsentschädigung.** Eine Teilzeitanstellung ist kein Hindernis, da das Erwerbsersatzgesetz kein Mindestpensum vorschreibt [1].\n\nVoraussetzung ist, dass Sie im Zeitpunkt der Geburt (Niederkunft) folgende drei Kriterien erfüllen:\n\n1. **Erwerbstätigkeit bei der Niederkunft:** Sie müssen im Zeitpunkt der Geburt als Arbeitnehmerin angestellt sein [1]. Ihr Teilzeitpensum erfüllt diese Voraussetzung.\n2. **Vorherige Erwerbstätigkeit:** Sie müssen während der 9 Monate unmittelbar vor der Geburt mindestens 5 Monate lang erwerbstätig gewesen sein [1].\n3. **Vorherige Versicherungsdauer:** Sie müssen während der 9 Monate vor der Niederkunft obligatorisch bei der AHV versichert gewesen sein [1]. Mit Wohnsitz und Erwerbstätigkeit in der Schweiz sind Sie obligatorisch AHV-versichert [2]. Falls Sie noch keine 9 Monate in der Schweiz versichert sind, können gestützt auf das Freizügigkeitsabkommen (FZA) Versicherungszeiten aus Italien (EU) angerechnet werden [3].\n\n**Dauer und Höhe der Entschädigung:**\n- **Dauer:** Die Entschädigung wird ab dem Tag der Niederkunft für 98 aufeinanderfolgende Tage (14 Wochen) ausbezahlt [4]. Das Arbeitsvertragsrecht sichert Ihnen für diese Zeit einen Mutterschaftsurlaub von mindestens 14 Wochen zu [5].\n- **Höhe:** Das Taggeld beträgt 80 Prozent Ihres vor der Geburt durchschnittlich erzielten Erwerbseinkommens [6], höchstens jedoch 220 Franken pro Tag [7].",
+     "clarifying_question": null,
+     "fails": []
+    },
+    {
+     "step": 1,
+     "opt_in": false,
+     "forget": true,
+     "writes": 0,
+     "reads": 0,
+     "facts_loaded": 0,
+     "stored": [],
+     "reply": null,
+     "clarifying_question": null,
+     "fails": []
+    },
+    {
+     "step": 2,
+     "latency_s": 98.3,
+     "opt_in": true,
+     "forget": false,
+     "writes": 1,
+     "reads": 2,
+     "facts_loaded": 0,
+     "stored": [],
+     "reply": "Grundsätzlich ja, sofern Sie die arbeitsvertraglichen Regeln einhalten und Ihr aufenthaltsrechtlicher Status dies zulässt:\n\n- **Arbeitsvertragsrecht (für alle):** Ein unbefristetes Arbeitsverhältnis kann von jeder Partei gekündigt werden [1]. Dabei müssen Sie die vertragliche oder die gesetzliche Kündigungsfrist beachten (im ersten Dienstjahr ein Monat, vom zweiten bis neunten Dienstjahr zwei Monate, danach drei Monate) [2].\n- **Schweizer Bürgerinnen/Bürger und Niederlassungsbewilligung (Ausweis C):** Sie können Ihre Erwerbstätigkeit in der ganzen Schweiz frei ausüben und die Stelle jederzeit wechseln [3].\n- **Aufenthaltsbewilligung (Ausweis B):** Sofern Sie zur Erwerbstätigkeit zugelassen sind, können Sie die Stelle ohne gesonderte Bewilligung wechseln [4].\n- **Kurzaufenthaltsbewilligung (Ausweis L):** Ein Stellenwechsel ist nicht frei möglich; er kann nur bewilligt werden, wenn wichtige Gründe vorliegen und die gesetzlichen Voraussetzungen erfüllt sind [5].",
+     "clarifying_question": null,
+     "fails": []
+    }
+   ],
+   "pass": true,
+   "usage": {
+    "model_calls": 21,
+    "prompt": 225929,
+    "cached": 141321,
+    "output": 4653,
+    "thoughts": 12420
+   },
+   "privacy_pass": true
+  },
+  {
+   "id": "mem-e2e-06",
+   "kind": "e2e",
+   "privacy": false,
+   "steps": [
+    {
+     "step": 0,
+     "latency_s": 214.2,
+     "opt_in": true,
+     "forget": false,
+     "writes": 1,
+     "reads": 2,
+     "facts_loaded": 0,
+     "stored": [
+      "municipality: Lugano",
+      "employment: employed",
+      "nationality_group: third_country",
+      "permit: B",
+      "The user is a citizen of a third country.",
+      "The user lives in Lugano.",
+      "The user is employed.",
+      "The user holds a B permit."
+     ],
+     "reply": "Nach dem Schweizer Obligationenrecht haben Sie als angestellte Person Anspruch auf **mindestens vier Wochen Ferien** pro Dienstjahr [1]. Bis zum vollendeten 20. Altersjahr beträgt der Anspruch **mindestens fünf Wochen** [1]. Bei einer regulären 5-Tage-Woche entspricht dies 20 bzw. 25 Arbeitstagen.\n\nIhre kosovarische Staatsangehörigkeit, Ihre B-Bewilligung oder Ihr Wohnort in Lugano ändern daran nichts: Die bundesgesetzlichen Mindeststandards gelten für alle Arbeitsverhältnisse in der Schweiz.\n\nZu beachten ist:\n- **Unvollständiges Dienstjahr**: Haben Sie das Arbeitsverhältnis unterjährig begonnen oder beendet, werden die Ferien anteilsmässig für die tatsächliche Dauer gewährt [2].\n- **Vertragliche Regelungen**: In Ihrem Arbeitsvertrag oder in einem anwendbaren Gesamtarbeitsvertrag (GAV) können mehr Ferientage vereinbart werden; der gesetzliche Mindestanspruch darf jedoch nicht unterschritten werden [3].",
+     "clarifying_question": null,
+     "fails": []
+    },
+    {
+     "step": 1,
+     "latency_s": 261.3,
+     "opt_in": true,
+     "forget": false,
+     "writes": 1,
+     "reads": 2,
+     "facts_loaded": 4,
+     "stored": [
+      "municipality: Lugano",
+      "employment: employed",
+      "nationality_group: third_country",
+      "permit: B",
+      "The user is a citizen of a third country.",
+      "The user lives in Lugano.",
+      "The user is employed.",
+      "The user holds a B permit."
+     ],
+     "reply": "In base alle informazioni registrate, considero che lei sia cittadino di uno Stato terzo con un permesso di dimora (permesso B) per attività dipendente.\n\nIn linea generale, il titolare di un permesso di dimora ammesso per un'attività lucrativa può svolgere il proprio lavoro in tutta la Svizzera e non necessita di un'autorizzazione per cambiare impiego [1].\n\nVi sono tuttavia alcune situazioni da considerare:\n- **Condizioni particolari del permesso:** il permesso di dimora viene rilasciato per un determinato scopo e può essere vincolato a ulteriori condizioni o oneri [2]. Se il permesso è stato rilasciato espressamente vincolato al datore di lavoro attuale, potrebbe rendersi necessaria una verifica o una nuova approvazione.\n- **Attività indipendente:** se intende passare dal lavoro dipendente a un'attività lucrativa indipendente, è richiesta un'apposita autorizzazione [3].\n- **Cambio di Cantone di residenza:** se il nuovo impiego comporta il trasferimento della residenza in un altro Cantone, deve prima richiedere il permesso nel nuovo Cantone [4]. Il titolare di permesso B ha diritto al cambio di Cantone purché non sia disoccupato e non vi siano motivi di revoca [5].",
+     "clarifying_question": null,
+     "fails": []
+    }
+   ],
+   "pass": true,
+   "usage": {
+    "model_calls": 15,
+    "prompt": 113667,
+    "cached": 41016,
+    "output": 2218,
+    "thoughts": 8741
+   },
+   "privacy_pass": null
+  }
+ ]
+}

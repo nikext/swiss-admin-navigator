@@ -896,3 +896,98 @@ the daily budget), which the global cap bounds. Per-visitor quotas reset if
 someone clears cookies and logs in again; the global cap still holds. A
 dropped connection doesn't stop the agent run (it is billed anyway), so it is
 not refunded. The in-memory login limiter is per instance (max 2).
+
+### ADR-029: Memory = opt-in structured profile whose schema is the whitelist; measured against Memory Bank defaults and custom topics
+**Status:** accepted (2026-10-16, M7)
+**Context:** M7 adds memory across conversations without ever storing what a
+resident must not have to disclose to a legal-information tool. Agreed with
+Nikola for M7 (2026-10-16): a memory-only eval instance plus the config on the
+served instance, CHF 10 model spend cap, and the memory cases drafted and
+model-verified by Claude (the ADR-024 delegation extended to `memory.jsonl`).
+Facts found while building it:
+- The served instance already had a Memory Bank with the default config
+  (ADK's `adk api_server` uses `agentengine://<itself>`). Its
+  `context_spec.memory_bank_config` can be updated alone (update mask
+  `context_spec`, no rebuild), and `adk deploy` never sends it.
+- Memory Bank offers natural-language memories with managed or custom
+  topics and few-shot examples, and **structured profiles** (an OpenAPI schema
+  that an LLM fills per scope, one memory per field). Natural-language
+  memories can be switched off, as can memory revisions; TTLs are per bank.
+- With the default extraction model a `generate` call took 281–360 s on the
+  europe-west6 instance (once it produced nothing). `gemini-3.8-flash` on
+  `global` took ~10 s (p50 8–12 s, max 147 s over 140 calls); on `eu` the call
+  returned in 2 s and generated nothing. Memory Bank documents that ML
+  processing falls back to global endpoints where no regional one exists, and
+  Gemini has none in Zürich (ADR-013), so data at rest stays in europe-west6
+  and processing is global either way.
+- Every structured-profile field is stored with a free-text `context` (why it
+  was extracted). The first run quoted the user verbatim there ("leben seit
+  2019 in eingetragener Partnerschaft in Zürich"): two leaks in the profile
+  variant although every stored value was clean.
+**Experiment (E8, `make eval-memory`, `memory.jsonl` 20 extract cases of which
+13 privacy cases; 2026-10-16, commit 4679e66, eval instance, extraction model
+gemini-3.8-flash@global, auditor = the judge model):**
+
+| variant | runs | privacy cases passed | leaks (forbidden strings) | judge-flagged sensitive | field recall | generate p50 s |
+|---|---|---|---|---|---|---|
+| Memory Bank defaults (managed topics) | 1 | **2/13** | 22 | 14 | 97.3% (72/74) | 11.4 |
+| custom topics + examples, natural language | 3 | 39/39 | 0 | 0 | 100% ×3 | 8.4–9.4 |
+| **structured profile (schema = whitelist)** | 3 | **39/39** | 0 | 0 | 98.6 / 97.3 / 98.6% | 11.2–11.9 |
+
+The defaults stored "I have diabetes.", "I am HIV-positive.", "In 2025, I was
+sentenced to 18 months for fraud.", "My first name is Claire …", "Mon fils est
+autiste." and religion. Profile misses: employment from "verdiene 7'200
+Franken" (mem-06, 3/3 runs) and once the nationality group from a
+clarification answer; topics recall is read through the auditor's mapping of
+free text to fields, which is more lenient than comparing enum values.
+Differences of 1–2 fields out of 74 are noise at n=20.
+**Decision:**
+- **Structured profile** with the whitelist as its schema (canton, municipality,
+  language, nationality group, permit L/B/C/Ci/G, employment, civil status
+  single/married/divorced/widowed, has children); natural-language memories
+  **off**, revisions **off**, TTL **30 days** (the web identity's lifetime, so
+  nothing outlives the visitor's ability to see or delete it). F/N/S permits
+  and registered partnership are not storable (asylum procedure; sexual
+  orientation, nDSG Art. 5). Every field says "only if the user stated it
+  about themselves"; the schema tells the extractor to explain values without
+  quoting the user (after that rule: 0 leaks in contexts over 3 runs).
+  Chosen over topics despite equal privacy because the guarantees are
+  structural: only enum-valid values (and a letters-only municipality) are
+  read back (`clean_profile`, mirrored in `web/src/lib/profile.ts` with a
+  drift test), so no stored free text reaches the prompt or the UI, a stored
+  instruction can't be replayed into the prompt (mem-18), and the "What I
+  remember" panel is a translatable field list.
+- Extraction model as the profile's optional `memory` role (ADR-008).
+- **Agent:** `MemoryContext` (reads, once per invocation) and `save_memory`
+  (`after_agent_callback`, user text + replies only) both act only when the
+  session state has `memory_opt_in: true`, set by the web BFF at session
+  creation. Memory Bank errors never fail an answer.
+- **Web:** a switch (cookie bound to the visitor's anonymous id; changing it
+  ends all the visitor's sessions so none keeps the old setting), "What I
+  remember" (whitelisted values only, never `context`) and "Forget me"
+  (`memories:purge` by `scope.user_id`, then all sessions); signing out does
+  the same. Sessions are listed/deleted via the Sessions REST API (0.25 s;
+  `async_list_sessions` through `:query` cold-starts the agent: 23 s), only
+  for ids from the visitor's own filtered list because REST delete doesn't
+  check the owner.
+- The memory eval runs against `swiss-nav-memory-eval`, never the served bank.
+**End to end (`memory-profile-e2e`, 6 cases / 10 agent turns, navigator_v1 on
+a local runner against the eval instance, CHF 0.39):** 6/6 passed, privacy
+4/4. A counting wrapper around the memory service shows the gating exactly:
+no opt-in → 0 writes and 0 reads (nothing stored); switch off → 0 reads
+although a profile existed; after Forget me the bank is empty and the next
+opted-in turn loads 0 facts. Recall: the second session got 5 resp. 4 facts
+and answered without a clarifying question, saying what it relied on
+("Relying on your remembered details (a third-country national holding a B
+permit in Zurich): …", the Italian case from facts saved in German). An
+epilepsy disclosure stored only `canton`/`permit`. Answer latency in that run
+was 33–662 s (p50 232 s) against 20–100 s in an identical run an hour
+earlier; the opt-out turn, which never touches memory, took 300 s, so the
+slowness was the model endpoint, not Memory Bank (reads add two ~0.3 s calls
+per turn, the write is fire-and-forget).
+**Consequences:** a remembered fact is available about 10–30 s after the turn
+(extraction runs after the answer). Memory Bank keeps a short template
+`context` per field ("The user lives in Bern."); it is purged with the
+memories. Extraction sends the user's own words to a global Gemini endpoint,
+like every answer already does (ADR-013). The topics variant stays available
+(`--variant topics`) if the profile's recall becomes a problem.

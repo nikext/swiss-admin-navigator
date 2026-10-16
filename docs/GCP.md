@@ -215,6 +215,17 @@ folder and scaling/labels from an `.agent_engine_config.json`
   was not adopted: `adk deploy` plus a 100-line script covers what we need.
 - Delete with the SDK (`client.runtimes.delete(name=…, force=True)`, which also
   removes sessions) if the instance is ever retired.
+- **Memory Bank (M7, ADR-029):** lives in the same instance's
+  `context_spec.memory_bank_config`; `make memory-bank ARGS="apply --variant
+  profile"` sets it (structured profile, natural-language memories and
+  revisions off, TTL 30 days, extraction model from the profile's `memory`
+  role). `ARGS=show` prints it; `list|purge --user web-…` inspects or deletes a
+  visitor's memories. Agent deploys don't change it.
+- **Memory eval instance:** `swiss-nav-memory-eval`
+  (`…/reasoningEngines/5494074886043205632`, `MEMORY_EVAL_RUNTIME_ID` in
+  `.env`), created by `make memory-bank ARGS="create-eval --variant profile"`:
+  no code, no compute, only a Memory Bank for `make eval-memory`. Costs
+  nothing while idle.
 
 ### Web → Cloud Run (M6, ADR-028)
 
@@ -252,6 +263,17 @@ gcloud run deploy swiss-nav-web --image … --region europe-west6 \
 - **Cost guard:** `GLOBAL_DAILY_CAP` (default 20 questions per Zürich day,
   ~CHF 0.7/day of model calls at most) and `USER_DAILY_QUOTA` (10). Firestore
   and Cloud Run stay in the free tiers at demo traffic.
+- **Memory (M7):** `/api/memory` GET (switch + remembered profile), POST
+  (switch; cookie `nav_memory` holds the visitor's own id, so a new identity
+  never inherits it) and DELETE (Forget me). Memories are listed and purged
+  through Memory Bank REST (`v1beta1/…/memories`, filter
+  `scope.user_id="web-…"`); the visitor's sessions are listed and deleted
+  through the Sessions REST API (`v1beta1/…/sessions`, filter
+  `user_id="web-…"`), which needs no agent container: `async_list_sessions`
+  through `:query` took 23 s from idle, REST 0.25 s. REST delete doesn't
+  check the owner, so only ids from that filtered list go there; "New
+  conversation" keeps ADK's `async_delete_session`. The SA's
+  `roles/aiplatform.user` covers both.
 - **Local:** `make web-install`, then `make web-dev` (Next.js dev server on
   :3000 against `AGENT_RUNTIME_ID` with ADC; quotas in memory; access code
   `WEB_ACCESS_CODE` or `local-dev-code`). `make web-check` = what CI runs.
@@ -311,7 +333,7 @@ Quota refused on 2026-10-16 (§ above, ADR-026); kept for reference.
 | Item | Driver | Expected monthly |
 |---|---|---|
 | Agent Runtime | Billing catalog (2026-10-16, `global` SKUs): "Agent Platform Compute" first 50 vCPU-h/month free, then USD 0.085/vCPU-h; "Agent Platform Memory" first 100 GiB-h free, then USD 0.009/GiB-h. Scale to zero at 1 vCPU / 2 GiB (ADR-027) | ~0 CHF at eval/demo traffic; ~USD 70/month if one instance stayed up |
-| Sessions + Memory Bank | billed per event since 2026-02 (third-party source: ~$0.25 / 1k events; verify) | < 5 CHF |
+| Sessions + Memory Bank | pricing PDF (2026-09): USD 0.25 per 1k memories stored per month, 0.50 per 1k retrieved, storage USD 0.30/GiB-month; plus the extraction model's tokens (~1 small Flash call per opted-in turn); verify | < 1 CHF at demo traffic |
 | Gemini Flash | tokens; an answer ≈ 4–6 LLM calls × 5–10k input tokens | ~0.5–2 Rp. per answer (verify pricing) |
 | Embeddings | one-time corpus embed (~30k chunks) + per query | < 2 CHF build, negligible per query |
 | Cloud Run (MCP, web) | scale to zero | ~0–3 CHF |

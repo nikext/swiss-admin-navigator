@@ -131,28 +131,64 @@ flowchart TD
 - The verifier is worth adding to v1 as a callback even if the multi-agent
   version loses the A/B.
 
-## 5. Memory (M7)
+## 5. Memory (M7, ADR-029)
 
-- Service: `VertexAiMemoryBankService(project, location, agent_engine_id)`
-  from `google.adk.memory`. Locally: `adk web --memory_service_uri="agentengine://<id>"`.
-  Memory Bank needs an Agent Runtime instance ID even when the agent runs
-  locally.
-- Tools: `preload_memory` (retrieved at the start of each turn). Save with
-  `await callback_context.add_session_to_memory()` in an `after_agent_callback`,
-  **only when the user has opted in** (session state `memory_opt_in == true`).
-- **What may be remembered:** canton, municipality, preferred language,
-  nationality group (EU/EFTA | third-country | Swiss), permit type,
-  employment status, and household facts the user volunteered (married,
-  children). **Never:** health details, criminal matters, financial account
-  data, or full names and addresses. Use Memory Bank memory topics /
-  customisation to restrict extraction (verify the current API), and add a
-  regression eval that proves sensitive facts are not stored.
-- **Forget me:** a UI button that deletes all memories for the `user_id`
-  (verify the delete API). Show the stored memories to the user in a "What I
-  remember" panel. That transparency is the selling point.
-- Consolidation: `custom_metadata={"enable_consolidation": True}` when adding
-  explicit memories, to avoid duplicates.
-- `user_id` = a random UUID in an httpOnly cookie (no accounts in v1).
+Built and measured in M7 (`agents/navigator/memory.py`). Where the bullets
+below differ from the original plan, the plan was wrong or vaguer.
+
+- **Service:** the runner's memory service. Deployed, `adk api_server` uses
+  `agentengine://<itself>` (ADK's `VertexAiMemoryBankService`); the memory eval
+  passes one pointing at a memory-only eval instance. Locally:
+  `adk web --memory_service_uri="agentengine://<id>"`.
+- **Opt-in is session state:** the web BFF creates every session with
+  `memory_opt_in: true|false` (the visitor's switch). The user can't set state,
+  so a message like "remember this" changes nothing without opt-in.
+- **Read:** `MemoryContext`, a `BaseTool` that edits each model request like
+  ADK's `preload_memory` but only with opt-in: it loads the structured profile
+  (`retrieve_profiles`, plus `search_memory`, which returns nothing while
+  natural-language memories are off) once per invocation and appends a
+  "Remembered about this user" block to the system instruction, marked as data
+  and with the rule to use the facts instead of asking again, to say which
+  fact it relied on, and that what the user says now wins. A Memory Bank
+  failure means answering without memory, never an error.
+- **Write:** `save_memory` (`after_agent_callback`), only with opt-in, sends
+  the turn's user text and the agent's user-facing reply (plus the reply
+  before it, so "B" after "Which permit?" means something) via
+  `add_events_to_memory` → `memories.generate` (`wait_for_completion: False`).
+  Tool calls, tool results (law text), thoughts and verifier rounds are never
+  sent.
+- **What may be remembered = a structured profile schema** (`PROFILE_FIELDS`,
+  enums where possible): canton, municipality, language, nationality group
+  (swiss | eu_efta | third_country, never the country), permit (L, B, C, Ci,
+  G), employment status, civil status (single, married, divorced, widowed) and
+  whether the user has children. Left out on purpose: F/N/S permits (asylum
+  procedure) and registered partnership (reveals sexual orientation, nDSG
+  Art. 5). Natural-language memories are **off**
+  (`disable_natural_language_memories`), memory revisions off, TTL 30 days
+  (the web identity's lifetime). Every field description says "only if the
+  user stated it about themselves" and lists what is never recorded; the
+  schema description also tells the extractor to explain values without
+  quoting the user, because Memory Bank stores a free-text `context` with each
+  field and it quoted sensitive words verbatim before that rule.
+  On read, `clean_profile` drops anything not whitelisted.
+- **Measured (memory eval):** Memory Bank's defaults stored diagnoses,
+  convictions, names and religion (11 of 13 privacy cases failed); the
+  structured profile and a custom-topics variant both passed 39/39 privacy
+  checks over three runs. The profile won on structural guarantees (only enum
+  values reach the prompt and the UI). See ADR-029.
+- **Extraction model:** the profile's `memory` role (`gemini-3.8-flash` on
+  `global`). Memory Bank's default took 281–360 s per call on the
+  europe-west6 instance, this one ~10 s; `eu` was accepted but generated
+  nothing. Memory Bank processes on global endpoints either way.
+- **Config:** `make memory-bank ARGS="apply --variant profile"` writes
+  `context_spec.memory_bank_config` of the served instance (update mask
+  `context_spec` only; agent deploys don't touch it).
+- **Forget me / transparency:** the web BFF lists the visitor's memories
+  (`scope.user_id` filter) for the "What I remember" panel (whitelisted values
+  only, never `context`), purges them (`memories:purge`) and ends all the
+  visitor's sessions. Signing out does the same, since the anonymous id (and
+  with it any access to those memories) is gone afterwards.
+- `user_id` = `web-<random id>` from the signed httpOnly cookie (ADR-028).
 
 ## 6. Models (config, not code)
 
