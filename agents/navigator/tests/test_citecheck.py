@@ -184,6 +184,19 @@ async def test_marker_problems() -> None:
     assert [(p.kind, p.ref) for p in problems] == [("marker", "1")]
 
 
+async def test_contact_details_are_answer_problems() -> None:
+    d = draft(cite()).model_copy(update={"cantonal_note": "Office, Via Chicherio 20, Camorino."})
+    checked, problems = await check_citations(d, law(ART_271A))
+    assert [(p.kind, p.ref) for p in problems] == [("contact", None)]
+    assert "Via Chicherio 20" in problems[0].message
+    answer = finalize(d, checked, problems, [make_round(checked, problems)])
+    assert answer.verification.status == "degraded"
+    assert answer.cantonal_note == "Office, Via Chicherio 20, Camorino."  # flagged, not edited
+    assert answer.verification.repairs == [
+        "1 contact detail(s) written from memory left in the answer"
+    ]
+
+
 # --- finalize --------------------------------------------------------------------------
 
 

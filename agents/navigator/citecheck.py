@@ -20,6 +20,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
+from .contact import answer_contact_details
 from .contract import Answer, Citation, DraftAnswer, DraftCitation, Problem, Round, Verification
 
 Fetch = Callable[[str, str, str], Awaitable[dict[str, Any]]]
@@ -210,6 +211,13 @@ async def check_citations(draft: DraftAnswer, fetch: Fetch) -> tuple[list[Checke
         if ref not in refs:
             msg = f"[{ref}] is used in answer_markdown but no citation has ref {ref}."
             answer_problems.append(Problem(ref=ref, kind="marker", message=msg))
+    for kind, found in answer_contact_details(draft.model_dump()):
+        msg = (
+            f"the answer gives a {kind} ({found!r}) that no tool returned. Name the kind of "
+            "authority instead (e.g. the cantonal migration office) and leave out addresses, "
+            "postcodes, phone numbers and web addresses."
+        )
+        answer_problems.append(Problem(ref=None, kind="contact", message=msg))
 
     keys = sorted({(c.sr.strip(), c.article.strip(), c.quote_lang) for c in draft.citations})
 
@@ -294,6 +302,9 @@ def finalize(
     if dangling:
         fields["answer_markdown"] = strip_markers(draft.answer_markdown, dangling)
         repairs.append(f"markers {sorted(dangling)} removed from the answer")
+    contact = [p for p in problems if p.kind == "contact"]
+    if contact:  # left as written, but flagged: removing words could change the meaning
+        repairs.append(f"{len(contact)} contact detail(s) written from memory left in the answer")
     only_infra = all(p.kind == "fetch" for p in problems)
     fields["confidence"] = "low"
     return Answer(
