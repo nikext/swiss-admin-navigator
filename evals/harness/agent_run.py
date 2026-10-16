@@ -1,8 +1,10 @@
-"""Run one eval case through navigator_v1 with the local ADK runner (M3 target).
+"""Run eval cases through navigator_v1 and record what the metrics need.
 
-Records what the metrics need: the final answer JSON, every tool call, the
-verifier's `citation_check` rounds, per-model-call token usage and latency.
-M5 adds a target for the deployed agent; this module is the local one.
+Two targets yield the same ADK events: `LocalAgent` (an in-memory ADK runner,
+M3) and `RemoteAgent` (the deployed agent on Agent Runtime, M5, in
+`remote_run.py`). Either way the trace holds the final answer JSON, every tool
+call, the verifier's `citation_check` rounds, per-model-call token usage and
+latency.
 """
 
 from __future__ import annotations
@@ -11,10 +13,12 @@ import asyncio
 import json
 import time
 import uuid
+from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
-from typing import Any
+from typing import Any, Protocol
 
 from google.adk.agents import LlmAgent
+from google.adk.events import Event
 from google.adk.runners import InMemoryRunner
 from google.genai import types
 
@@ -60,29 +64,56 @@ class Trace:
     latency_s: float = 0.0
 
 
-async def run_case(runner: InMemoryRunner, case: Case, timeout_s: float = 300) -> Trace:
+class Target(Protocol):
+    """Where cases run: yields the agent's events for one question."""
+
+    def events(self, case: Case) -> AsyncIterator[Event]: ...
+
+    async def close(self) -> None: ...
+
+
+class LocalAgent:
+    """The agent in this process, through ADK's in-memory runner."""
+
+    def __init__(self, agent: LlmAgent) -> None:
+        self.runner = InMemoryRunner(agent=agent, app_name=APP)
+
+    async def events(self, case: Case) -> AsyncIterator[Event]:
+        session = await self.runner.session_service.create_session(
+            app_name=APP, user_id="eval", session_id=f"{case.id}-{uuid.uuid4().hex[:8]}"
+        )
+        message = types.Content(role="user", parts=[types.Part(text=case.question)])
+        async for event in self.runner.run_async(
+            user_id="eval", session_id=session.id, new_message=message
+        ):
+            yield event
+
+    async def close(self) -> None:
+        await self.runner.close()
+
+
+def record(trace: Trace, event: Event) -> None:
+    """Add one event's usage, tool calls and final text to the trace."""
+    if event.usage_metadata:
+        trace.usage.add(event.usage_metadata)
+    for call in event.get_function_calls():
+        if call.name == CHECK_TOOL:
+            trace.check_rounds += 1
+        else:
+            trace.tool_calls.append({"name": call.name, "args": call.args})
+    if event.is_final_response() and event.content and event.content.parts:
+        text = "".join(p.text for p in event.content.parts if p.text and not p.thought)
+        if text.strip():
+            trace.raw_final = text
+
+
+async def run_case(target: Target, case: Case, timeout_s: float = 300) -> Trace:
     trace = Trace(case.id)
-    session = await runner.session_service.create_session(
-        app_name=APP, user_id="eval", session_id=f"{case.id}-{uuid.uuid4().hex[:8]}"
-    )
-    message = types.Content(role="user", parts=[types.Part(text=case.question)])
     start = time.perf_counter()
 
     async def consume() -> None:
-        async for event in runner.run_async(
-            user_id="eval", session_id=session.id, new_message=message
-        ):
-            if event.usage_metadata:
-                trace.usage.add(event.usage_metadata)
-            for call in event.get_function_calls():
-                if call.name == CHECK_TOOL:
-                    trace.check_rounds += 1
-                else:
-                    trace.tool_calls.append({"name": call.name, "args": call.args})
-            if event.is_final_response() and event.content and event.content.parts:
-                text = "".join(p.text for p in event.content.parts if p.text and not p.thought)
-                if text.strip():
-                    trace.raw_final = text
+        async for event in target.events(case):
+            record(trace, event)
 
     try:
         await asyncio.wait_for(consume(), timeout_s)
@@ -102,14 +133,13 @@ async def run_case(runner: InMemoryRunner, case: Case, timeout_s: float = 300) -
 
 
 async def run_cases(
-    agent: LlmAgent, cases: list[Case], concurrency: int, on_done: Any = None
+    target: Target, cases: list[Case], concurrency: int, on_done: Any = None
 ) -> list[Trace]:
-    runner = InMemoryRunner(agent=agent, app_name=APP)
     sem = asyncio.Semaphore(concurrency)
 
     async def one(case: Case) -> Trace:
         async with sem:
-            trace = await run_case(runner, case)
+            trace = await run_case(target, case)
         if on_done:
             on_done(case, trace)
         return trace
@@ -117,4 +147,4 @@ async def run_cases(
     try:
         return list(await asyncio.gather(*(one(c) for c in cases)))
     finally:
-        await runner.close()
+        await target.close()

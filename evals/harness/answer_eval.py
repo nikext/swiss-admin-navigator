@@ -4,10 +4,12 @@
     uv run python -m evals.harness.answer_eval                  # golden + all draft batches
     uv run python -m evals.harness.answer_eval --dataset all+adversarial   # the full eval
     uv run python -m evals.harness.answer_eval --ids work-01,housing-02 --no-judge
+    uv run python -m evals.harness.answer_eval --smoke --target remote   # make eval-smoke-remote
     uv run python -m evals.harness.answer_eval --dataset golden --from A.json --from B.json
 
-Runs each case through the agent (local ADK runner), re-checks every final
-citation against the law over MCP, asks the judge (profile `judge` role) for
+Runs each case through the agent (the local ADK runner, or with `--target
+remote` the deployed agent on Agent Runtime, `AGENT_RUNTIME_ID`), re-checks
+every final citation against the law over MCP, asks the judge (profile `judge` role) for
 groundedness, key facts, must_not and behaviour, and writes
 `evals/reports/<date>-<sha>-<name>.{json,md}`. By default it starts its own
 MCP server from this checkout (needs `data/index.sqlite`); `--mcp-url` uses a
@@ -40,7 +42,7 @@ from dotenv import load_dotenv
 
 from agents.navigator.agent import build_agent, profile
 from agents.navigator.contact import answer_contact_details
-from evals.harness.agent_run import Trace, Usage, run_cases
+from evals.harness.agent_run import LocalAgent, Target, Trace, Usage, run_cases
 from evals.harness.answer_metrics import (
     CitationCheck,
     as_dicts,
@@ -63,6 +65,7 @@ from evals.harness.judge import (
     prompt_sha,
 )
 from evals.harness.law import LawClient, local_server
+from evals.harness.remote_run import RemoteAgent
 from evals.harness.retrieval_eval import git_sha
 from evals.harness.retrieval_metrics import bootstrap_ci
 
@@ -266,6 +269,18 @@ def rescored_note(meta: dict[str, Any]) -> list[str]:
     return [f"- re-scored without model calls from {', '.join(f'`{x}`' for x in src)}"]
 
 
+def target_note(meta: dict[str, Any]) -> list[str]:
+    deployed = (meta.get("target") or {}).get("deployed")
+    if not deployed:
+        return []
+    return [
+        f"- target: **deployed** `{deployed['name']}` (commit "
+        f"{deployed['labels'].get('commit', '?')}, updated {deployed['update_time']}, agent MCP "
+        f"{deployed['env'].get('SWISS_LAW_MCP_URL', '?')}); latency includes the network and "
+        "session creation"
+    ]
+
+
 def render_markdown(report: dict[str, Any]) -> str:
     s, meta = report["summary"], report["meta"]
     qf, hc = s["quote_fidelity"], s["hallucinated_citations"]
@@ -284,6 +299,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"- judge: `{model_label(meta['profile']['judge'])}`, prompt sha {meta['judge_prompt_sha']}"
         if meta["judged"]
         else "- judge: off",
+        *target_note(meta),
         f"- law: {meta['mcp']['url']} (index as_of {meta['mcp']['health'].get('as_of')}, "
         f"built from {meta['mcp']['health'].get('index_sha')})",
         f"- run: {report['run_at']} at {report['git_sha']}; CIs are 95% percentile bootstraps "
@@ -393,19 +409,41 @@ def render_markdown(report: dict[str, Any]) -> str:
 async def evaluate(
     args: argparse.Namespace, dataset: Dataset, cases: list[Case], url: str
 ) -> dict[str, Any]:
-    root_agent = build_agent(url)
-
     pricing = yaml.safe_load(PRICING.read_text(encoding="utf-8"))
     project = os.environ.get("GOOGLE_CLOUD_PROJECT", "")
     if not project:
         raise SystemExit("GOOGLE_CLOUD_PROJECT is not set (copy .env.example to .env)")
 
+    target: Target
+    if args.target == "remote":
+        # The deployed agent uses its own MCP server (its env); `url` only serves the re-check.
+        remote = RemoteAgent(
+            args.agent_runtime or os.environ.get("AGENT_RUNTIME_ID", ""),
+            project,
+            os.environ.get("GOOGLE_CLOUD_LOCATION") or "europe-west6",
+        )
+        deployed = remote.describe()
+        deployed_profile = deployed["env"].get("NAV_PROFILE") or "default"
+        if deployed_profile != profile.name:  # cost and the report's model come from `profile`
+            raise SystemExit(
+                f"the deployed agent runs profile {deployed_profile!r}, this run {profile.name!r}"
+            )
+        target, where, output_mode = remote, remote.name, "deployed (not introspected)"
+    else:
+        root_agent = build_agent(url)
+        target, where, deployed = LocalAgent(root_agent), url, None
+        output_mode = (
+            "native schema + tools"
+            if root_agent.canonical_model.capabilities.output_schema_and_tools
+            else "set_model_response tool"
+        )
+
     def progress(case: Case, trace: Trace) -> None:
         status = (trace.answer or {}).get("verification", {}).get("status")
         print(f"  {case.id:<28} {trace.error or status:<20} {trace.latency_s:5.1f}s", flush=True)
 
-    print(f"running {len(cases)} cases (concurrency {args.concurrency}) against {url}")
-    traces = await run_cases(root_agent, cases, args.concurrency, progress)
+    print(f"running {len(cases)} cases (concurrency {args.concurrency}) against {where}")
+    traces = await run_cases(target, cases, args.concurrency, progress)
 
     judge = None if args.no_judge else Judge(profile.judge, project)
     sem = asyncio.Semaphore(args.concurrency)
@@ -462,9 +500,8 @@ async def evaluate(
             "judge_prompt_sha": prompt_sha(),
             "judged": judge is not None,
             "adk": version("google-adk"),
-            "output_mode": "native schema + tools"
-            if root_agent.canonical_model.capabilities.output_schema_and_tools
-            else "set_model_response tool",
+            "output_mode": output_mode,
+            "target": {"kind": args.target, "deployed": deployed},
             "mcp": {
                 "url": url if args.mcp_url else "local (started by the harness)",
                 "health": health,
@@ -525,6 +562,15 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--concurrency", type=int, default=4)
     ap.add_argument("--no-judge", action="store_true")
     ap.add_argument("--mcp-url", default=None, help="use this MCP server instead of a local one")
+    ap.add_argument(
+        "--target",
+        choices=("local", "remote"),
+        default="local",
+        help="local: ADK runner in this process; remote: the agent deployed on Agent Runtime",
+    )
+    ap.add_argument(
+        "--agent-runtime", default=None, help="Agent Runtime id or name (default: AGENT_RUNTIME_ID)"
+    )
     ap.add_argument("--name", default=None)
     ap.add_argument("--out", type=Path, default=REPORTS)
     ap.add_argument(
@@ -548,6 +594,8 @@ def main(argv: list[str] | None = None) -> int:
             report = asyncio.run(evaluate(args, dataset, cases, url))
 
     name = args.name or ("smoke" if args.smoke else "answers")
+    if args.target == "remote" and not args.name:
+        name += "-remote"
     if not report["meta"]["dataset"]["verified"]:
         name += "-drafts"
     report = {
