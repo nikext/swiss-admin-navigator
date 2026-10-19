@@ -1000,3 +1000,61 @@ clarifying question; a purge by `scope.user_id` left nothing. Web revision `swis
 memories. Extraction sends the user's own words to a global Gemini endpoint,
 like every answer already does (ADR-013). The topics variant stays available
 (`--variant topics`) if the profile's recall becomes a problem.
+
+### ADR-030: Web UI redesign from a Claude Design handoff; everything new is derived in the browser
+**Status:** accepted (2026-10-19, outside the milestone sequence; branch `ui-redesign`)
+**Context:** the M6 UI (ADR-028) worked but looked generic. Nikola had Claude
+Design draw the app from a prompt that listed every UI state and contract
+field; the handoff canvas has 29 artboards (access, empty chat, research
+timeline, answer, multi-turn thread with clarifying/degraded/out-of-scope
+turns, memory dialog, article panel; light, dark and phone each; a German
+proof; the phone quota-exhausted state) and one token stylesheet. Several
+things it shows are not sent by the BFF: per-step timings, "Checked N
+articles in X s · 1 correction", a final "writing the answer" step, a
+per-quote "Verified" tick, domain tags on the examples, long-form dates.
+**Decision:**
+- Rebuild the components (`Shell`, `Login`, `Chat`, `AnswerView`,
+  `ArticlePanel`, `MemoryPanel`, new `Trail`, `Icon`) and `globals.css` to the
+  handoff, with **no change to the BFF, the SSE events or the agent**. The
+  design's tokens live on `:root` with a `prefers-color-scheme: dark` set;
+  `prefers-reduced-motion` turns the entrance animations off.
+- Everything the BFF doesn't send is derived client-side in pure, unit-tested
+  helpers (`web/src/lib/present.ts`): step times from when each `progress`
+  event arrived, the trail summary (distinct articles read, verifier
+  re-checks), dates through `Intl` in the UI language, typographic quotes per
+  language, source stats. The "writing the answer and checking every quote"
+  step is a placeholder shown after the last read, not an event. The
+  per-quote "Verified" tick and "N of N quotes checked" appear only when
+  `verification.status` isn't `unavailable` (then nothing was checked).
+- Fonts: Instrument Sans (UI, answers), Source Serif 4 (law text only), IBM
+  Plex Mono (refs, timers), self-hosted by `next/font` at build time (the
+  browser never calls Google; the Docker build needs network, as `npm ci`
+  already does). Only the sans is preloaded: preloading the serif (~450 KB
+  with its opsz axis and italics) and the mono pushed the mobile LCP to
+  5.3 s on the login page.
+- Icons: Lucide paths inlined in `Icon.tsx` (ISC), no icon package; no npm
+  dependency changes.
+- Layout: the article opens as a side panel next to the chat at ≥ 1100 px, a
+  right-hand overlay dialog below, a bottom sheet at ≤ 640 px; memory is a
+  centred dialog, full screen on phones; on phones the disclaimer is a slim
+  "Unofficial. Not legal advice. Details" bar (ADR-010 still holds: teal and
+  "§", no Swiss symbols, the notice always visible).
+- New strings (domain tags, trail, memory dialog, panel retry) in EN/DE/FR/IT;
+  the i18n completeness test covers them. The designer's sample AVIG quotes
+  were invented for the mockup and are not used anywhere.
+**Verification:** `make web-check` (eslint, prettier, tsc, 60 vitest tests,
+including 7 for `present.ts`); production build. A Playwright script served
+the build (`next start`, in-memory quotas) with `/api/*` mocked in the
+browser (no model spend) and captured 35 states (access, wrong code, empty,
+waiting, answer, article, thread, memory dialog states, German, quota
+exhausted) at 1440×1000 and 375×812 in light and dark: axe-core 0
+violations in all 35. Lighthouse (mobile, simulated slow 4G), two runs:
+login accessibility 100, best practices 100, performance 86/90 (LCP
+3.8/3.3 s); chat accessibility 100, best practices 100, performance 96/93
+(LCP 2.7/3.2 s).
+**Consequences:** performance is below M6's 100 because M6 used system fonts;
+three web-font families are the price of the design's type system. Step
+timings are measured in the browser, so they include network latency; a
+finished answer keeps its trail across reloads (saved with the chat in
+sessionStorage). Not yet checked against the deployed agent: a live answer's trail
+and the panel on a real phone (do after `make deploy-web`).

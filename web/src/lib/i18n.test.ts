@@ -13,8 +13,24 @@ describe("strings", () => {
     expect(STRINGS.en.notice).toBe("Unofficial. Not legal advice.");
     for (const l of LANGS) {
       expect(STRINGS[l].examples).toHaveLength(6);
-      expect(STRINGS[l].noticeLong).toContain("Fedlex");
+      expect(STRINGS[l].noticeSources).toContain("Fedlex");
     }
+  });
+
+  it("lists the same memory policy in every language", () => {
+    for (const l of LANGS) {
+      expect(STRINGS[l].keepList).toHaveLength(STRINGS.en.keepList.length);
+      expect(STRINGS[l].neverList).toHaveLength(STRINGS.en.neverList.length);
+      expect(STRINGS[l].points).toHaveLength(3);
+    }
+  });
+
+  it("pluralises the trail and the seal", () => {
+    expect(STRINGS.en.trail(4, 48, 0)).toBe("Checked 4 articles in 48 s");
+    expect(STRINGS.en.trail(1, 39, 1)).toBe("Checked 1 article in 39 s · 1 correction");
+    expect(STRINGS.de.trail(4, 48, 0)).toBe("4 Artikel in 48 s geprüft");
+    expect(STRINGS.en.seal(3, 3)).toBe("3 of 3 quotes checked against the law text");
+    expect(STRINGS.en.sealPartial(1, 2, 1)).toBe("1 of 2 quotes verified · 1 removed");
   });
 
   it("never claims to be official (ADR-010)", () => {
