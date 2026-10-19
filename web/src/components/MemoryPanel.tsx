@@ -4,7 +4,9 @@ import { useEffect, useRef, useState } from "react";
 
 import type { Lang } from "@/lib/contract";
 import { STRINGS } from "@/lib/i18n";
-import { describe, FIELD_ORDER, type Profile } from "@/lib/profile";
+import { describeParts, FIELD_ORDER, type Profile } from "@/lib/profile";
+
+import Icon from "./Icon";
 
 interface Props {
   lang: Lang;
@@ -18,15 +20,19 @@ type Load = { profile: Profile } | "error" | null; // null: loading
 
 /**
  * Opt-in memory (M7, ADR-029): the switch, what is remembered (whitelisted
- * fields only, as the BFF returns them) and "Forget me".
+ * fields only, as the BFF returns them), the keep/never policy and "Forget me".
+ * Centred modal; full screen on phones.
  */
 export default function MemoryPanel({ lang, enabled, onReset, onClose }: Props) {
   const s = STRINGS[lang];
   const dialog = useRef<HTMLDialogElement>(null);
+  const cancel = useRef<HTMLButtonElement>(null);
   const [load, setLoad] = useState<Load>(null);
+  const [attempt, setAttempt] = useState(0);
   const [busy, setBusy] = useState(false);
   const [confirming, setConfirming] = useState(false);
-  const [status, setStatus] = useState<string | null>(null);
+  const [forgotten, setForgotten] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     const d = dialog.current;
@@ -45,11 +51,16 @@ export default function MemoryPanel({ lang, enabled, onReset, onClose }: Props) 
         if (!ctrl.signal.aborted) setLoad("error");
       });
     return () => ctrl.abort();
-  }, []);
+  }, [attempt]);
+
+  useEffect(() => {
+    if (confirming) cancel.current?.focus();
+  }, [confirming]);
 
   async function toggle(next: boolean) {
     setBusy(true);
-    setStatus(null);
+    setFailed(false);
+    setForgotten(false);
     try {
       const r = await fetch("/api/memory", {
         method: "POST",
@@ -59,7 +70,7 @@ export default function MemoryPanel({ lang, enabled, onReset, onClose }: Props) 
       if (!r.ok) throw new Error(String(r.status));
       onReset(next);
     } catch {
-      setStatus(s.memoryError);
+      setFailed(true);
     } finally {
       setBusy(false);
     }
@@ -67,15 +78,15 @@ export default function MemoryPanel({ lang, enabled, onReset, onClose }: Props) 
 
   async function forgetAll() {
     setBusy(true);
-    setStatus(null);
+    setFailed(false);
     try {
       const r = await fetch("/api/memory", { method: "DELETE" });
       if (!r.ok) throw new Error(String(r.status));
       setLoad({ profile: {} });
-      setStatus(s.forgotten);
+      setForgotten(true);
       onReset(enabled);
     } catch {
-      setStatus(s.memoryError);
+      setFailed(true);
     } finally {
       setBusy(false);
       setConfirming(false);
@@ -88,93 +99,209 @@ export default function MemoryPanel({ lang, enabled, onReset, onClose }: Props) 
   return (
     <dialog
       ref={dialog}
-      className="panel"
+      className="dialog"
       aria-labelledby="memory-title"
+      aria-describedby="memory-intro"
       onClose={onClose}
       onClick={(e) => {
         if (e.target === dialog.current) dialog.current?.close(); // backdrop click
       }}
     >
-      <div className="panel-inner memory">
-        <header className="panel-head">
-          <h2 id="memory-title">{s.memory}</h2>
+      <div className="dialog-head">
+        <h2 id="memory-title" className="t-h1">
+          {s.memory}
+        </h2>
+        <button
+          type="button"
+          className="btn btn-ghost btn-icon"
+          onClick={() => dialog.current?.close()}
+          aria-label={s.close}
+        >
+          <Icon name="x" size={20} />
+        </button>
+      </div>
+
+      <div className="dialog-body">
+        <p id="memory-intro" className="muted">
+          {s.memoryIntro}
+        </p>
+
+        <div className="switch-row">
+          <div>
+            <label id="memory-switch-label" htmlFor="memory-switch">
+              {s.memorySwitch}
+            </label>
+            <p className="t-small regular subtle">{s.memoryRestart}</p>
+          </div>
           <button
+            id="memory-switch"
             type="button"
-            className="icon"
-            onClick={() => dialog.current?.close()}
-            aria-label={s.close}
-          >
-            ×
-          </button>
-        </header>
-
-        <p>{s.memoryIntro}</p>
-        <p className="small">{s.memoryKeeps}</p>
-        <p className="small">{s.memoryNever}</p>
-
-        <label className="switch">
-          <input
-            type="checkbox"
-            checked={enabled}
-            disabled={busy}
-            onChange={(e) => void toggle(e.target.checked)}
+            className="switch"
+            role="switch"
+            aria-checked={enabled}
+            aria-labelledby="memory-switch-label"
+            disabled={busy || load === null}
+            onClick={() => void toggle(!enabled)}
           />
-          <span>{s.memorySwitch}</span>
-        </label>
-        <p className="muted small">{s.memoryRestart}</p>
+        </div>
 
-        <h3>{s.rememberTitle}</h3>
-        {load === null && (
-          <p role="status" className="muted">
-            {s.loading}
+        {forgotten && (
+          <p className="done" role="status">
+            <Icon name="check" />
+            {s.forgotten}
           </p>
         )}
-        {load === "error" && (
-          <p role="alert" className="error">
+        {failed && (
+          <p className="field-error" role="alert">
+            <Icon name="circleAlert" />
             {s.memoryError}
           </p>
         )}
-        {profile && fields.length === 0 && <p className="muted">{s.rememberEmpty}</p>}
-        {profile && fields.length > 0 && (
-          <ul className="remembered">
-            {fields.map((f) => (
-              <li key={f}>{describe(f, profile[f]!, lang)}</li>
-            ))}
-          </ul>
-        )}
-        {enabled && <p className="muted small">{s.rememberDelay}</p>}
 
-        <div className="forget">
-          {confirming ? (
-            <>
-              <p>{s.forgetConfirm}</p>
+        <section className="remember" aria-labelledby="remember-title" aria-busy={load === null}>
+          <div className="remember-head">
+            <h3 id="remember-title" className="t-h2">
+              {s.rememberTitle}
+            </h3>
+            {enabled && <span className="t-small regular subtle">{s.rememberDelay}</span>}
+          </div>
+          {load === null && (
+            <p
+              role="status"
+              className="t-small subtle"
+              style={{ display: "flex", gap: 8, alignItems: "center" }}
+            >
+              <Icon name="loader" className="spin" />
+              {s.loading}
+            </p>
+          )}
+          {load === "error" && (
+            <div className="callout callout-error" role="alert">
+              <Icon name="triangleAlert" size={20} />
+              <div>
+                <p className="callout-body">{s.memoryError}</p>
+                <div className="callout-actions">
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      setLoad(null);
+                      setAttempt((a) => a + 1);
+                    }}
+                  >
+                    <Icon name="rotateCcw" />
+                    {s.tryAgain}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+          {profile && fields.length === 0 && <p className="muted">{s.rememberEmpty}</p>}
+          {profile && fields.length > 0 && (
+            <dl className="facts">
+              {fields.map((f) => {
+                const { label, value } = describeParts(f, profile[f]!, lang);
+                return (
+                  <div key={f} className="fact">
+                    <dt>{label}</dt>
+                    <dd>{value}</dd>
+                  </div>
+                );
+              })}
+            </dl>
+          )}
+        </section>
+
+        <div className="policy">
+          <div className="policy-col keep">
+            <h3 className="policy-head">
+              <Icon name="check" />
+              {s.keepTitle}
+            </h3>
+            <ul className="policy-list">
+              {s.keepList.map((item) => (
+                <li key={item}>
+                  <Icon name="check" size={14} />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="policy-col never">
+            <h3 className="policy-head">
+              <Icon name="lock" />
+              {s.neverTitle}
+            </h3>
+            <ul className="policy-list">
+              {s.neverList.map((item) => (
+                <li key={item}>
+                  <Icon name="ban" size={14} />
+                  {item}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        <p className="expiry t-small regular subtle">
+          <Icon name="clock" />
+          {s.memoryExpiry}
+        </p>
+      </div>
+
+      <div className="dialog-foot">
+        {confirming ? (
+          <div className="confirm">
+            <p>{s.forgetConfirm}</p>
+            <div className="confirm-actions">
+              <button
+                ref={cancel}
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => setConfirming(false)}
+              >
+                {s.cancel}
+              </button>
               <button
                 type="button"
-                className="danger"
+                className="btn btn-danger"
                 disabled={busy}
                 onClick={() => void forgetAll()}
               >
-                {s.forget}
-              </button>{" "}
-              <button type="button" className="ghost" onClick={() => setConfirming(false)}>
-                {s.close}
+                {busy ? (
+                  <>
+                    <Icon name="loader" className="spin" />
+                    {s.deleting}
+                  </>
+                ) : (
+                  <>
+                    <Icon name="trash" />
+                    {s.forget}
+                  </>
+                )}
               </button>
-            </>
-          ) : (
+            </div>
+          </div>
+        ) : (
+          <>
             <button
               type="button"
-              className="ghost"
+              className="btn btn-danger-outline"
               disabled={busy}
               onClick={() => setConfirming(true)}
             >
+              <Icon name="trash" />
               {s.forget}
             </button>
-          )}
-        </div>
-        {status && (
-          <p role="status" className="small">
-            {status}
-          </p>
+            <span className="spacer" />
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={() => dialog.current?.close()}
+            >
+              {s.done}
+            </button>
+          </>
         )}
       </div>
     </dialog>

@@ -212,8 +212,12 @@ export const PROFILE_LABELS: Record<Lang, Labels> = {
   },
 };
 
-/** "Permit: B", "Civil status: Married" — a remembered field as the panel shows it. */
-export function describe(field: ProfileField, value: string | boolean, lang: Lang): string {
+/** A remembered field as the memory dialog shows it: label and value in the UI language. */
+export function describeParts(
+  field: ProfileField,
+  value: string | boolean,
+  lang: Lang,
+): { label: string; value: string } {
   const l = PROFILE_LABELS[lang];
   const shown =
     typeof value === "boolean"
@@ -223,5 +227,11 @@ export function describe(field: ProfileField, value: string | boolean, lang: Lan
       : field === "canton" || field === "permit" || field === "municipality"
         ? value
         : (l.values[value] ?? value);
-  return `${l.fields[field]}: ${shown}`;
+  return { label: l.fields[field], value: shown };
+}
+
+/** "Permit: B", "Civil status: Married" — a remembered field as one line. */
+export function describe(field: ProfileField, value: string | boolean, lang: Lang): string {
+  const { label, value: shown } = describeParts(field, value, lang);
+  return `${label}: ${shown}`;
 }
