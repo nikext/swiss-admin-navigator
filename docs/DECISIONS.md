@@ -1056,5 +1056,18 @@ login accessibility 100, best practices 100, performance 86/90 (LCP
 three web-font families are the price of the design's type system. Step
 timings are measured in the browser, so they include network latency; a
 finished answer keeps its trail across reloads (saved with the chat in
-sessionStorage). Not yet checked against the deployed agent: a live answer's trail
-and the panel on a real phone (do after `make deploy-web`).
+sessionStorage). Open: a check on a real phone (Nikola).
+**Deployed (2026-10-19, commit 6303e9d):** `swiss-nav-web` revision
+`00004-4gr`. Without the cookie `/api/chat`, `/api/quota`, `/api/article`,
+`/api/memory` and `DELETE /api/session` answer 401; only the sans (2 files,
+41 KB) is preloaded. One live question through the UI (Playwright, desktop):
+answered in 109 s, "All quotes verified · High confidence · Checked 1
+article in 108 s", 3 sources with 3 "Verified" ticks; the article side panel
+opened with the cited paragraph highlighted; axe 0 violations on the answer
+and the panel; at 375 px no horizontal scroll; no console errors. It
+surfaced an M6 race: the page-load `GET /api/quota` (610 ms on a cold
+instance) read the counter before the chat's consume committed and arrived
+after the chat's `quota` event, so the footer kept "10 of 10" although
+Firestore held 1. The page-load read now never overrides a count a chat
+reply reported (reproduced with a delayed mock: 10 of 10 before, 9 of 10
+after).
