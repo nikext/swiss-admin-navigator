@@ -9,6 +9,7 @@ from agents.navigator.agent import (
     TOOLS,
     build_agent,
     generate_config,
+    llm,
     profile,
     root_agent,
 )
@@ -71,7 +72,25 @@ def test_every_model_call_has_a_deadline() -> None:
     assert plain.http_options is not None
     assert plain.http_options.timeout == CALL_TIMEOUT_MS
     assert plain.thinking_config is None
-    low = generate_config(LlmRef("m", "global", thinking="low"))
+    low = generate_config(LlmRef(profile.agent.model, "global", thinking="low"))  # a Gemini
     assert low.thinking_config is not None
     assert low.thinking_config.thinking_level == "LOW"
     assert build_agent(claim_check=False).generate_content_config is not None
+
+
+def test_open_models_go_through_litellm_and_submit_through_a_tool() -> None:
+    # M9 (E1): any non-Gemini profile model runs through LiteLLM on Vertex MaaS.
+    from google.adk.models.lite_llm import LiteLlm
+
+    ref = LlmRef("some-publisher/some-model-maas", "global", "medium")
+    model = llm(ref)
+    assert isinstance(model, LiteLlm)
+    assert model.model == "vertex_ai/some-publisher/some-model-maas"
+    assert model._additional_args["vertex_location"] == "global"
+    assert model._additional_args["reasoning_effort"] == "medium"
+    assert model._additional_args["num_retries"] == RETRY.attempts
+    assert model.capabilities.output_schema_and_tools is False  # set_model_response, not JSON mode
+    assert generate_config(ref).thinking_config is None
+    agent = build_agent("http://127.0.0.1:1/mcp", ref)
+    assert agent.model is not None
+    assert not isinstance(agent.model, Gemini)
