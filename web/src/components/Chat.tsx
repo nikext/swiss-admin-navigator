@@ -1,28 +1,37 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import { citationLabel } from "@/lib/cite";
-import type { Answer, Citation, Lang, Step, UiEvent } from "@/lib/contract";
-import { STRINGS } from "@/lib/i18n";
+import type { Answer, Citation, Lang, UiEvent } from "@/lib/contract";
+import { STRINGS, type Domain } from "@/lib/i18n";
 import { LineSplitter } from "@/lib/lines";
+import { count, COUNTER_FROM, MAX_CHARS, type TrailStep } from "@/lib/present";
 
 import AnswerView from "./AnswerView";
 import ArticlePanel from "./ArticlePanel";
+import Icon, { type IconName } from "./Icon";
 import MemoryPanel from "./MemoryPanel";
-import { Brand, LangSelect, Notice } from "./Shell";
+import { Brand, Disclaimer, LangMenu, Menu } from "./Shell";
+import { WorkCard } from "./Trail";
+
+type Failure = "generic" | "network" | "quota_user" | "quota_global";
 
 type Msg =
   | { id: string; role: "user"; text: string }
   | {
       id: string;
       role: "assistant";
+      question: string;
       state: "pending" | "done" | "error";
-      steps: { step: Step; detail?: string }[];
+      steps: TrailStep[];
+      took?: number;
       answer?: Answer;
-      error?: string;
+      error?: Failure;
       rated?: "up" | "down";
     };
+
+type AssistantMsg = Extract<Msg, { role: "assistant" }>;
 
 interface Saved {
   sessionId: string | null;
@@ -31,10 +40,31 @@ interface Saved {
 
 const STORE = "nav_chat";
 
+const DOMAIN_ICONS: Record<Domain, IconName> = {
+  housing: "house",
+  work: "briefcase",
+  social: "umbrella",
+  residence: "idCard",
+  mobility: "car",
+  tax: "receipt",
+};
+
 function loadSaved(): Saved | null {
   try {
     const raw = sessionStorage.getItem(STORE);
-    return raw ? (JSON.parse(raw) as Saved) : null;
+    if (!raw) return null;
+    const saved = JSON.parse(raw) as Saved;
+    // Older saves have no question, step times or durations; keep them readable.
+    saved.messages = saved.messages.map((m, i, all) => {
+      if (m.role !== "assistant") return m;
+      const prev = all[i - 1];
+      return {
+        ...m,
+        question: m.question ?? (prev?.role === "user" ? prev.text : ""),
+        steps: (m.steps ?? []).map((st) => ({ ...st, at: st.at ?? 0 })),
+      };
+    });
+    return saved;
   } catch {
     return null;
   }
@@ -49,6 +79,23 @@ function save(s: Saved): void {
 }
 
 const uid = () => Math.random().toString(36).slice(2, 10);
+
+/** A CSS media query as React state (false on the server). */
+function useMedia(query: string): boolean {
+  const subscribe = useCallback(
+    (notify: () => void) => {
+      const mq = window.matchMedia(query);
+      mq.addEventListener("change", notify);
+      return () => mq.removeEventListener("change", notify);
+    },
+    [query],
+  );
+  return useSyncExternalStore(
+    subscribe,
+    () => window.matchMedia(query).matches,
+    () => false,
+  );
+}
 
 export default function Chat({
   initialLang,
@@ -67,11 +114,15 @@ export default function Chat({
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
   const [quota, setQuota] = useState<number | null>(null);
-  const [panel, setPanel] = useState<Citation | null>(null);
+  const [quotaReason, setQuotaReason] = useState<"user" | "global">("user");
+  const [panel, setPanel] = useState<{ msgId: string; citation: Citation } | null>(null);
   const [startedAt, setStartedAt] = useState(0);
   const [now, setNow] = useState(0);
   const bottom = useRef<HTMLDivElement>(null);
+  const textarea = useRef<HTMLTextAreaElement>(null);
   const abort = useRef<AbortController | null>(null);
+  const opener = useRef<HTMLElement | null>(null);
+  const docked = useMedia("(min-width: 1100px)");
   const s = STRINGS[lang];
 
   useEffect(() => {
@@ -82,7 +133,9 @@ export default function Chat({
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setMessages(
         saved.messages.map((m) =>
-          m.role === "assistant" && m.state === "pending" ? { ...m, state: "error" } : m,
+          m.role === "assistant" && m.state === "pending"
+            ? { ...m, state: "error", error: "network" }
+            : m,
         ),
       );
       setSessionId(saved.sessionId);
@@ -90,7 +143,10 @@ export default function Chat({
     fetch("/api/quota")
       .then((r) => (r.ok ? r.json() : null))
       .then((d: { remaining?: { user: number; global: number } } | null) => {
-        if (d?.remaining) setQuota(Math.min(d.remaining.user, d.remaining.global));
+        if (d?.remaining) {
+          setQuota(Math.min(d.remaining.user, d.remaining.global));
+          setQuotaReason(d.remaining.global < d.remaining.user ? "global" : "user");
+        }
       })
       .catch(() => {});
   }, []);
@@ -100,7 +156,7 @@ export default function Chat({
   }, [sessionId, messages]);
 
   useEffect(() => {
-    bottom.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    if (messages.length) bottom.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [messages]);
 
   useEffect(() => {
@@ -108,9 +164,8 @@ export default function Chat({
     const t = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(t);
   }, [busy]);
-  const elapsed = Math.max(0, Math.round((now - startedAt) / 1000));
 
-  const update = useCallback((id: string, f: (m: Extract<Msg, { role: "assistant" }>) => Msg) => {
+  const update = useCallback((id: string, f: (m: AssistantMsg) => Msg) => {
     setMessages((ms) => ms.map((m) => (m.id === id && m.role === "assistant" ? f(m) : m)));
   }, []);
 
@@ -118,18 +173,23 @@ export default function Chat({
     const question = text.trim();
     if (!question || busy) return;
     const aid = uid();
+    const t0 = Date.now();
     setMessages((ms) => [
       ...ms,
       { id: uid(), role: "user", text: question },
-      { id: aid, role: "assistant", state: "pending", steps: [] },
+      { id: aid, role: "assistant", question, state: "pending", steps: [] },
     ]);
     setInput("");
-    setStartedAt(Date.now());
-    setNow(Date.now());
+    setStartedAt(t0);
+    setNow(t0);
     setBusy(true);
     const ctrl = new AbortController();
     abort.current = ctrl;
     let finished = false;
+    const fail = (error: Failure) => {
+      finished = true;
+      update(aid, (m) => ({ ...m, state: "error", error }));
+    };
     try {
       const resp = await fetch("/api/chat", {
         method: "POST",
@@ -143,15 +203,11 @@ export default function Chat({
       }
       if (!resp.ok || !resp.body) {
         const err = (await resp.json().catch(() => ({}))) as { code?: string };
-        const msg =
-          err.code === "quota_user"
-            ? s.quotaUser
-            : err.code === "quota_global"
-              ? s.quotaGlobal
-              : s.errorGeneric;
-        if (err.code?.startsWith("quota")) setQuota(0);
-        update(aid, (m) => ({ ...m, state: "error", error: msg }));
-        finished = true;
+        if (err.code === "quota_user" || err.code === "quota_global") {
+          setQuota(0);
+          setQuotaReason(err.code === "quota_global" ? "global" : "user");
+          fail(err.code);
+        } else fail("generic");
         return;
       }
       const reader = resp.body.getReader();
@@ -161,15 +217,21 @@ export default function Chat({
         for (const line of done ? lines.flush() : lines.push(value)) {
           const e = JSON.parse(line) as UiEvent;
           if (e.type === "session") setSessionId(e.sessionId);
-          else if (e.type === "quota") setQuota(Math.min(e.user, e.global));
-          else if (e.type === "progress") {
-            update(aid, (m) => ({ ...m, steps: [...m.steps, { step: e.step, detail: e.detail }] }));
+          else if (e.type === "quota") {
+            setQuota(Math.min(e.user, e.global));
+            setQuotaReason(e.global < e.user ? "global" : "user");
+          } else if (e.type === "progress") {
+            const at = Date.now() - t0;
+            update(aid, (m) => ({
+              ...m,
+              steps: [...m.steps, { step: e.step, detail: e.detail, at }],
+            }));
           } else if (e.type === "answer") {
             finished = true;
-            update(aid, (m) => ({ ...m, state: "done", answer: e.answer }));
+            const took = Math.round((Date.now() - t0) / 1000);
+            update(aid, (m) => ({ ...m, state: "done", answer: e.answer, took }));
           } else if (e.type === "error") {
-            finished = true;
-            update(aid, (m) => ({ ...m, state: "error", error: s.errorGeneric }));
+            fail("generic");
           }
         }
         if (done) break;
@@ -177,10 +239,35 @@ export default function Chat({
     } catch {
       // network drop or abort; handled below
     } finally {
-      if (!finished) update(aid, (m) => ({ ...m, state: "error", error: s.errorNetwork }));
+      if (!finished) update(aid, (m) => ({ ...m, state: "error", error: "network" }));
       abort.current = null;
       setBusy(false);
     }
+  }
+
+  /** Drops the failed turn and asks its question again. */
+  function retry(m: AssistantMsg) {
+    setMessages((ms) => {
+      const i = ms.findIndex((x) => x.id === m.id);
+      return i > 0 && ms[i - 1]?.role === "user" ? [...ms.slice(0, i - 1), ...ms.slice(i + 1)] : ms;
+    });
+    void ask(m.question);
+  }
+
+  function openCitation(msgId: string, citation: Citation) {
+    if (panel?.msgId === msgId && panel.citation.ref === citation.ref) {
+      closePanel();
+      return;
+    }
+    opener.current = document.activeElement as HTMLElement | null;
+    setPanel({ msgId, citation });
+  }
+
+  function closePanel() {
+    setPanel(null);
+    const el = opener.current;
+    opener.current = null;
+    if (el?.isConnected) requestAnimationFrame(() => el.focus());
   }
 
   async function newChat() {
@@ -196,6 +283,7 @@ export default function Chat({
         body: JSON.stringify({ sessionId: old }),
       }).catch(() => {});
     }
+    textarea.current?.focus();
   }
 
   /** The memory switch changed or everything was forgotten; the BFF ended the sessions. */
@@ -231,169 +319,239 @@ export default function Chat({
   }
 
   const empty = messages.length === 0;
+  const outOfQuota = quota === 0;
+  const quotaMessage = quotaReason === "global" ? s.quotaGlobal : s.quotaUser;
+  const placeholder = outOfQuota
+    ? s.quotaPlaceholder
+    : busy
+      ? s.waitPlaceholder
+      : empty
+        ? s.askPlaceholder
+        : s.followUpPlaceholder;
+  const turns = pairTurns(messages);
+
+  // The composer grows with its text (or a wrapping placeholder), up to its max-height.
+  useEffect(() => {
+    const t = textarea.current;
+    if (!t) return;
+    t.style.height = "auto";
+    t.style.height = `${t.scrollHeight}px`;
+  }, [input, placeholder]);
+  const memoryLabel = `${s.memory}: ${memoryOn ? s.memoryOn : s.memoryOff}`;
 
   return (
-    <div className="page">
+    <div className="shell">
       <header className="topbar">
-        <Brand lang={lang} />
-        <div className="actions">
-          <LangSelect lang={lang} onChange={setLang} />
-          <button
-            type="button"
-            className="ghost"
-            aria-haspopup="dialog"
-            onClick={() => setMemoryOpen(true)}
-          >
-            {s.memory}: {memoryOn ? s.memoryOn : s.memoryOff}
-          </button>
+        <Brand />
+        <nav className="topbar-actions" aria-label={s.account}>
           {!empty && (
-            <button type="button" className="ghost" onClick={newChat}>
+            <button type="button" className="btn btn-ghost only-wide" onClick={newChat}>
+              <Icon name="squarePen" />
               {s.newChat}
             </button>
           )}
-          <button type="button" className="ghost" onClick={logout}>
+          <LangMenu lang={lang} onChange={setLang} />
+          <button
+            type="button"
+            className="btn btn-ghost mem-btn only-wide"
+            aria-haspopup="dialog"
+            onClick={() => setMemoryOpen(true)}
+          >
+            <span className={`dot${memoryOn ? "" : " off"}`} aria-hidden="true" />
+            {memoryLabel}
+          </button>
+          <button
+            type="button"
+            className="btn btn-ghost btn-icon mem-btn only-narrow"
+            aria-haspopup="dialog"
+            aria-label={memoryLabel}
+            onClick={() => setMemoryOpen(true)}
+          >
+            <Icon name="stickyNote" size={20} />
+            <span className={`dot corner${memoryOn ? "" : " off"}`} aria-hidden="true" />
+          </button>
+          <button type="button" className="btn btn-ghost only-wide" onClick={logout}>
+            <Icon name="logOut" />
             {s.logout}
           </button>
-        </div>
+          <span className="only-narrow">
+            <Menu
+              label={s.more}
+              buttonLabel={s.more}
+              buttonClass="btn btn-ghost btn-icon"
+              button={<Icon name="moreVertical" size={20} />}
+              items={[
+                ...(empty
+                  ? []
+                  : [
+                      {
+                        key: "new",
+                        label: s.newChat,
+                        icon: "squarePen" as const,
+                        onSelect: newChat,
+                      },
+                    ]),
+                { key: "out", label: s.logout, icon: "logOut" as const, onSelect: logout },
+              ]}
+            />
+          </span>
+        </nav>
       </header>
 
-      <main className="chat">
-        {empty && (
-          <section className="examples" aria-labelledby="examples-title">
-            <h2 id="examples-title">{s.examplesTitle}</h2>
-            <ul>
-              {s.examples.map((q) => (
-                <li key={q}>
-                  <button type="button" onClick={() => ask(q)} disabled={busy} lang={lang}>
-                    {q}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
-
-        <ol className="messages" aria-label="Conversation">
-          {messages.map((m) =>
-            m.role === "user" ? (
-              <li key={m.id} className="msg user">
-                <span className="sr-only">{s.you}: </span>
-                <p>{m.text}</p>
-              </li>
+      <div className="main">
+        {/* Focusable so the conversation scrolls by keyboard even when nothing in it is. */}
+        <div className="chat-pane" tabIndex={0}>
+          <main className={`chat${empty ? " is-empty" : ""}`}>
+            {empty ? (
+              <>
+                <div className="hero">
+                  <h1 className="t-display">{s.heroTitle}</h1>
+                  <p className="hero-sub t-body-lg muted">{s.heroSub}</p>
+                </div>
+                <section className="examples-section" aria-labelledby="examples-title">
+                  <h2 id="examples-title" className="t-label muted">
+                    {s.examplesTitle}
+                  </h2>
+                  <ul className="examples">
+                    {s.examples.map((ex) => (
+                      <li key={ex.q}>
+                        <button
+                          type="button"
+                          className="ex"
+                          onClick={() => ask(ex.q)}
+                          disabled={busy || outOfQuota}
+                          lang={lang}
+                        >
+                          <span className="tag">
+                            <Icon name={DOMAIN_ICONS[ex.domain]} size={14} />
+                            {s.domains[ex.domain]}
+                          </span>
+                          {ex.q}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              </>
             ) : (
-              <li key={m.id} className="msg assistant">
-                <span className="sr-only">{s.assistant}: </span>
-                {m.state === "pending" && (
-                  <div className="pending">
-                    <p className="thinking" role="status" aria-live="polite">
-                      <span className="spinner" aria-hidden="true" />
-                      {m.steps.length
-                        ? `${s.steps[m.steps.at(-1)!.step]}${m.steps.at(-1)!.detail ? `: ${m.steps.at(-1)!.detail}` : ""}`
-                        : s.thinking}
-                      <span className="muted"> · {elapsed}s</span>
-                    </p>
-                    {m.steps.length > 1 && (
-                      <ul className="steps muted small">
-                        {m.steps.slice(0, -1).map((st, i) => (
-                          <li key={i}>
-                            {s.steps[st.step]}
-                            {st.detail ? `: ${st.detail}` : ""}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                    <p className="muted small">{s.slowHint}</p>
-                  </div>
-                )}
-                {m.state === "error" && (
-                  <p className="error" role="alert">
-                    {m.error ?? s.errorGeneric}
-                  </p>
-                )}
-                {m.state === "done" && m.answer && (
-                  <>
-                    <AnswerView
-                      answer={m.answer}
-                      lang={lang}
-                      onCite={setPanel}
-                      onAsk={ask}
-                      disabled={busy}
-                    />
-                    <div
-                      className="feedback"
-                      role="group"
-                      aria-label={`${s.helpful} / ${s.notHelpful}`}
-                    >
-                      {m.rated ? (
-                        <p className="muted small" role="status">
-                          {s.thanks}
-                        </p>
-                      ) : (
-                        <>
-                          <button
-                            type="button"
-                            className="icon"
-                            aria-label={s.helpful}
-                            onClick={() => rate(m.id, m.answer!, "up")}
-                          >
-                            👍
-                          </button>
-                          <button
-                            type="button"
-                            className="icon"
-                            aria-label={s.notHelpful}
-                            onClick={() => rate(m.id, m.answer!, "down")}
-                          >
-                            👎
-                          </button>
-                        </>
+              <>
+                <h1 className="sr-only">Swiss Admin Navigator</h1>
+                <ol className="turns" aria-label={s.assistant}>
+                  {turns.map(({ user, reply }) => (
+                    <li key={reply?.id ?? user.id} className="turn">
+                      <p className="msg-user">
+                        <span className="sr-only">{s.you}: </span>
+                        {user.text}
+                      </p>
+                      {reply && (
+                        <Reply
+                          m={reply}
+                          lang={lang}
+                          busy={busy}
+                          elapsedMs={now - startedAt}
+                          activeRef={panel?.msgId === reply.id ? panel.citation.ref : null}
+                          onCite={(c) => openCitation(reply.id, c)}
+                          onAsk={ask}
+                          onRetry={() => retry(reply)}
+                          onRate={(r) => reply.answer && rate(reply.id, reply.answer, r)}
+                          quotaMessage={quotaMessage}
+                        />
                       )}
-                    </div>
-                  </>
+                    </li>
+                  ))}
+                </ol>
+              </>
+            )}
+            <div ref={bottom} />
+          </main>
+
+          <div className="dock">
+            <form
+              className="dock-inner"
+              aria-label={s.send}
+              onSubmit={(e) => {
+                e.preventDefault();
+                void ask(input);
+              }}
+            >
+              <div className={`composer${busy || outOfQuota ? " is-disabled" : ""}`}>
+                <label htmlFor="question" className="sr-only">
+                  {s.yourQuestion}
+                </label>
+                <textarea
+                  id="question"
+                  ref={textarea}
+                  rows={1}
+                  maxLength={MAX_CHARS}
+                  placeholder={placeholder}
+                  value={input}
+                  disabled={outOfQuota}
+                  aria-describedby="composer-meta"
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
+                      e.preventDefault();
+                      void ask(input);
+                    }
+                  }}
+                />
+                <button
+                  type="submit"
+                  className="btn btn-primary send"
+                  aria-label={s.send}
+                  disabled={busy || !input.trim() || outOfQuota}
+                >
+                  <span className="only-wide">{s.send}</span>
+                  <Icon name="arrowUp" />
+                </button>
+              </div>
+              <div className="composer-meta" id="composer-meta">
+                {outOfQuota ? (
+                  <span className="limit" role="status">
+                    <Icon name="clock" />
+                    {quotaMessage}
+                  </span>
+                ) : (
+                  <span aria-live="polite">{quota !== null && s.quotaLeft(quota, userQuota)}</span>
                 )}
-              </li>
-            ),
-          )}
-        </ol>
-        <div ref={bottom} />
-      </main>
+                {input.length >= COUNTER_FROM ? (
+                  <span className="count">
+                    {count(input.length, lang)} / {count(MAX_CHARS, lang)}
+                  </span>
+                ) : (
+                  !outOfQuota && (
+                    <span className="keys" aria-hidden="true">
+                      <kbd>Enter</kbd> {s.toSend} · <kbd>Shift</kbd>+<kbd>Enter</kbd> {s.newLine}
+                    </span>
+                  )
+                )}
+              </div>
+            </form>
+          </div>
+        </div>
 
-      <form
-        className="composer"
-        aria-label={s.send}
-        onSubmit={(e) => {
-          e.preventDefault();
-          void ask(input);
-        }}
-      >
-        <label htmlFor="question" className="sr-only">
-          {s.askPlaceholder}
-        </label>
-        <textarea
-          id="question"
-          rows={2}
-          maxLength={2000}
-          placeholder={s.askPlaceholder}
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
-              e.preventDefault();
-              void ask(input);
-            }
-          }}
-        />
-        <button type="submit" className="primary" disabled={busy || !input.trim() || quota === 0}>
-          {s.send}
-        </button>
-        {quota !== null && (
-          <p className="quota muted small" aria-live="polite">
-            {quota === 0 ? s.quotaUser : s.quotaLeft(quota, userQuota)}
-          </p>
+        {panel && docked && (
+          <ArticlePanel
+            key={`${panel.msgId}-${panel.citation.ref}`}
+            citation={panel.citation}
+            lang={lang}
+            docked
+            onClose={closePanel}
+          />
         )}
-      </form>
+      </div>
 
-      <Notice lang={lang} />
+      <Disclaimer lang={lang} />
+
+      {panel && !docked && (
+        <ArticlePanel
+          key={`${panel.msgId}-${panel.citation.ref}`}
+          citation={panel.citation}
+          lang={lang}
+          docked={false}
+          onClose={closePanel}
+        />
+      )}
       {memoryOpen && (
         <MemoryPanel
           lang={lang}
@@ -402,14 +560,79 @@ export default function Chat({
           onClose={() => setMemoryOpen(false)}
         />
       )}
-      {panel && (
-        <ArticlePanel
-          key={`${panel.sr}-${panel.article}-${panel.ref}`}
-          citation={panel}
-          lang={lang}
-          onClose={() => setPanel(null)}
-        />
-      )}
+    </div>
+  );
+}
+
+/** Messages alternate user → assistant; a turn is one question and its reply. */
+function pairTurns(messages: Msg[]) {
+  const turns: { user: Extract<Msg, { role: "user" }>; reply?: AssistantMsg }[] = [];
+  for (const m of messages) {
+    if (m.role === "user") turns.push({ user: m });
+    else if (turns.length && !turns.at(-1)!.reply) turns.at(-1)!.reply = m;
+  }
+  return turns;
+}
+
+function Reply({
+  m,
+  lang,
+  busy,
+  elapsedMs,
+  activeRef,
+  onCite,
+  onAsk,
+  onRetry,
+  onRate,
+  quotaMessage,
+}: {
+  m: AssistantMsg;
+  lang: Lang;
+  busy: boolean;
+  elapsedMs: number;
+  activeRef: string | null;
+  onCite: (c: Citation) => void;
+  onAsk: (q: string) => void;
+  onRetry: () => void;
+  onRate: (r: "up" | "down") => void;
+  quotaMessage: string;
+}) {
+  const s = STRINGS[lang];
+  if (m.state === "pending") return <WorkCard steps={m.steps} lang={lang} elapsedMs={elapsedMs} />;
+  if (m.state === "done" && m.answer) {
+    return (
+      <AnswerView
+        answer={m.answer}
+        lang={lang}
+        steps={m.steps}
+        took={m.took ?? null}
+        activeRef={activeRef}
+        onCite={onCite}
+        onAsk={onAsk}
+        disabled={busy}
+        rated={m.rated}
+        onRate={onRate}
+      />
+    );
+  }
+  const quota = m.error === "quota_user" || m.error === "quota_global";
+  const title = quota ? s.quotaTitle : m.error === "network" ? s.networkTitle : s.errorTitle;
+  const body = quota ? quotaMessage : m.error === "network" ? s.errorNetwork : s.errorGeneric;
+  return (
+    <div className={`callout ${quota ? "callout-warn" : "callout-error"}`} role="alert">
+      <Icon name={quota ? "clock" : "triangleAlert"} size={20} />
+      <div>
+        <p className="callout-title">{title}</p>
+        <p className="callout-body">{body}</p>
+        {!quota && (
+          <div className="callout-actions">
+            <button type="button" className="btn btn-secondary" onClick={onRetry} disabled={busy}>
+              <Icon name="rotateCcw" />
+              {s.tryAgain}
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
