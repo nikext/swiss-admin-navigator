@@ -80,7 +80,12 @@ def _free_port() -> int:
 def local_server(log_path: Path, timeout_s: float = 60, port: int | None = None) -> Iterator[str]:
     """Run the MCP server from this checkout (needs data/index.sqlite); yields its URL."""
     port = port or _free_port()
-    env = os.environ | {"SEARCH_RATE_PER_MIN": "6000", "SEARCH_BURST": "200"}
+    # The harness is the only client: lift the per-client limit and the embedding budget
+    # (M10, ADR-033), which would otherwise turn bursts of searches into keyword-only ones.
+    env = os.environ | {
+        "SEARCH_RATE_PER_MIN": "6000", "SEARCH_BURST": "200",
+        "EMBED_RATE_PER_MIN": "6000", "EMBED_BURST": "200",
+    }  # fmt: skip
     log_path.parent.mkdir(parents=True, exist_ok=True)
     with log_path.open("w") as log:
         proc = subprocess.Popen(  # noqa: S603 (our own module, fixed args)
