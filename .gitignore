@@ -9,6 +9,8 @@ application_default_credentials.json
 # corpus + build artefacts (rebuilt from corpus/manifest.lock.json)
 cache/
 data/
+# a worktree's symlink to the main checkout's data/ (`data/` matches directories only)
+/data
 *.sqlite
 *.sqlite-*
 
