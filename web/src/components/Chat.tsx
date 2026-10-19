@@ -115,6 +115,9 @@ export default function Chat({
   const [busy, setBusy] = useState(false);
   const [quota, setQuota] = useState<number | null>(null);
   const [quotaReason, setQuotaReason] = useState<"user" | "global">("user");
+  // Set once a chat reply reported the quota: the page-load read may have run
+  // before that question was counted and arrive later, so it must not win.
+  const quotaFromChat = useRef(false);
   const [panel, setPanel] = useState<{ msgId: string; citation: Citation } | null>(null);
   const [startedAt, setStartedAt] = useState(0);
   const [now, setNow] = useState(0);
@@ -143,7 +146,7 @@ export default function Chat({
     fetch("/api/quota")
       .then((r) => (r.ok ? r.json() : null))
       .then((d: { remaining?: { user: number; global: number } } | null) => {
-        if (d?.remaining) {
+        if (d?.remaining && !quotaFromChat.current) {
           setQuota(Math.min(d.remaining.user, d.remaining.global));
           setQuotaReason(d.remaining.global < d.remaining.user ? "global" : "user");
         }
@@ -204,6 +207,7 @@ export default function Chat({
       if (!resp.ok || !resp.body) {
         const err = (await resp.json().catch(() => ({}))) as { code?: string };
         if (err.code === "quota_user" || err.code === "quota_global") {
+          quotaFromChat.current = true;
           setQuota(0);
           setQuotaReason(err.code === "quota_global" ? "global" : "user");
           fail(err.code);
@@ -218,6 +222,7 @@ export default function Chat({
           const e = JSON.parse(line) as UiEvent;
           if (e.type === "session") setSessionId(e.sessionId);
           else if (e.type === "quota") {
+            quotaFromChat.current = true;
             setQuota(Math.min(e.user, e.global));
             setQuotaReason(e.global < e.user ? "global" : "user");
           } else if (e.type === "progress") {
