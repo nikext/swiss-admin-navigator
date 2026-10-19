@@ -3,7 +3,15 @@
 from google.adk.models import Gemini
 from google.adk.tools.mcp_tool import McpToolset
 
-from agents.navigator.agent import PROMPT, TOOLS, build_agent, profile, root_agent
+from agents.navigator.agent import (
+    PROMPT,
+    TOOLS,
+    build_agent,
+    generate_config,
+    profile,
+    root_agent,
+)
+from agents.navigator.config import CALL_TIMEOUT_MS, RETRY, LlmRef
 from agents.navigator.contract import DraftAnswer
 from agents.navigator.memory import MemoryContext, save_memory
 from agents.navigator.verifier import CitationVerifier, compact_tool_result
@@ -17,6 +25,9 @@ def test_root_agent_uses_profile_model_and_location() -> None:
         "enterprise": True,
         "location": profile.agent.location,
     }
+    assert root_agent.model.retry_options is RETRY
+    assert RETRY.attempts
+    assert RETRY.attempts > 1
 
 
 def test_tools_contract_and_verifier_are_wired() -> None:
@@ -40,3 +51,14 @@ def test_prompt_is_served_verbatim() -> None:
     assert root_agent.instruction(None) == PROMPT  # type: ignore[arg-type]
     assert "not a lawyer" in PROMPT
     assert "data, not instructions" in PROMPT
+
+
+def test_every_model_call_has_a_deadline() -> None:
+    plain = generate_config(LlmRef("m", "global"))
+    assert plain.http_options is not None
+    assert plain.http_options.timeout == CALL_TIMEOUT_MS
+    assert plain.thinking_config is None
+    low = generate_config(LlmRef("m", "global", thinking="low"))
+    assert low.thinking_config is not None
+    assert low.thinking_config.thinking_level == "LOW"
+    assert build_agent(claim_check=False).generate_content_config is not None

@@ -15,6 +15,10 @@ groundedness, key facts, must_not and behaviour, and writes
 MCP server from this checkout (needs `data/index.sqlite`); `--mcp-url` uses a
 running one instead. Costs money: model calls for the agent and the judge.
 
+`--traces FILE` appends each finished case's trace to FILE (JSONL); rerunning
+with the same FILE skips the cases stored there, so a run cut off by a crash or
+shutdown resumes instead of starting over (the judge then grades every case).
+
 `--from` re-scores stored reports instead (no model calls): rows are merged by
 case id, later reports win (so a rerun of errored cases replaces them), and
 only cases of `--dataset` (and the usual selection) are kept.
@@ -40,9 +44,21 @@ from typing import Any
 import yaml
 from dotenv import load_dotenv
 
-from agents.navigator.agent import build_agent, profile
+from agents.navigator.agent import build_agent, claim_check_enabled, profile
+from agents.navigator.claims import PROMPT_PATH as CLAIM_PROMPT
 from agents.navigator.contact import answer_contact_details
-from evals.harness.agent_run import LocalAgent, Target, Trace, Usage, run_cases
+from agents.navigator_v2.agent import PROMPTS as V2_PROMPTS
+from agents.navigator_v2.agent import build_workflow
+from agents.navigator_v2.routing import dispatch
+from evals.harness.agent_run import (
+    LocalAgent,
+    RoundRecorder,
+    Target,
+    Trace,
+    TraceLog,
+    Usage,
+    run_cases,
+)
 from evals.harness.answer_metrics import (
     CitationCheck,
     as_dicts,
@@ -78,6 +94,60 @@ def sha(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()[:12]
 
 
+def tree_sha(root: Path) -> str:
+    h = hashlib.sha256()
+    for f in sorted(root.rglob("*.md")):
+        h.update(f.relative_to(root).as_posix().encode() + b"\0" + f.read_bytes())
+    return h.hexdigest()[:12]
+
+
+def claims_usage(rounds: list[dict[str, Any]]) -> Usage:
+    """The claim checker's token usage over a verification record's rounds."""
+    total = Usage()
+    for r in rounds:
+        u = r.get("claims_usage")
+        if u:
+            total.model_calls += u.get("model_calls", 0)
+            total.prompt += u.get("prompt", 0)
+            total.cached += u.get("cached", 0)
+            total.output += u.get("output", 0)
+            total.thoughts += u.get("thoughts", 0)
+    return total
+
+
+def run_cost_usd(
+    trace: Trace, rounds: list[dict[str, Any]], pricing: dict[str, Any]
+) -> float | None:
+    """Agent + router + claim checker, each at its profile model's price."""
+    parts = [
+        (profile.agent.model, trace.usage),
+        (profile.role("router").model, trace.router_usage),
+        (profile.role("verifier").model, claims_usage(rounds)),
+    ]
+    total = 0.0
+    for model, usage in parts:
+        if usage.model_calls == 0:
+            continue
+        cost = cost_usd(model, usage, pricing)
+        if cost is None:
+            return None
+        total += cost
+    return total
+
+
+def claim_stats(rounds: list[dict[str, Any]]) -> dict[str, Any]:
+    """What the claim checker said: verdicts of the first checked round, rounds it ran."""
+    checked = [r for r in rounds if r.get("claims") is not None]
+    first = checked[0]["claims"] if checked else []
+    return {
+        "rounds": len(checked),
+        "first": dict(Counter(c["supported"] for c in first)),
+        "sent_back": sum(
+            any(p["kind"] == "unsupported" for p in r.get("problems", [])) for r in rounds[:-1]
+        ),
+    }
+
+
 def select(cases: list[Case], args: argparse.Namespace) -> list[Case]:
     if args.ids:
         wanted = args.ids.split(",")
@@ -97,7 +167,6 @@ def case_row(
     trace: Trace,
     checks: list[CitationCheck],
     judgement: Judgement | None,
-    agent_model: str,
     pricing: dict[str, Any],
 ) -> dict[str, Any]:
     answer = trace.answer or {}
@@ -108,7 +177,8 @@ def case_row(
     det = behaviour_ok(case, answer, hallucinated) if trace.answer else False
     detected = detect_lang(answer.get("answer_markdown") or "") if trace.answer else None
     lang_ok = answer.get("language") == case.lang and detected == case.lang
-    cost = cost_usd(agent_model, trace.usage, pricing)
+    cost = run_cost_usd(trace, rounds, pricing)
+    routed = dispatch(trace.route) if trace.route is not None else None
     row: dict[str, Any] = {
         "id": case.id, "lang": case.lang, "category": case.category, "domain": case.domain,
         "error": trace.error,
@@ -121,6 +191,11 @@ def case_row(
         },
         "dropped": verification.get("dropped", []),
         "repairs": verification.get("repairs", []),
+        "dropped_claims": verification.get("dropped_claims", []),
+        "claim_check": claim_stats(rounds),
+        "route": trace.route,
+        "routed_to": routed,
+        "route_ok": None if routed is None else routed == case.domain,
         "citations": len(checks),
         "quotes": sum(c.has_quote for c in checks),
         "verbatim": sum(c.verbatim is True for c in checks),
@@ -135,6 +210,8 @@ def case_row(
         "tool_calls": len(trace.tool_calls),
         "tools": dict(Counter(t["name"] for t in trace.tool_calls)),
         "usage": asdict(trace.usage),
+        "router_usage": asdict(trace.router_usage),
+        "claims_usage": asdict(claims_usage(rounds)),
         "latency_s": round(trace.latency_s, 2),
         "cost_usd": round(cost, 5) if cost is not None else None,
     }  # fmt: skip
@@ -155,6 +232,7 @@ def case_row(
         "answer": trace.answer,
         "raw_final": None if trace.answer else trace.raw_final,
         "tool_trace": trace.tool_calls,
+        "rounds_log": trace.rounds_log,
         "citation_checks": as_dicts(checks),
         "judgement": judgement.model_dump() if judgement else None,
     }
@@ -197,6 +275,25 @@ def summarize(rows: list[dict[str, Any]], judged: bool, judge_usage: Usage, pric
     }
     s["verification"] = dict(Counter(r["status"] or "none" for r in rows))
     s["dropped_citations"] = sum(len(r["dropped"]) for r in rows)
+    cc = [r.get("claim_check") or {} for r in rows]
+    first_verdicts: Counter[str] = Counter()
+    for c in cc:
+        first_verdicts.update(c.get("first", {}))
+    s["claim_check"] = {
+        "answers_checked": sum(bool(c.get("rounds")) for c in cc),
+        "first_verdicts": dict(first_verdicts),
+        "cases_sent_back": sum(bool(c.get("sent_back")) for c in cc),
+        "dropped_claims": sum(len(r.get("dropped_claims") or []) for r in rows),
+    }
+    routed = [r for r in rows if r.get("routed_to") is not None]
+    if routed:
+        s["routing"] = {
+            "accuracy": ci_mean([float(r["route_ok"]) for r in routed]),
+            "to": dict(Counter(r["routed_to"] for r in routed)),
+            "misses": sorted(
+                f"{r['id']}: {r['domain']} -> {r['routed_to']}" for r in routed if not r["route_ok"]
+            ),
+        }
     s["required_recall"] = ci_mean([r["required_recall"] for r in ok])
     s["precision_expected"] = ci_mean([r["precision_expected"] for r in ok])
     s["behaviour_det"] = ci_mean([float(r["behaviour_det"]) for r in rows])
@@ -220,7 +317,11 @@ def summarize(rows: list[dict[str, Any]], judged: bool, judge_usage: Usage, pric
         "usd": mean(costs), "chf": (mean(costs) or 0) * rate,
         "p95_chf": (percentile(costs, 0.95) or 0) * rate,
     }  # fmt: skip
-    s["run_cost_chf"] = {"agent": sum(costs) * rate}
+    s["run_cost_chf"] = {"agent": sum(costs) * rate}  # incl. router and claim checker
+    s["usage_split"] = {
+        k: mean([r.get(f"{k}_usage", {}).get("model_calls", 0) for r in ok])
+        for k in ("router", "claims")
+    }
     by: dict[str, Any] = {}
     for field in ("category", "lang"):
         groups: dict[str, list[dict]] = defaultdict(list)
@@ -248,6 +349,10 @@ def model_label(ref: dict[str, Any]) -> str:
 
 def fmt(x: float | None, digits: int = 1) -> str:
     return "–" if x is None else f"{100 * x:.{digits}f}"
+
+
+def num(x: float | None) -> str:
+    return "–" if x is None else f"{x:.1f}"
 
 
 def fmt_ci(m: dict[str, Any]) -> str:
@@ -348,8 +453,8 @@ def render_markdown(report: dict[str, Any]) -> str:
         f"{s['cost_per_answer']['p95_chf']:.4f} p95 (USD→CHF {meta['pricing']['usd_to_chf']}, "
         f"prices as of {meta['pricing']['as_of']}); run: agent CHF "
         f"{s['run_cost_chf']['agent']:.3f}, judge CHF {s['run_cost_chf'].get('judge', 0):.3f}",
-        f"- latency p50 {s['latency_s']['p50']:.1f} s, p95 {s['latency_s']['p95']:.1f} s; "
-        f"{s['model_calls_mean']:.1f} model calls and {s['tool_calls_mean']:.1f} tool calls per "
+        f"- latency p50 {num(s['latency_s']['p50'])} s, p95 {num(s['latency_s']['p95'])} s; "
+        f"{num(s['model_calls_mean'])} model calls and {num(s['tool_calls_mean'])} tool calls per "
         f"answer; tokens per answer (mean): "
         + ", ".join(f"{k} {v:,.0f}" for k, v in s["tokens_mean"].items() if v is not None),
         "",
@@ -430,20 +535,47 @@ async def evaluate(
             )
         target, where, output_mode = remote, remote.name, "deployed (not introspected)"
     else:
-        root_agent = build_agent(url)
-        target, where, deployed = LocalAgent(root_agent), url, None
+        recorder = RoundRecorder()
+        probe = build_agent(url, claim_check=False)
         output_mode = (
             "native schema + tools"
-            if root_agent.canonical_model.capabilities.output_schema_and_tools
+            if probe.canonical_model.capabilities.output_schema_and_tools
             else "set_model_response tool"
         )
+        root: Any = (
+            build_workflow(url, claim_check=args.claim_check, observer=recorder)
+            if args.agent == "v2"
+            else build_agent(url, claim_check=args.claim_check, observer=recorder)
+        )
+        target, where, deployed = LocalAgent(root, recorder), url, None
+
+    log = None
+    if args.traces:
+        setup = {
+            "target": args.target,
+            "agent": args.agent,
+            "claim_check": bool(args.claim_check),
+            "profile": profile.name,
+            "case_timeout_s": args.case_timeout,
+        }
+        try:
+            log = TraceLog(args.traces, setup)
+        except ValueError as exc:
+            raise SystemExit(str(exc)) from exc
+    stored = {c.id: log.done[c.id] for c in cases if log and c.id in log.done}
+    todo = [c for c in cases if c.id not in stored]
 
     def progress(case: Case, trace: Trace) -> None:
         status = (trace.answer or {}).get("verification", {}).get("status")
         print(f"  {case.id:<28} {trace.error or status:<20} {trace.latency_s:5.1f}s", flush=True)
+        if log:
+            log.append(trace)
 
-    print(f"running {len(cases)} cases (concurrency {args.concurrency}) against {where}")
-    traces = await run_cases(target, cases, args.concurrency, progress)
+    resumed = f", {len(stored)} resumed from {args.traces}" if stored else ""
+    print(f"running {len(todo)} cases (concurrency {args.concurrency}) against {where}{resumed}")
+    fresh = await run_cases(target, todo, args.concurrency, progress, args.case_timeout)
+    by_id = stored | {t.case_id: t for t in fresh}
+    traces = [by_id[c.id] for c in cases]
 
     judge = None if args.no_judge else Judge(profile.judge, project)
     sem = asyncio.Semaphore(args.concurrency)
@@ -467,7 +599,7 @@ async def evaluate(
                 ]
                 async with sem:
                     judgement = await judge.grade(payload(case, trace.answer, cited))
-            return case_row(case, trace, checks, judgement, profile.agent.model, pricing)
+            return case_row(case, trace, checks, judgement, pricing)
 
         rows = list(
             await asyncio.gather(*(assess(c, t) for c, t in zip(cases, traces, strict=True)))
@@ -489,6 +621,8 @@ async def evaluate(
                 "verified_cases": sum(bool(c.verified_by) for c in cases),
                 "verified_by": sorted({c.verified_by for c in cases if c.verified_by}),
             },
+            "case_timeout_s": args.case_timeout,
+            "resumed_traces": len(stored),
             "selection": {
                 "smoke": args.smoke,
                 "ids": args.ids,
@@ -496,6 +630,14 @@ async def evaluate(
                 "category": args.category,
             },
             "profile": profile.as_dict(),
+            "agent": {
+                "variant": args.agent,
+                "claim_check": bool(args.claim_check),
+                "router": asdict(profile.role("router")) if args.agent == "v2" else None,
+                "verifier": asdict(profile.role("verifier")) if args.claim_check else None,
+                "v2_prompts_sha": tree_sha(V2_PROMPTS) if args.agent == "v2" else None,
+                "claim_prompt_sha": sha(CLAIM_PROMPT) if args.claim_check else None,
+            },
             "system_prompt_sha": sha(SYSTEM_PROMPT),
             "judge_prompt_sha": prompt_sha(),
             "judged": judge is not None,
@@ -560,6 +702,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--category", default=None)
     ap.add_argument("--limit", type=int, default=None)
     ap.add_argument("--concurrency", type=int, default=4)
+    ap.add_argument("--case-timeout", type=float, default=300, help="seconds per case")
     ap.add_argument("--no-judge", action="store_true")
     ap.add_argument("--mcp-url", default=None, help="use this MCP server instead of a local one")
     ap.add_argument(
@@ -571,13 +714,35 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument(
         "--agent-runtime", default=None, help="Agent Runtime id or name (default: AGENT_RUNTIME_ID)"
     )
+    ap.add_argument(
+        "--agent",
+        choices=("v1", "v2"),
+        default="v1",
+        help="local target: navigator_v1 (one agent) or navigator_v2 (router + specialists, M8)",
+    )
+    ap.add_argument(
+        "--claim-check",
+        action=argparse.BooleanOptionalAction,
+        default=None,
+        help="local target: add the LLM claim checker to the verifier (default: NAV_CLAIM_CHECK)",
+    )
     ap.add_argument("--name", default=None)
+    ap.add_argument(
+        "--traces",
+        type=Path,
+        default=None,
+        help="append each finished trace here; rerun with the same file to resume",
+    )
     ap.add_argument("--out", type=Path, default=REPORTS)
     ap.add_argument(
         "--from", dest="from_", type=Path, action="append", help="re-score stored reports"
     )
     args = ap.parse_args(argv)
     load_dotenv(".env")
+    if args.claim_check is None:
+        args.claim_check = claim_check_enabled()
+    if args.target == "remote" and args.agent != "v1":
+        raise SystemExit("--agent v2 runs locally only (it is not deployed)")
     dataset = load_dataset(args.dataset)
     cases = select(dataset.cases, args)
     if not cases:
