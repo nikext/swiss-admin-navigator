@@ -1278,9 +1278,12 @@ body cap (declared and chunked, at and over the limit). A local server: a
 **Consequences:** a distributed flood can still keep both instances busy.
 Cloud Run bills ~USD 0.13 per instance-hour, ~USD 190 a month if it never
 stopped. The budget alert (ADR-012) is the backstop, and the response is
-`--max-instances 1` or `--no-allow-unauthenticated`. Not verified until
-`make deploy-mcp` (Nikola): that a forged hop and no header give the same
-client hash on Cloud Run, which shows the appended hop is the real address.
+`--max-instances 1` or `--no-allow-unauthenticated`. Verified on Cloud Run
+after `make deploy-mcp` (revision `swiss-nav-mcp-00008-4mr`, 014559e,
+2026-10-19): `list_acts` with no header and with a forged
+`X-Forwarded-For: 203.0.113.7` logged the same client hash (the forged one
+with `forwarded_hops: 2`), so the appended hop is the real address; a 70 KB
+body got 413 `request body too large`.
 The web BFF's login limiter keys IPv6 per address, which is fine: the
 16-character code from a 56-letter alphabet can't be brute-forced at
 10 tries per 15 minutes anyway.
