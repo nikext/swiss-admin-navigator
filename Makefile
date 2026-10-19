@@ -111,6 +111,9 @@ eval-full: ## Golden + every draft batch; ARGS="--dataset golden+adversarial [--
 eval-derive: ## No-verifier / v1-verifier answers from a recorded --claim-check run (ARGS="--from R.json --policy none|deterministic"; judge only)
 	$(UV) run python -m evals.harness.derive $(ARGS)
 
+eval-apertus: ## E1: Apertus 1.5 8B on Cloud Run GPU + eval + teardown (Nikola runs it; DRY_RUN=1; EVAL_ARGS=...)
+	bash infra/apertus_eval.sh
+
 eval-compare: ## Experiment tables with paired CIs (ARGS="--report base=A.json --report other=B.json [--subset golden]")
 	$(UV) run python -m evals.harness.compare $(ARGS)
 

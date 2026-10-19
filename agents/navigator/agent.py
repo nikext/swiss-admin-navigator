@@ -57,10 +57,11 @@ def instruction_provider(prompt: str):
     return instruction
 
 
-def new_toolset(mcp_url: str) -> McpToolset:
+def new_toolset(mcp_url: str, tools: list[str] | None = None) -> McpToolset:
+    """The swiss-law tools; `tools` narrows them for ablations (E3: without get_toc)."""
     return McpToolset(
         connection_params=StreamableHTTPConnectionParams(url=mcp_url, timeout=15),
-        tool_filter=TOOLS,
+        tool_filter=list(TOOLS if tools is None else tools),
         # The server's tool list is static; don't re-list it before every model call.
         tool_list_cache_ttl_seconds=3600,
     )
@@ -85,8 +86,9 @@ REASONING_EFFORT = {"minimal": "low", "low": "low", "medium": "medium", "high": 
 
 def open_model(model: LlmRef) -> BaseLlm:
     """A non-Gemini model through LiteLLM (M9, E1): open models on Model as a Service
-    (`publisher/model-maas` on Vertex's OpenAI-compatible endpoint, ADC auth). Eval runs only:
-    litellm comes with the evals package, the deployed image does not have it."""
+    (`publisher/model-maas` on Vertex's OpenAI-compatible endpoint, ADC auth), or a vLLM server
+    when the location is a URL. Eval runs only: litellm comes with the evals package, the
+    deployed image does not have it."""
     from google.adk.models._capabilities import LlmCapabilities
     from google.adk.models.lite_llm import LiteLlm
 
@@ -98,13 +100,18 @@ def open_model(model: LlmRef) -> BaseLlm:
         def capabilities(self) -> LlmCapabilities:
             return LlmCapabilities(output_schema_and_tools=False)
 
-    kwargs: dict[str, Any] = {
-        "vertex_project": os.environ.get("GOOGLE_CLOUD_PROJECT"),
-        "vertex_location": model.location,
-        "num_retries": RETRY.attempts,
-    }
+    kwargs: dict[str, Any] = {"num_retries": RETRY.attempts}
     if model.thinking is not None:
         kwargs["reasoning_effort"] = REASONING_EFFORT[model.thinking]
+    if model.location.startswith(("http://", "https://")):
+        # A self-hosted vLLM server's OpenAI API (Apertus on Cloud Run, ADR-006), reached
+        # through `gcloud run services proxy`, which adds the identity token.
+        kwargs |= {"api_base": model.location, "api_key": "unused"}
+        return ToolSubmitLiteLlm(model=f"hosted_vllm/{model.model}", **kwargs)
+    kwargs |= {
+        "vertex_project": os.environ.get("GOOGLE_CLOUD_PROJECT"),
+        "vertex_location": model.location,
+    }
     return ToolSubmitLiteLlm(model=f"vertex_ai/{model.model}", **kwargs)
 
 

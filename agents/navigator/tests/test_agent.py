@@ -94,3 +94,11 @@ def test_open_models_go_through_litellm_and_submit_through_a_tool() -> None:
     agent = build_agent("http://127.0.0.1:1/mcp", ref)
     assert agent.model is not None
     assert not isinstance(agent.model, Gemini)
+
+
+def test_a_url_location_is_a_vllm_server() -> None:
+    model = llm(LlmRef("some-org/some-model", "http://127.0.0.1:8081/v1"))
+    assert model.model == "hosted_vllm/some-org/some-model"
+    assert model._additional_args["api_base"] == "http://127.0.0.1:8081/v1"  # type: ignore[attr-defined]
+    assert "vertex_location" not in model._additional_args  # type: ignore[attr-defined]
+    assert model.capabilities.output_schema_and_tools is False

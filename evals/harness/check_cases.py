@@ -37,8 +37,9 @@ Status = Callable[[str, str], str | None]
 
 
 def case_files(root: Path = DATASETS) -> list[Path]:
-    """Every case file: golden/adversarial/silver at the top, plus all drafts."""
-    top = [root / n for n in ("golden.jsonl", "adversarial.jsonl", "silver.jsonl")]
+    """Every case file: golden/adversarial/silver/crosslingual at the top, plus all drafts."""
+    names = ("golden.jsonl", "adversarial.jsonl", "silver.jsonl", "crosslingual.jsonl")
+    top = [root / n for n in names]
     return [p for p in top if p.is_file()] + sorted((root / DRAFTS.parent.name).glob("*.jsonl"))
 
 
