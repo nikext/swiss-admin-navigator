@@ -138,6 +138,8 @@ make eval-memory  # memory eval on the eval Memory Bank (ARGS="--variant profile
 make memory-bank ARGS="show|apply --variant profile|create-eval|list|purge --user U"   # Memory Bank admin
 make eval-derive  # no-verifier / v1-verifier answers from a recorded --claim-check run (ARGS="--from R.json --policy none|deterministic"; judge only)
 make eval-compare # experiment tables with paired CIs (ARGS="--report a=A.json --report b=B.json [--study a=S.json --judge model@loc] [--subset golden|adversarial]")
+make gcp-armor    # Model Armor API + template swiss-nav-input (eu) + IAM (ask first; DRY_RUN=1)
+make eval-armor   # E7: Model Armor on every eval input + law text (MODEL_ARMOR_TEMPLATE; free tier)
 ```
 
 Integration tests (network/GCP) are marked `@pytest.mark.integration` and
@@ -168,3 +170,4 @@ skipped by default: `uv run pytest -m integration`.
   (`NAV_CLAIM_CHECK`) until M9 re-measures its latency (ADR-034).
 - Deploys (`make deploy-agent`, `deploy-web`, `deploy-mcp`) are run by Nikola; Claude
   prepares them (DRY_RUN=1) and verifies afterwards.
+- M10 (agreed 2026-10-19): done before M9 (ADR-031); Claude ran make gcp-armor; the 80 new injection.jsonl cases are drafted and model-verified by Claude (ADR-024 extended).
