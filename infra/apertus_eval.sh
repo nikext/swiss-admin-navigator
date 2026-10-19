@@ -89,15 +89,19 @@ trap cleanup EXIT INT TERM
 echo "== deploy (waits until vLLM has downloaded and loaded the model)"
 # Weights come from HF on start into the in-memory filesystem (~18.5 GB of 32 GiB). One
 # instance, never more; scale to zero is moot because the trap deletes the service.
+# The first start (2026-10-20) reached vLLM's warm-up after ~27 min (image pull, weight
+# download, load, compile), hence the 40-min probe window; at 0.92 GPU memory and the default
+# 256 sequences, the sampler warm-up (131k vocab) ran out of memory: 0.88 and 8 sequences
+# (the eval sends at most 2 conversations at a time).
 run "$GCLOUD" run deploy "$SERVICE" --project "$PROJECT_ID" --region "$REGION" \
   --image "$IMAGE" --service-account "$SA" --no-allow-unauthenticated \
   --gpu 1 --gpu-type "$GPU_TYPE" --no-gpu-zonal-redundancy \
   --cpu 8 --memory 32Gi --no-cpu-throttling \
   --min-instances 0 --max-instances 1 --concurrency 16 --timeout 3600 \
   --port 8000 --set-secrets HF_TOKEN="$SECRET":latest --labels "$LABELS" \
-  --startup-probe httpGet.path=/health,httpGet.port=8000,periodSeconds=10,timeoutSeconds=5,failureThreshold=120 \
+  --startup-probe httpGet.path=/health,httpGet.port=8000,periodSeconds=20,timeoutSeconds=5,failureThreshold=120 \
   --command vllm \
-  --args="^|^serve|${MODEL}|--host|0.0.0.0|--port|8000|--max-model-len|${MAX_MODEL_LEN}|--gpu-memory-utilization|0.92|--chat-template-content-format|string|--enable-auto-tool-choice|--tool-call-parser|apertus|${VLLM_ARGS// /|}"
+  --args="^|^serve|${MODEL}|--host|0.0.0.0|--port|8000|--max-model-len|${MAX_MODEL_LEN}|--gpu-memory-utilization|0.88|--max-num-seqs|8|--chat-template-content-format|string|--enable-auto-tool-choice|--tool-call-parser|apertus|${VLLM_ARGS// /|}"
 
 echo "== proxy on 127.0.0.1:$PORT"
 if [[ "$DRY_RUN" != 1 ]]; then
