@@ -15,6 +15,10 @@ groundedness, key facts, must_not and behaviour, and writes
 MCP server from this checkout (needs `data/index.sqlite`); `--mcp-url` uses a
 running one instead. Costs money: model calls for the agent and the judge.
 
+`--traces FILE` appends each finished case's trace to FILE (JSONL); rerunning
+with the same FILE skips the cases stored there, so a run cut off by a crash or
+shutdown resumes instead of starting over (the judge then grades every case).
+
 `--from` re-scores stored reports instead (no model calls): rows are merged by
 case id, later reports win (so a rerun of errored cases replaces them), and
 only cases of `--dataset` (and the usual selection) are kept.
@@ -46,7 +50,15 @@ from agents.navigator.contact import answer_contact_details
 from agents.navigator_v2.agent import PROMPTS as V2_PROMPTS
 from agents.navigator_v2.agent import build_workflow
 from agents.navigator_v2.routing import dispatch
-from evals.harness.agent_run import LocalAgent, RoundRecorder, Target, Trace, Usage, run_cases
+from evals.harness.agent_run import (
+    LocalAgent,
+    RoundRecorder,
+    Target,
+    Trace,
+    TraceLog,
+    Usage,
+    run_cases,
+)
 from evals.harness.answer_metrics import (
     CitationCheck,
     as_dicts,
@@ -537,12 +549,33 @@ async def evaluate(
         )
         target, where, deployed = LocalAgent(root, recorder), url, None
 
+    log = None
+    if args.traces:
+        setup = {
+            "target": args.target,
+            "agent": args.agent,
+            "claim_check": bool(args.claim_check),
+            "profile": profile.name,
+            "case_timeout_s": args.case_timeout,
+        }
+        try:
+            log = TraceLog(args.traces, setup)
+        except ValueError as exc:
+            raise SystemExit(str(exc)) from exc
+    stored = {c.id: log.done[c.id] for c in cases if log and c.id in log.done}
+    todo = [c for c in cases if c.id not in stored]
+
     def progress(case: Case, trace: Trace) -> None:
         status = (trace.answer or {}).get("verification", {}).get("status")
         print(f"  {case.id:<28} {trace.error or status:<20} {trace.latency_s:5.1f}s", flush=True)
+        if log:
+            log.append(trace)
 
-    print(f"running {len(cases)} cases (concurrency {args.concurrency}) against {where}")
-    traces = await run_cases(target, cases, args.concurrency, progress, args.case_timeout)
+    resumed = f", {len(stored)} resumed from {args.traces}" if stored else ""
+    print(f"running {len(todo)} cases (concurrency {args.concurrency}) against {where}{resumed}")
+    fresh = await run_cases(target, todo, args.concurrency, progress, args.case_timeout)
+    by_id = stored | {t.case_id: t for t in fresh}
+    traces = [by_id[c.id] for c in cases]
 
     judge = None if args.no_judge else Judge(profile.judge, project)
     sem = asyncio.Semaphore(args.concurrency)
@@ -589,6 +622,7 @@ async def evaluate(
                 "verified_by": sorted({c.verified_by for c in cases if c.verified_by}),
             },
             "case_timeout_s": args.case_timeout,
+            "resumed_traces": len(stored),
             "selection": {
                 "smoke": args.smoke,
                 "ids": args.ids,
@@ -693,6 +727,12 @@ def main(argv: list[str] | None = None) -> int:
         help="local target: add the LLM claim checker to the verifier (default: NAV_CLAIM_CHECK)",
     )
     ap.add_argument("--name", default=None)
+    ap.add_argument(
+        "--traces",
+        type=Path,
+        default=None,
+        help="append each finished trace here; rerun with the same file to resume",
+    )
     ap.add_argument("--out", type=Path, default=REPORTS)
     ap.add_argument(
         "--from", dest="from_", type=Path, action="append", help="re-score stored reports"

@@ -18,6 +18,7 @@ import time
 import uuid
 from collections.abc import AsyncIterator
 from dataclasses import asdict, dataclass, field, replace
+from pathlib import Path
 from typing import Any, Protocol
 
 from google.adk.agents import LlmAgent
@@ -186,6 +187,41 @@ async def run_case(target: Target, case: Case, timeout_s: float = 300) -> Trace:
     elif not trace.error:
         trace.error = "no final answer"
     return trace
+
+
+def trace_from_dict(d: dict[str, Any]) -> Trace:
+    d = dict(d)
+    d["usage"] = Usage(**d["usage"])
+    d["router_usage"] = Usage(**d["router_usage"])
+    return Trace(**d)
+
+
+class TraceLog:
+    """Finished traces as JSONL after a header line, so an interrupted run resumes with
+    the cases it has not finished (`answer_eval --traces`). A stored trace is reused as
+    is, errors included, so a resumed run scores like an uninterrupted one."""
+
+    def __init__(self, path: Path, header: dict[str, Any]) -> None:
+        self.path = path
+        self.done: dict[str, Trace] = {}
+        if path.exists() and path.stat().st_size:
+            first, *rest = path.read_text(encoding="utf-8").splitlines()
+            stored = json.loads(first)
+            if stored != header:
+                raise ValueError(f"{path} was written by another run setup: {stored} != {header}")
+            for line in rest:
+                try:
+                    trace = trace_from_dict(json.loads(line))
+                except (json.JSONDecodeError, TypeError, KeyError):
+                    continue  # a line cut off when the process died
+                self.done[trace.case_id] = trace
+        else:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps(header) + "\n", encoding="utf-8")
+
+    def append(self, trace: Trace) -> None:
+        with self.path.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(asdict(trace), ensure_ascii=False, default=str) + "\n")
 
 
 async def run_cases(

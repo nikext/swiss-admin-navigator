@@ -1,14 +1,16 @@
 """Trace recording: the v2 router's events and the verifier's round snapshots."""
 
+from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
+import pytest
 from google.adk.events import Event
 from google.adk.models.llm_response import LlmResponse
 from google.genai import types
 
 from agents.navigator.contract import Round
-from evals.harness.agent_run import RoundRecorder, Trace, record
+from evals.harness.agent_run import RoundRecorder, Trace, TraceLog, record
 
 
 def event(author: str, text: str, prompt: int = 10) -> Event:
@@ -52,3 +54,32 @@ def test_round_recorder_snapshots_usage_including_the_current_call() -> None:
     recorder(SimpleNamespace(session=SimpleNamespace(id="other")), "{}", Round(  # type: ignore[arg-type]
         citations=0, quotes=0, problems=[]), response)  # fmt: skip
     assert len(trace.rounds_log) == 1
+
+
+def test_trace_log_resumes_finished_traces(tmp_path: Path) -> None:
+    path = tmp_path / "t.jsonl"
+    header = {"agent": "v1", "claim_check": True}
+    log = TraceLog(path, header)
+    trace = Trace("c1", answer={"answer_markdown": "x"}, latency_s=3.5)
+    trace.usage.add_counts(prompt=100, output=7)
+    trace.rounds_log.append({"round": {"status": "passed"}})
+    log.append(trace)
+    log.append(Trace("c2", error="timeout after 600 s"))
+    with path.open("a", encoding="utf-8") as f:
+        f.write('{"case_id": "c3", "ans')  # cut off when the process died
+
+    again = TraceLog(path, header)
+    assert set(again.done) == {"c1", "c2"}
+    c1 = again.done["c1"]
+    assert c1.answer == {"answer_markdown": "x"}
+    assert c1.latency_s == 3.5
+    assert (c1.usage.prompt, c1.usage.output, c1.usage.model_calls) == (100, 7, 1)
+    assert c1.rounds_log == [{"round": {"status": "passed"}}]
+    assert again.done["c2"].error == "timeout after 600 s"
+
+
+def test_trace_log_refuses_another_setup(tmp_path: Path) -> None:
+    path = tmp_path / "t.jsonl"
+    TraceLog(path, {"agent": "v1"})
+    with pytest.raises(ValueError, match="another run setup"):
+        TraceLog(path, {"agent": "v2"})
