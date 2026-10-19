@@ -43,6 +43,8 @@ feature count.
   model choice and tokenizer are decided by eval numbers. Put the numbers in
   the PR and the ADR.
 - **Update the status table** in `docs/PLAN.md` in each milestone PR.
+- **ADR numbers:** before adding an ADR, check `docs/DECISIONS.md` on main *and* in
+  open worktrees/PRs (`git worktree list`, `gh pr list`); parallel sessions collide.
 - At the end of a session, if a milestone is mid-flight, add a short
   "Next up" note under its status row so a fresh session can continue.
 
@@ -116,6 +118,7 @@ make eval-retrieval  # recall@k/MRR of the served config (E4=1: the E4 grid)
 make mcp-dev      # MCP server on http://127.0.0.1:8080/mcp (STDIO=1: stdio)
 make eval-smoke   # 20 smoke cases: agent + judge, own local MCP server (~CHF 1.4) → evals/reports/
 make eval-full    # golden + every draft batch (ARGS="--dataset all+adversarial" for the full eval)
+                  # long runs: --traces data/logs/<name>.traces.jsonl checkpoints each case; rerun the same command to resume
 make eval-multiturn  # 25 simulated conversations, ADK AgentEvaluator + rubric judge (~CHF 3)
 make review-golden   # Nikola: verify drafts against the article text → golden.jsonl
 make check-cases     # schema, ids, expected citations, golden text lock (ARGS=--update-lock)
@@ -133,6 +136,8 @@ make web-install | web-check | web-dev   # web deps; eslint+prettier+tsc+vitest 
 make deploy-web   # build + push + Cloud Run for web/ (Nikola runs it; DRY_RUN=1 previews)
 make eval-memory  # memory eval on the eval Memory Bank (ARGS="--variant profile [--part extract|e2e]"; ~CHF 0.4)
 make memory-bank ARGS="show|apply --variant profile|create-eval|list|purge --user U"   # Memory Bank admin
+make eval-derive  # no-verifier / v1-verifier answers from a recorded --claim-check run (ARGS="--from R.json --policy none|deterministic"; judge only)
+make eval-compare # experiment tables with paired CIs (ARGS="--report a=A.json --report b=B.json [--study a=S.json --judge model@loc] [--subset golden|adversarial]")
 ```
 
 Integration tests (network/GCP) are marked `@pytest.mark.integration` and
@@ -156,5 +161,10 @@ skipped by default: `uv run pytest -m integration`.
   (`make memory-bank ARGS="apply --variant …"`); M7 model spend capped at CHF 10 (used
   ≈ CHF 2.3); the 26 `memory.jsonl` cases are drafted and model-verified by Claude
   (ADR-024 extended, ADR-029).
+- M8 (agreed 2026-10-19): M8 model spend cap CHF 30, raised to CHF 40 the same day (used
+  ≈ CHF 35, plus ≈ CHF 20 for the 2026-10-16 runs lost to a shutdown). Experiments
+  ran with `AGENT_LOCATION=global ROUTER_LOCATION=global VERIFIER_LOCATION=global`
+  (`eu` congested); the served agent stays on `eu`. The claim checker stays opt-in
+  (`NAV_CLAIM_CHECK`) until M9 re-measures its latency (ADR-034).
 - Deploys (`make deploy-agent`, `deploy-web`, `deploy-mcp`) are run by Nikola; Claude
   prepares them (DRY_RUN=1) and verifies afterwards.
