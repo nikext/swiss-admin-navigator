@@ -15,6 +15,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 if [[ -f .env ]]; then set -a; source .env; set +a; fi
+mkdir -p data/logs
+exec > >(tee -a data/logs/apertus-eval.log) 2>&1  # a copy to follow from another shell
 
 PROJECT_ID="${GOOGLE_CLOUD_PROJECT:?set GOOGLE_CLOUD_PROJECT in .env}"
 REGION="${GPU_REGION:-europe-west4}"
