@@ -3,13 +3,9 @@
 import json
 from typing import Any
 
-import pytest
-from google.adk.agents import LlmAgent
 from google.adk.agents.callback_context import CallbackContext
-from google.adk.agents.invocation_context import InvocationContext
 from google.adk.models.llm_request import LlmRequest
 from google.adk.models.llm_response import LlmResponse
-from google.adk.sessions import InMemorySessionService
 from google.genai import types
 
 from agents.navigator.tests.test_citecheck import ART_271A, cite, draft
@@ -29,16 +25,6 @@ class FakeTool:
 class FakeToolset:
     async def get_tools(self, readonly_context: Any = None) -> list[FakeTool]:
         return [FakeTool()]
-
-
-@pytest.fixture
-async def ctx() -> CallbackContext:
-    service = InMemorySessionService()
-    session = await service.create_session(app_name="t", user_id="u")
-    ic = InvocationContext(
-        session_service=service, invocation_id="i1", agent=LlmAgent(name="a"), session=session
-    )
-    return CallbackContext(ic)
 
 
 def text_response(text: str, partial: bool = False) -> LlmResponse:

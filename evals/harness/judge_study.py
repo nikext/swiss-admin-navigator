@@ -370,6 +370,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--ids", default=None)
     ap.add_argument("--concurrency", type=int, default=4)
     ap.add_argument("--out", type=Path, default=REPORTS)
+    ap.add_argument("--name", default="judge-study", help="report name (several per day)")
     args = ap.parse_args(argv)
     load_dotenv(".env")
     if args.from_:
@@ -379,7 +380,7 @@ def main(argv: list[str] | None = None) -> int:
         if not args.judges:
             ap.error("give --judges or --from")
         study = asyncio.run(collect(args))
-        stem = args.out / f"{datetime.now(UTC):%Y-%m-%d}-{study['git_sha']}-judge-study"
+        stem = args.out / f"{datetime.now(UTC):%Y-%m-%d}-{study['git_sha']}-{args.name}"
         args.out.mkdir(parents=True, exist_ok=True)
     rows = score(study, load_labels(args.labels, study["report"]))
     study["agreement"] = rows

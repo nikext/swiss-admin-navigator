@@ -36,7 +36,7 @@ class Replay:
     def __init__(self, items: list[dict], fail_after: int | None = None) -> None:
         self.items, self.fail_after, self.closed = items, fail_after, False
 
-    async def events(self, case: Case) -> AsyncIterator[Event]:
+    async def events(self, case: Case, trace: object = None) -> AsyncIterator[Event]:
         for i, item in enumerate(self.items):
             if i == self.fail_after:
                 raise RuntimeError("stream broke")

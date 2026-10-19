@@ -8,7 +8,8 @@ todo = @echo "make $@: not implemented yet (lands in $(1), see docs/PLAN.md)" >&
 
 .PHONY: help setup lint fmt test check smoke-gemini gcp-setup gcp-budget gcp-wif \
         resolve ingest spotcheck fixtures index index-e4 publish-index eval-retrieval mcp-dev mcp-coldstart agent-dev \
-        eval-smoke eval-smoke-remote eval-full eval-multiturn eval-memory memory-bank silver review-golden check-cases \
+        eval-smoke eval-smoke-remote eval-full eval-multiturn eval-memory eval-derive eval-compare memory-bank silver \
+        review-golden check-cases \
         label-answers judge-study query-remote deploy-mcp deploy-agent deploy-web gcp-armor eval-armor \
         web-install web-dev web-check gcp-web
 
@@ -104,8 +105,14 @@ eval-memory: ## Memory eval on the eval Memory Bank (MEMORY_EVAL_RUNTIME_ID; bil
 memory-bank: ## Memory Bank admin: ARGS="show|apply --variant profile [--dry-run]|create-eval|list|purge --user U"
 	$(UV) run python -m scripts.memory_bank $(ARGS)
 
-eval-full: ## Every case of golden (drafts until it exists); M4 adds adversarial.jsonl (ARGS=...)
+eval-full: ## Golden + every draft batch; ARGS="--dataset golden+adversarial [--agent v2] [--claim-check]"
 	$(UV) run python -m evals.harness.answer_eval $(ARGS)
+
+eval-derive: ## No-verifier / v1-verifier answers from a recorded --claim-check run (ARGS="--from R.json --policy none|deterministic"; judge only)
+	$(UV) run python -m evals.harness.derive $(ARGS)
+
+eval-compare: ## Experiment tables with paired CIs (ARGS="--report base=A.json --report other=B.json [--subset golden]")
+	$(UV) run python -m evals.harness.compare $(ARGS)
 
 silver: ## Generate evals/datasets/silver.jsonl (~400 single-article cases; billable, < CHF 1; ARGS=--dry-run)
 	$(UV) run python -m evals.harness.silver $(ARGS)

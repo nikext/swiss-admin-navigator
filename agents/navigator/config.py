@@ -17,7 +17,9 @@ The agent and judge roles take an optional `thinking` level (`minimal`, `low`,
 can lower it per run (M4).
 
 The optional `memory` role (M7) is the model Memory Bank extracts memories
-with; without it Memory Bank uses its default (ADR-029).
+with; without it Memory Bank uses its default (ADR-029). The optional `router`
+and `verifier` roles (M8) are navigator_v2's router and the LLM claim checker;
+without them both use the agent's model and location (ADR-034).
 
 The profile is chosen by `NAV_PROFILE` (default: `default`). Single fields can
 be overridden per run with `<ROLE>_<FIELD>` (e.g. `AGENT_MODEL`,
@@ -35,8 +37,19 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from google.genai import types
 
 PROFILES_DIR = Path(__file__).parent / "profiles"
+
+
+# Model calls retry on 408/429/5xx with exponential backoff (google-genai's default codes).
+# Without it one transient `eu` 500/503 ended a whole answer (M4 CI flake, M5 remote case).
+RETRY = types.HttpRetryOptions(attempts=4, initial_delay=2, max_delay=30)
+# Per-call deadline. Gemini honours it and answers 504, which RETRY retries; without it a
+# call the endpoint queued and never started hung until the eval's case timeout (600 s,
+# `global` and `eu` on 2026-10-19). Healthy calls take 2-30 s.
+CALL_TIMEOUT_MS = 90_000
+HTTP = types.HttpOptions(timeout=CALL_TIMEOUT_MS, retry_options=RETRY)
 
 
 class ProfileError(ValueError):
@@ -70,21 +83,27 @@ class Profile:
     judge: LlmRef
     embedding: EmbeddingRef
     memory: ModelRef | None = None  # Memory Bank's extraction model; None: Memory Bank's default
+    router: LlmRef | None = None  # navigator_v2's router; None: the agent's model
+    verifier: LlmRef | None = None  # the LLM claim checker; None: the agent's model
+
+    def role(self, name: str) -> LlmRef:
+        """An optional LLM role, falling back to the agent's model and location (not its
+        thinking level: a role without one runs at the model's default)."""
+        ref = getattr(self, name)
+        return ref if ref is not None else LlmRef(self.agent.model, self.agent.location)
 
     def as_dict(self) -> dict[str, Any]:
         return asdict(self)
 
 
 ROLES = tuple(f.name for f in fields(Profile) if f.name != "name")
-OPTIONAL_ROLES = {"memory"}
+OPTIONAL_ROLES = {"memory", "router", "verifier"}
+LLM_ROLES = ("agent", "judge", "router", "verifier")
 _REF_KEYS = {f.name for f in fields(ModelRef)}
 # Optional keys per role, with the dataclass default when absent.
-_OPTIONAL_KEYS = {"agent": {"thinking"}, "judge": {"thinking"}, "embedding": {"input_format"}}
-_REF_TYPES: dict[str, type[ModelRef]] = {
-    "agent": LlmRef,
-    "judge": LlmRef,
-    "embedding": EmbeddingRef,
-}
+_OPTIONAL_KEYS = {role: {"thinking"} for role in LLM_ROLES} | {"embedding": {"input_format"}}
+_REF_TYPES: dict[str, type[ModelRef]] = dict.fromkeys(LLM_ROLES, LlmRef)
+_REF_TYPES["embedding"] = EmbeddingRef
 
 
 def _keys_check(
@@ -133,7 +152,7 @@ def load_profile(
         refs[role] = _REF_TYPES.get(role, ModelRef)(**values)
     if refs["embedding"].input_format not in INPUT_FORMATS:
         raise ProfileError(f"{path}: embedding.input_format must be one of {INPUT_FORMATS}")
-    for role in ("agent", "judge"):
-        if refs[role].thinking not in (None, *THINKING_LEVELS):
+    for role in LLM_ROLES:
+        if role in refs and refs[role].thinking not in (None, *THINKING_LEVELS):
             raise ProfileError(f"{path}: {role}.thinking must be one of {THINKING_LEVELS}")
     return Profile(name=name, **refs)

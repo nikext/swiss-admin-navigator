@@ -11,6 +11,14 @@ sees `citation_check` as a declared tool and cannot call it itself. After the
 last round the answer is finalised: verified fields filled in by code, the
 verification record attached, unverifiable parts dropped (`citecheck.finalize`).
 
+With a `ClaimChecker` (M8, ADR-034) a draft that passes the deterministic
+check is also graded claim by claim by an LLM; claims the cited text does not
+(fully) support go back as `unsupported` problems, through the same reserved
+call, and up to two redrafts are allowed. Claims still rated `no` after the
+last round are removed from the text. An `observer` (the eval harness) sees
+every checked draft with its round, so policies that stop earlier (no
+verifier, deterministic only) can be scored from the same run.
+
 `compact_tool_result` is an `after_tool_callback`: MCP results carry the same
 JSON twice (pretty-printed text + `structuredContent`); the model gets one copy.
 """
@@ -19,7 +27,9 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 import uuid
+from collections.abc import Callable
 from typing import Any
 
 from google.adk.agents.callback_context import CallbackContext
@@ -32,6 +42,7 @@ from google.adk.utils.content_utils import SKIP_THOUGHT_SIGNATURE_VALIDATOR
 from google.genai import types
 from pydantic import ValidationError
 
+from . import claims as claim_check
 from .citecheck import (
     ArticleNotFoundError,
     FetchError,
@@ -39,7 +50,11 @@ from .citecheck import (
     finalize,
     make_round,
 )
+from .claims import ClaimChecker
 from .contract import DraftAnswer, Problem, Round
+
+# (callback context, the draft as the model wrote it, its round, the model response)
+Observer = Callable[[CallbackContext, str, Round, LlmResponse], None]
 
 log = logging.getLogger(__name__)
 
@@ -75,10 +90,26 @@ def compact_tool_result(
     return structured if isinstance(structured, dict) else None
 
 
+def _question(ctx: CallbackContext) -> str:
+    content = ctx.user_content
+    if not content or not content.parts:
+        return ""
+    return " ".join(p.text for p in content.parts if p.text).strip()
+
+
 class CitationVerifier:
-    def __init__(self, toolset: McpToolset, max_retries: int = 1) -> None:
+    def __init__(
+        self,
+        toolset: McpToolset,
+        max_retries: int | None = None,
+        claims: ClaimChecker | None = None,
+        observer: Observer | None = None,
+    ) -> None:
         self.toolset = toolset
-        self.max_retries = max_retries
+        self.claims = claims
+        # One redraft for the deterministic check (ADR-018); two with the claim checker (ADR-034).
+        self.max_retries = max_retries if max_retries is not None else (2 if claims else 1)
+        self.observer = observer
         self._check_tool = FunctionTool(func=citation_check)
 
     async def before_model(
@@ -124,6 +155,7 @@ class CitationVerifier:
         except ValidationError as exc:
             problem = Problem(ref=None, kind="parse", message=f"not a valid answer: {exc}"[:500])
             rounds.append(Round(citations=0, quotes=0, problems=[problem]))
+            self._observe(callback_context, text, rounds[-1], llm_response)
             if len(rounds) <= self.max_retries:
                 return self._reject(callback_context, rounds, {"raw": text[:4000]})
             log.warning("final answer is not valid JSON after %d rounds", len(rounds))
@@ -132,8 +164,23 @@ class CitationVerifier:
         async def fetch(sr: str, article: str, lang: str) -> dict:
             return await self._fetch(callback_context, sr, article, lang)
 
+        start = time.perf_counter()
         checked, answer_problems = await check_citations(draft, fetch)
-        rounds.append(make_round(checked, answer_problems))
+        current = make_round(checked, answer_problems)
+        current.check_s = round(time.perf_counter() - start, 3)
+        if self.claims and draft.citations and not current.problems:
+            try:
+                verdicts, usage, seconds = await self.claims.check(
+                    _question(callback_context), draft, checked
+                )
+            except Exception:  # the checker must never block an answer
+                log.exception("claim check failed")
+            else:
+                current.claims, current.claims_usage = verdicts, usage
+                current.claims_s = round(seconds, 3)
+                current.problems += claim_check.problems(verdicts)
+        rounds.append(current)
+        self._observe(callback_context, text, current, llm_response)
         model_problems = [p for p in rounds[-1].problems if p.kind != "fetch"]
         if model_problems and len(rounds) <= self.max_retries:
             return self._reject(callback_context, rounds, draft.model_dump())
@@ -149,6 +196,16 @@ class CitationVerifier:
                 role="model", parts=[types.Part(text=answer.model_dump_json(exclude_none=False))]
             )
         )
+
+    def _observe(
+        self, ctx: CallbackContext, text: str, current: Round, response: LlmResponse
+    ) -> None:
+        if self.observer is None:
+            return
+        try:
+            self.observer(ctx, text, current, response)
+        except Exception:  # an observer bug must not change the answer
+            log.exception("verifier observer failed")
 
     def _reject(
         self, ctx: CallbackContext, rounds: list[Round], draft: dict[str, Any]

@@ -31,7 +31,7 @@ from google.genai import types
 from openai import AsyncOpenAI
 from pydantic import BaseModel
 
-from agents.navigator.config import LlmRef
+from agents.navigator.config import CALL_TIMEOUT_MS, LlmRef
 from evals.harness.agent_run import Usage
 from evals.harness.cases import Case
 
@@ -138,7 +138,12 @@ class Judge:
                 base_url=openapi_base_url(project, ref.location), api_key="unset"
             )
         else:
-            self._gemini = genai.Client(vertexai=True, project=project, location=ref.location)
+            self._gemini = genai.Client(
+                vertexai=True,
+                project=project,
+                location=ref.location,
+                http_options=types.HttpOptions(timeout=CALL_TIMEOUT_MS),  # grade() retries
+            )
 
     async def _gemini_grade(self, text: str) -> Judgement:
         config = types.GenerateContentConfig(
@@ -210,7 +215,9 @@ class Judge:
             raise JudgeError(f"judge stopped with {choice.finish_reason}")
         return choice.message.parsed
 
-    async def grade(self, data: dict[str, Any], attempts: int = 3) -> Judgement:
+    async def grade(self, data: dict[str, Any], attempts: int = 6) -> Judgement:
+        # Six tries over ~3 min of backoff: one judge failure ends the whole run, and on
+        # 2026-10-19 three 504s in a row on `global` did (derive, v2-deterministic).
         text = json.dumps(data, ensure_ascii=False, indent=1)
         call = (
             self._claude_grade
@@ -225,7 +232,7 @@ class Judge:
             except Exception:
                 if attempt == attempts - 1:
                     raise
-                await asyncio.sleep(2 * 4**attempt)
+                await asyncio.sleep(min(2 * 4**attempt, 60))
         raise AssertionError("unreachable")
 
 

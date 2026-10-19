@@ -188,11 +188,11 @@ First comparison: ADR-027 (within noise of local).
 | ID | Question | Configs |
 |---|---|---|
 | E1 | Which model, at what cost? | `gemini-3.8-flash` vs `gemini-3.5-flash-lite` vs `gemini-3.1-pro-preview` vs Claude (Model Garden) vs **Apertus 1.5 8B** (self-hosted) |
-| E2 | Single agent vs multi-agent | `navigator_v1` vs `navigator_v2` (same model) |
+| E2 | Single agent vs multi-agent | `navigator_v1` vs `navigator_v2` (same model). **Done in M8:** v2 never better (golden, Qwen judge: groundedness −1.7 with claim check, −2.8 (CI −5.4…−0.2) without), +13% cost; router 98% correct. v1 stays. ADR-034, `docs/RESULTS.md`. |
 | E3 | Does tree navigation help? | `search_law` only vs `search_law` + `get_toc` |
 | E4 | Retrieval ablation | BM25 vs dense vs hybrid (RRF, weighted); trigram vs unicode61; with vs without contextual headers; dims 256–3072; emb-2@eu vs emb-001@europe-west6. **Done in M2:** dense emb-2 + headers + 768 dims wins (R@8 98.5, MRR 0.881; hybrid −13.7). ADR-016, `evals/reports/2026-10-15-c756c89-e4-retrieval.md`. |
 | E5 | Cross-lingual robustness | Same questions in EN/DE/FR/IT: does quality drop for EN given that EN source texts are mostly missing? |
-| E6 | Verifier value | v1 with vs without citation_verifier: hallucinated citations, latency, cost |
+| E6 | Verifier value | v1 with vs without citation_verifier: hallucinated citations, latency, cost. **Done in M8** (paired prefixes of one run, `make eval-derive`): deterministic verifier = quote fidelity 98.5 → 99.6%; LLM claim checker = groundedness +4.4 (Qwen; +9.4 Flash) at ×1.8 cost and ×2 latency; opt-in. ADR-034. |
 | E7 | Model Armor | Injection block rate vs false positives on golden. **Screen measured in M10:** injection filter at medium with multi-language detection flags 17/58 attacks (29%), 0/532 benign, 0/400 law texts; 0/13 in-document injections. ADR-032, `evals/reports/2026-10-19-98fc50c-e7-armor.md`. The agent-with-screen runs on adversarial and smoke are pending (after M8's runs). |
 | E8 | Memory whitelist | Memory Bank defaults vs custom topics vs structured profile: field recall, leaks of sensitive data, privacy cases. **Done in M7:** ADR-029. |
 
