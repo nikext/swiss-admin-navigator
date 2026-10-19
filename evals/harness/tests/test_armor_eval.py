@@ -139,3 +139,16 @@ def test_summarize_and_render() -> None:
 def test_verdict_from_a_stored_row() -> None:
     v = ok(injection=2, skipped=("sdp",), latency_ms=3.0)
     assert verdict_from(v.as_dict()) == v
+
+
+def test_answer_reports_note_the_screen() -> None:
+    from evals.harness.answer_eval import screen_note
+
+    screen = {
+        "template": "projects/p/locations/eu/templates/t",
+        "mode": "block",
+        "min_level": "medium",
+    }
+    assert screen_note({"agent": {"screen": None}}, {}) == []
+    note = screen_note({"agent": {"screen": screen}}, {"screened": ["adv-13"]})
+    assert note == ["- input screen (M10): Model Armor `t`, block at medium; blocked 1 (adv-13)"]

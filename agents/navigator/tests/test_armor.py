@@ -267,6 +267,8 @@ def test_from_env() -> None:
         }
     )
     assert (logged.mode, logged.min_level) == ("log", 3)
+    assert off.as_dict() is None
+    assert logged.as_dict() == {"template": TEMPLATE, "mode": "log", "min_level": "high"}
     with pytest.raises(ValueError, match="MODEL_ARMOR_MODE"):
         InputScreen.from_env({"MODEL_ARMOR_TEMPLATE": TEMPLATE, "MODEL_ARMOR_MODE": "loud"})
 

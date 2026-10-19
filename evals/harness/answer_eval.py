@@ -45,6 +45,7 @@ import yaml
 from dotenv import load_dotenv
 
 from agents.navigator.agent import build_agent, claim_check_enabled, profile
+from agents.navigator.armor import InputScreen
 from agents.navigator.claims import PROMPT_PATH as CLAIM_PROMPT
 from agents.navigator.contact import answer_contact_details
 from agents.navigator_v2.agent import PROMPTS as V2_PROMPTS
@@ -298,6 +299,7 @@ def summarize(rows: list[dict[str, Any]], judged: bool, judge_usage: Usage, pric
     s["precision_expected"] = ci_mean([r["precision_expected"] for r in ok])
     s["behaviour_det"] = ci_mean([float(r["behaviour_det"]) for r in rows])
     s["contact_answers"] = sorted(r["id"] for r in ok if r.get("contact_details"))
+    s["screened"] = sorted(r["id"] for r in ok if (r.get("answer") or {}).get("screening"))
     s["lang_match"] = ci_mean([float(r["lang_ok"]) for r in ok])
     if judged:
         s["groundedness"] = ci_mean([r.get("groundedness") for r in ok])
@@ -386,6 +388,18 @@ def target_note(meta: dict[str, Any]) -> list[str]:
     ]
 
 
+def screen_note(meta: dict[str, Any], s: dict[str, Any]) -> list[str]:
+    screen = (meta.get("agent") or {}).get("screen")
+    if not screen:
+        return []
+    blocked = s.get("screened") or []
+    return [
+        f"- input screen (M10): Model Armor `{screen['template'].rsplit('/', 1)[-1]}`, "
+        f"{screen['mode']} at {screen['min_level']}; blocked {len(blocked)}"
+        + (f" ({', '.join(blocked)})" if blocked else "")
+    ]
+
+
 def render_markdown(report: dict[str, Any]) -> str:
     s, meta = report["summary"], report["meta"]
     qf, hc = s["quote_fidelity"], s["hallucinated_citations"]
@@ -405,6 +419,7 @@ def render_markdown(report: dict[str, Any]) -> str:
         if meta["judged"]
         else "- judge: off",
         *target_note(meta),
+        *screen_note(meta, s),
         f"- law: {meta['mcp']['url']} (index as_of {meta['mcp']['health'].get('as_of')}, "
         f"built from {meta['mcp']['health'].get('index_sha')})",
         f"- run: {report['run_at']} at {report['git_sha']}; CIs are 95% percentile bootstraps "
@@ -558,6 +573,8 @@ async def evaluate(
             "profile": profile.name,
             "case_timeout_s": args.case_timeout,
         }
+        if screen := InputScreen.from_env().as_dict():
+            setup["screen"] = screen
         try:
             log = TraceLog(args.traces, setup)
         except ValueError as exc:
@@ -637,6 +654,7 @@ async def evaluate(
                 "verifier": asdict(profile.role("verifier")) if args.claim_check else None,
                 "v2_prompts_sha": tree_sha(V2_PROMPTS) if args.agent == "v2" else None,
                 "claim_prompt_sha": sha(CLAIM_PROMPT) if args.claim_check else None,
+                "screen": InputScreen.from_env().as_dict() if args.target == "local" else None,
             },
             "system_prompt_sha": sha(SYSTEM_PROMPT),
             "judge_prompt_sha": prompt_sha(),

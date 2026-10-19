@@ -325,6 +325,16 @@ class InputScreen:
         armor = ModelArmor(template, timeout_s=3.0) if template else None
         return cls(armor, mode if armor else "off", min_level)  # type: ignore[arg-type]
 
+    def as_dict(self) -> dict[str, str] | None:
+        """The settings for eval reports; None when screening is off."""
+        if self.armor is None:
+            return None
+        return {
+            "template": self.armor.template,
+            "mode": self.mode,
+            "min_level": LEVEL_NAMES[self.min_level],
+        }
+
     async def before_agent(self, callback_context: CallbackContext) -> types.Content | None:
         if self.armor is None:
             return None
