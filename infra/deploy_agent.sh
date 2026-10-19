@@ -63,7 +63,7 @@ SWISS_LAW_MCP_URL=$MCP_URL
 NAV_PROFILE=$PROFILE
 GOOGLE_GENAI_USE_ENTERPRISE=TRUE
 EOF
-# Input screening (M10, ADR-031): unset template = off.
+# Input screening (M10, ADR-032): unset template = off.
 if [[ -n "${MODEL_ARMOR_TEMPLATE:-}" ]]; then
   cat >>"$AGENT/.env" <<EOF
 MODEL_ARMOR_TEMPLATE=$MODEL_ARMOR_TEMPLATE

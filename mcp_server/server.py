@@ -8,7 +8,7 @@ Tools: search_law, get_article, get_toc, list_acts, resolve_citation.
 The index (`INDEX_PATH`, default data/index.sqlite) is read-only and loaded at
 startup; the only outbound call is the query embedding in `search_law`.
 
-Limits (M10, ADR-032): `search_law` is rate-limited per client (the last
+Limits (M10, ADR-033): `search_law` is rate-limited per client (the last
 X-Forwarded-For hop, which Cloud Run's front end appends; IPv6 clients by /64),
 `SEARCH_RATE_PER_MIN`/`SEARCH_BURST`. Embedding calls (cache misses) also have a
 per-process budget, `EMBED_RATE_PER_MIN`/`EMBED_BURST`, across all clients:

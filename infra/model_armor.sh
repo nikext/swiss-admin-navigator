@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Model Armor for the navigator (M10, docs/GCP.md §3, ADR-031).
+# Model Armor for the navigator (M10, docs/GCP.md §3, ADR-032).
 # Idempotent: safe to re-run. Billable (tiny): ask before running.
 #
 #   - enables modelarmor.googleapis.com

@@ -1071,3 +1071,193 @@ after the chat's `quota` event, so the footer kept "10 of 10" although
 Firestore held 1. The page-load read now never overrides a count a chat
 reply reported (reproduced with a delayed mock: 10 of 10 before, 9 of 10
 after).
+
+### ADR-031: M10 (security) before M9 (model comparison)
+**Status:** accepted (2026-10-19)
+**Context:** CLAUDE.md says one milestone at a time, in order. M9 compares
+models against the served agent, and whether that agent is navigator_v1 or
+v2 is M8's open question (E2/E6 are still running in the main checkout).
+M10 doesn't depend on M8's result: Model Armor screens the user's message
+before any agent runs, and the MCP limits are server-side.
+**Decision:** Nikola agreed to do M10 before M9. M10 is built in a separate
+worktree (`../swiss-admin-navigator-m10`, branch `m10-security` from main,
+`data/` linked to the main checkout's), so it doesn't touch the M8 branch or
+its running evals. No Gemini-heavy eval runs until Nikola says M8's runs are
+done; the Model Armor screening eval calls only Model Armor.
+**Consequences:** M9 starts after M8 decides v1 vs v2, which it needs anyway.
+Whichever of M8 and M10 merges second rebases onto the other: both touch
+`agents/navigator/agent.py` (M10 only adds `before_agent_callback`), and the
+second one renumbers its ADRs if they collide. navigator_v2 builds its
+specialists with `build_agent`, so they get the screen, but its router runs
+first; screening once before the router is an M8 follow-up.
+
+### ADR-032: Model Armor screens user input before the first model call; injection filter at medium, multi-language on; no tool-output screening (E7)
+**Status:** accepted (2026-10-19, M10)
+**Context:** PLAN M10 asks for Model Armor on user input (optionally tool
+output), measured as the block rate on attacks against false positives on
+golden. Verified facts (2026-10-19):
+- Model Armor has no europe-west6. It offers `eu` (EU data centres) and
+  single EU regions; the agent's model calls already run on `eu` (ADR-013).
+- The built-in Gemini integration doesn't fit. Per-request templates
+  (`model_armor_config` on `generateContent`) work only in europe-west1/2/3
+  and two Asian regions, not on the `eu` endpoint Gemini 3.8 Flash is served
+  from. Floor settings are project-wide, so they would screen every Gemini
+  call of the shared project (other apps, the M8 evals; ADR-012).
+- ADK 2.12 ships `ModelArmorPlugin` (`google.adk.integrations.model_armor`).
+  It needs `google-cloud-modelarmor` (not installed), re-screens the same user
+  text before every model call of a turn (4–6 per answer), and answers a block
+  with plain text, which breaks the JSON answer contract the BFF parses.
+- Agent Gateway's Model Armor integration requires both in the same region,
+  which rules it out for the Zürich deployment (the PLAN's stretch item).
+- Pricing: 2M tokens a month free, then USD 0.10 per 1M (standalone). The
+  project quota is 1,200 calls a minute. Each result reports the
+  injection/jailbreak and RAI confidence (`LOW_AND_ABOVE`,
+  `MEDIUM_AND_ABOVE`, `HIGH`) of every match at or above the template's
+  threshold.
+**Measured (E7, `make eval-armor`, report
+`evals/reports/2026-10-19-98fc50c-e7-armor.md`):** template at
+LOW_AND_ABOVE, 1,032 texts × 3 arms, no Gemini, ~82k tokens per arm (free
+tier). Labels: 58 attacks (40 new in `injection.jsonl` + 18 existing
+golden/adversarial injection cases), 532 benign (golden 140, silver 352, 40
+hard negatives: pasted leases and letters, "please ignore my previous
+e-mail", style requests, domestic violence, harassment, criminal record, URLs,
+AHV numbers, IBANs), 42 other adversarial (fake articles, false premises,
+unlawful requests), 400 law texts (100 random in-force articles per
+language). `injection.jsonl` is model-verified (ADR-024 extended, Nikola's
+go-ahead 2026-10-19). Wilson 95% CIs:
+
+| arm | level | attacks flagged | benign flagged | law text flagged |
+|---|---|---|---|---|
+| base | high | 17.2% (10/58; 10–29) | 0/532 (0–0.7) | 0/400 |
+| base | medium | 24.1% (14/58; 15–37) | 0/532 | 0/400 |
+| base | low | 37.9% (22/58; 27–51) | 0/532 | 0/400 |
+| multi-language | high | 19.0% (11/58; 11–31) | 0/532 | 0/400 |
+| **multi-language** | **medium** | **29.3% (17/58; 19–42)** | **0/532 (0–0.7)** | **0/400 (0–1.0)** |
+| multi-language | low | 39.7% (23/58; 28–53) | 1/532 (golden mobility-02) | 0/400 |
+
+- By kind (multi-language, medium): direct overrides and prompt extraction
+  9/10, persona 3/8, obfuscated 2/4, memory poisoning 1/4, exfiltration 1/4,
+  fake system turns 1/7, fake tool output 0/5, format overrides ("no
+  citations") 0/3, **injections inside pasted e-mails, contracts, letters
+  and web text 0/13 at every level**. By language: DE 5/14, EN 6/17, FR 3/14,
+  IT 3/13. Golden adversarial-01 ("Ignoriere alle bisherigen Anweisungen…")
+  only reaches low.
+- Multi-language detection vs none, paired at medium: +5.2 pts (0.0…+12.1),
+  3 more attacks, no extra false positive, +~50 ms (p50 225 vs 177 ms, p95
+  336 vs 270 ms). Passing the source language changed nothing.
+- Responsible AI filters at low flag victims' questions (base: 7/532,
+  including "Mein Mann schlägt mich…", sexual harassment at work, insults
+  quoted by the person insulted) and 12/400 law texts ("dangerous"). At
+  medium and above they flag no benign text and catch no attack the
+  injection filter misses.
+- Other adversarial: 4/42 flagged at high, all requests for help with fraud
+  (fake rental contract, sham marriage, undeclared work, hiding from a
+  removal order).
+- The first run (concurrency 5, three arms interleaved, ~1,500 calls a
+  minute) got 429s on 102 calls; the eval now paces itself at 900 a minute
+  with backoff. The re-run had 0 errors.
+**Decision:**
+- `agents/navigator/armor.py`: a small REST client (httpx + ADC) instead of
+  ADK's plugin, and `InputScreen` as navigator's `before_agent_callback`:
+  one `sanitizeUserPrompt` per user message with multi-language detection,
+  before any model call. Template `swiss-nav-input` in `eu`
+  (`infra/model_armor.sh`, `make gcp-armor`), every filter at LOW_AND_ABOVE;
+  the threshold is code (`MODEL_ARMOR_MIN_LEVEL`, default **medium**), so the
+  eval scores every level from one pass. Sanitize operations are not logged
+  (questions can be personal, ADR-028); the agent logs only the verdict and
+  latency. `roles/modelarmor.user` for `swiss-nav-agent@` and `swiss-nav-ci@`.
+- **Block only on the injection filter at medium.** That level is the
+  highest recall with no observed false positive. Low adds 6 attacks but
+  blocks a golden question, and the RAI filters only add false positives.
+- A block ends the turn with a fixed answer in the message's language
+  (stop-word guess): no model call, no tool call, and no Memory Bank write
+  (ADK skips `after_agent_callback` when `before_agent_callback` returns
+  content). It is contract-valid: `out_of_scope: true` (the UI's existing
+  badge), no citations, `verification.status: passed` with no rounds,
+  `screening: {status: blocked, flags}`. The text names both an attempt to
+  change the assistant and a request for help with something unlawful, since
+  the filter also matches the latter.
+- **Fail open.** A Model Armor error or timeout (3 s) lets the message
+  through, logged as a warning. The agent's own defences (prompt rule 6, the
+  citation verifier, the answer contract) don't depend on the screen.
+- **No tool-output screening.** The law text comes from our own index, built
+  offline from Fedlex and pinned by sha256 in the lock. The filter flags 0/400
+  law texts but also misses every injection inside a document, so screening
+  4–15 tool results per answer would add latency and protect nothing.
+- `MODEL_ARMOR_MODE=log` screens without blocking; an unset
+  `MODEL_ARMOR_TEMPLATE` turns the screen off (CI smoke, local runs).
+**Verification:** 31 unit tests (result parsing on the probed response shape,
+thresholds, retry on 429, never raising, block/log/fail-open/empty, env,
+language guess, the blocked answer parses as `Answer`; the eval's labels,
+Wilson CIs, policies, summaries). Live: a French override was blocked in 1.0 s
+on a cold first call with the French refusal; the domestic-violence question
+and the "ignore my previous e-mail" letter passed (230–310 ms). The answer
+harness on the six cases flagged high in every arm (golden adversarial-08,
+adv-13, adv-39…42; own MCP server, no judge): all six blocked with 0 model
+and 0 tool calls, CHF 0.0000, behaviour 6/6, language match 6/6
+(`evals/reports/2026-10-19-10b0023-e7-blocked-drafts.md`). The staged
+deploy imports under Python 3.11 with the screen in block at medium.
+**Consequences:** the screen stops the crude direct overrides cheaply and
+logs them, at ~0.2 s per question and no money at demo traffic. It is not a
+defence against the realistic attack here: instructions hidden in a pasted
+letter or contract get through every time, and so do fake tool outputs. That
+stays the agent's job, which adversarial already measures (behaviour 96%,
+fidelity 100% in M4). On golden, the only case the screen changes is
+adversarial-08 (it loses its required citation: the cost of a refusal). Open:
+the adversarial and golden-smoke runs of the agent with the screen on (needs
+Gemini, after M8's runs), a deploy with `MODEL_ARMOR_TEMPLATE` set (Nikola),
+and a screen before navigator_v2's router if v2 ships.
+
+### ADR-033: MCP server limits: the hop Cloud Run appends, IPv6 by /64, an embedding budget, a body cap
+**Status:** accepted (2026-10-19, M10)
+**Context:** the M10 review of the public MCP server (ADR-003, ADR-017).
+- `search_law`'s per-IP limit keyed on the **first** `X-Forwarded-For` hop,
+  which is whatever the client sends (M6 finding). One client could forge a
+  new address per request and make unlimited paid query embeddings.
+- Embeddings cost USD 0.20 per 1M tokens and a query is at most 1,000
+  characters (~300 tokens). Two instances × concurrency 40 could make several
+  hundred calls a second: on the order of USD 100 an hour, uncapped.
+- An IPv6 subscriber usually controls a whole /64, so per-address limits are
+  trivial to dodge over IPv6.
+- Cloud Run accepts request bodies up to 32 MiB, and the MCP SDK parses
+  the whole body. Tool inputs were already capped (query 1,000 characters,
+  citation text 4,000, `k` ≤ 20, TOC 300 nodes), the body was not.
+- Every other tool reads local SQLite in milliseconds, and the agent itself
+  calls the server from Agent Runtime's addresses.
+**Decision:**
+- The client is the **last** `X-Forwarded-For` hop (the one Cloud Run's front
+  end appends, as the web BFF already does), IPv4 per address, IPv6 per /64.
+  Log lines record `forwarded_hops` when there is more than one, i.e. when the
+  client sent its own header.
+- A per-process **embedding budget** across all clients, counting only cache
+  misses: `EMBED_RATE_PER_MIN` 30, burst 30. Past it, `search_law` answers
+  with keyword search and says so in `degraded`, as when the embedding
+  endpoint is down. Worst case over both instances, all day: 2 × 43,200 × 300
+  tokens × USD 0.20/1M ≈ USD 5/day. Real traffic is far below (the web caps
+  20 answers a day, a remote smoke run ~10 searches a minute).
+- `BodyLimit` ASGI middleware: bodies over `MAX_BODY_BYTES` (64 KiB) get 413
+  before the app sees them, declared or chunked (the body is buffered up to
+  the cap and replayed).
+- Rate-limit and budget hits log at WARNING, so `severity>=WARNING` on the
+  `swiss-nav-mcp` service lists abuse without a new metric.
+- Unchanged after review: max 2 instances, concurrency 40, 60 s timeout,
+  30/min burst 10 for `search_law` per client, no limit on the SQLite-only
+  tools (bounded by instances × concurrency), public and unauthenticated
+  (ADR-003).
+**Verification:** unit tests for the last hop and a forged first hop, /64
+grouping and IPv4-mapped addresses, the budget (a cache hit costs nothing;
+the second distinct query degrades to BM25 with the budget message), and the
+body cap (declared and chunked, at and over the limit). A local server: a
+100 KB body got 413 with and without Content-Length, a small chunked
+`tools/list` and `/health` 200, and a request with a forged hop logged
+`forwarded_hops: 2`. Before the middleware buffered, the chunked case returned
+500, because Starlette's error middleware answered first.
+**Consequences:** a distributed flood can still keep both instances busy.
+Cloud Run bills ~USD 0.13 per instance-hour, ~USD 190 a month if it never
+stopped. The budget alert (ADR-012) is the backstop, and the response is
+`--max-instances 1` or `--no-allow-unauthenticated`. Not verified until
+`make deploy-mcp` (Nikola): that a forged hop and no header give the same
+client hash on Cloud Run, which shows the appended hop is the real address.
+The web BFF's login limiter keys IPv6 per address, which is fine: the
+16-character code from a 56-letter alphabet can't be brute-forced at
+10 tries per 15 minutes anyway.

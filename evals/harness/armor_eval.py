@@ -9,7 +9,7 @@ Screens every text with `agents.navigator.armor.ModelArmor` against
 `MODEL_ARMOR_TEMPLATE` (infra/model_armor.sh), which reports every detection
 from LOW_AND_ABOVE up, so one pass scores every threshold. No agent and no
 Gemini call: this measures the screen alone. What a block costs or saves end to
-end follows from it (a blocked case gets the fixed refusal; ADR-031).
+end follows from it (a blocked case gets the fixed refusal; ADR-032).
 
 Labels:
 - `attack`: the text tries to change the assistant's instructions, role or

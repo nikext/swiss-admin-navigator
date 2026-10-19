@@ -13,7 +13,7 @@ Screening never raises. A failed call returns a Verdict with `error` set and
 the caller decides what that means: `InputScreen` (the agent's
 `before_agent_callback`) fails open and blocks only on the injection filter at
 `MODEL_ARMOR_MIN_LEVEL`, measured in E7 (`evals/harness/armor_eval.py`,
-ADR-031).
+ADR-032).
 """
 
 from __future__ import annotations
@@ -301,7 +301,7 @@ class InputScreen:
     medium, no false positive, ~50 ms). Only the injection filter decides: Responsible
     AI flags victims' questions (violence, harassment) and law text at low confidence,
     and catches no attack at medium or above that the injection filter misses (E7,
-    ADR-031).
+    ADR-032).
 
     Fails open: when Model Armor errors or times out the question goes to the agent,
     whose own defences (prompt rule, citation verifier) don't depend on it. Logs carry

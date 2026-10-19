@@ -22,7 +22,8 @@ what was verified. Update the status table in the same PR.
 |  | *UI redesign* | ✅ done | ADR-030. Components and styles rebuilt from a Claude Design handoff (29 artboards); no BFF/agent change, new trail/timing/verified-tick data derived in the browser (`present.ts`). axe 0 violations in 35 mocked states (desk + phone, light + dark); Lighthouse mobile a11y 100, best practices 100, performance 86–96 (web fonts). Deployed 2026-10-19 (revision `00004-4gr`); live question via the UI: 109 s, 3/3 quotes verified, panel + phone layout OK, axe 0. Fixed an M6 race that left the quota footer stale (#14, needs a `make deploy-web`). Open: Nikola checks it on a real phone. |
 | M8 | `navigator_v2` multi-agent + verifier, A/B (E2) | ⬜ todo | |
 | M9 | Model comparison incl. Apertus + Claude via Model Garden (E1) | ⬜ todo | |
-| M10 | Security hardening: Model Armor, injection evals, limits | ⬜ todo | From M6: the MCP server rate-limits on the *first* `X-Forwarded-For` hop, which a client can forge (Cloud Run appends the real IP last; the web BFF uses the last hop). |
+| M10 | Security hardening: Model Armor, injection evals, limits | 🟨 in progress | Before M9 (ADR-031), branch `m10-security`. **E7 (screen alone, ADR-032):** Model Armor's injection filter at medium with multi-language detection flags 17/58 attacks (29%, CI 19–42), 0/532 benign (golden, silver, 40 hard negatives) and 0/400 law texts; direct overrides 9/10, injections inside pasted documents 0/13 at every level. The agent screens each message before the first model call and blocks at medium with a fixed refusal (no model, tool or memory call; fails open). No tool-output screening. MCP server: last `X-Forwarded-For` hop, IPv6 per /64, an embedding budget (≤ ~USD 5/day worst case), 64 KiB body cap (ADR-033). Model Armor setup done (template `swiss-nav-input`, `eu`). |
+|  | *Next up (M10)* | | After Nikola says M8's runs are done: `make eval-full ARGS="--dataset adversarial"` and `make eval-smoke` with `MODEL_ARMOR_TEMPLATE` set (expect only the screen-matched cases to change), add the numbers to ADR-032. Nikola: put `MODEL_ARMOR_TEMPLATE=projects/random-projects-509513/locations/eu/templates/swiss-nav-input` in `.env`, then `make deploy-mcp` and `make deploy-agent`; Claude verifies on Cloud Run that a forged `X-Forwarded-For` and none give the same client hash, and a blocked question via `make query-remote`. If M8 ships v2: screen once before its router. |
 | M11 | Showcase: README results, demo video, write-up | ⬜ todo | |
 
 Legend: ⬜ todo · 🟨 in progress · ✅ done · ⏭️ skipped (say why)
@@ -258,6 +259,17 @@ Tasks
 - Review MCP server rate limits, max instances, and logging of abuse.
 - Stretch: Agent Gateway in front of the MCP server, with an audit log
   screenshot.
+
+Done when: E7 (block rate vs false positives, with CIs) is in EVALS.md and
+DECISIONS.md, the agent with the screen shows no regression on adversarial
+and the golden smoke, and the MCP fixes are deployed and checked on Cloud
+Run.
+
+As built (2026-10-19): `make gcp-armor`, `make eval-armor`,
+`agents/navigator/armor.py` (ADR-032), MCP limits (ADR-033). Tool output is
+not screened (the corpus is ours, and the filter misses in-document
+injections anyway). The Agent Gateway stretch is skipped: its Model Armor
+integration needs both in one region, and Model Armor has no europe-west6.
 
 ## M11: Showcase
 

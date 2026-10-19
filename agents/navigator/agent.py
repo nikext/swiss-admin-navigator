@@ -8,7 +8,7 @@ loaded into the instruction and each turn is sent to Memory Bank (`memory.py`,
 M7, ADR-029); the memory service is the runner's (`agentengine://` on Agent
 Runtime). With `MODEL_ARMOR_TEMPLATE` set, each user message is screened by Model
 Armor before the first model call and obvious injections get a fixed refusal
-(`armor.py`, M10, ADR-031).
+(`armor.py`, M10, ADR-032).
 
 Config: `NAV_PROFILE` picks the model (profiles/, ADR-008);
 `SWISS_LAW_MCP_URL` the MCP server (`make mcp-dev` locally, Cloud Run
