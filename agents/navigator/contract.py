@@ -4,7 +4,8 @@ The model fills `DraftAnswer` (ADK `output_schema`). The citation verifier
 (`verifier.py`) checks it against the law text and returns an `Answer`: the
 same fields, plus what code derives instead of the model (each citation's
 abbreviation, Fedlex URL and as-of date, the exact quote span from the
-source), the verification record and the fixed notice (ADR-010).
+source), the verification record and the fixed notice (ADR-010). An answer
+the input screen blocked (M10) has no citations and says why in `screening`.
 """
 
 from __future__ import annotations
@@ -107,7 +108,15 @@ class Verification(BaseModel):
     repairs: list[str] = Field(default_factory=list, description="Deterministic fixes applied.")
 
 
+class Screening(BaseModel):
+    """Set only when the input screen stopped the question (M10, `armor.py`)."""
+
+    status: Literal["blocked"]
+    flags: list[str] = Field(description='What matched, e.g. ["injection:high"].')
+
+
 class Answer(DraftAnswer):
     citations: list[Citation]  # type: ignore[assignment]
     verification: Verification
     notice: str = NOTICE
+    screening: Screening | None = None
