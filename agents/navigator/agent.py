@@ -6,7 +6,9 @@ answer passes the deterministic citation verifier (`verifier.py`, ADR-018).
 With the user's opt-in (session state set by the web BFF), remembered facts are
 loaded into the instruction and each turn is sent to Memory Bank (`memory.py`,
 M7, ADR-029); the memory service is the runner's (`agentengine://` on Agent
-Runtime).
+Runtime). With `MODEL_ARMOR_TEMPLATE` set, each user message is screened by Model
+Armor before the first model call and obvious injections get a fixed refusal
+(`armor.py`, M10, ADR-031).
 
 Config: `NAV_PROFILE` picks the model (profiles/, ADR-008);
 `SWISS_LAW_MCP_URL` the MCP server (`make mcp-dev` locally, Cloud Run
@@ -22,6 +24,7 @@ from google.adk.models import Gemini
 from google.adk.tools.mcp_tool import McpToolset, StreamableHTTPConnectionParams
 from google.genai import types
 
+from .armor import InputScreen
 from .config import LlmRef, load_profile
 from .contract import DraftAnswer
 from .memory import MemoryContext, save_memory
@@ -47,8 +50,12 @@ def generate_config(model: LlmRef) -> types.GenerateContentConfig | None:
     return types.GenerateContentConfig(thinking_config=types.ThinkingConfig(thinking_level=level))
 
 
-def build_agent(mcp_url: str = MCP_URL, model: LlmRef = profile.agent) -> LlmAgent:
-    """navigator_v1 against one MCP server. The eval harness builds its own."""
+def build_agent(
+    mcp_url: str = MCP_URL, model: LlmRef = profile.agent, screen: InputScreen | None = None
+) -> LlmAgent:
+    """navigator_v1 against one MCP server. The eval harness builds its own.
+    `screen` None follows the MODEL_ARMOR_* env."""
+    screen = screen or InputScreen.from_env()
     toolset = McpToolset(
         connection_params=StreamableHTTPConnectionParams(url=mcp_url, timeout=15),
         tool_filter=TOOLS,
@@ -67,6 +74,7 @@ def build_agent(mcp_url: str = MCP_URL, model: LlmRef = profile.agent) -> LlmAge
         generate_content_config=generate_config(model),
         tools=[toolset, MemoryContext()],
         output_schema=DraftAnswer,
+        before_agent_callback=screen.before_agent,
         before_model_callback=verifier.before_model,
         after_model_callback=verifier.after_model,
         after_tool_callback=compact_tool_result,

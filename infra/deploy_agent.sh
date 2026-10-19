@@ -9,7 +9,8 @@
 # (python:3.11-slim, `adk api_server --a2a`, Sessions at agentengine://<itself>).
 # So this script stages that folder from the commit (tracked files only, no tests), with
 #  - requirements.txt: the navigator's pins from uv.lock (ADR-011),
-#  - .env: the agent's runtime config (Cloud Run MCP URL, profile); nothing secret,
+#  - .env: the agent's runtime config (Cloud Run MCP URL, profile, the Model Armor
+#    template and threshold when MODEL_ARMOR_TEMPLATE is set, M10); nothing secret,
 # checks that the staged agent imports under Python 3.11 with exactly those pins, and
 # deploys with infra/agent_runtime.json (scale to zero, 1 vCPU / 2 GiB: the SDK default of
 # one always-on 4 vCPU / 4 GiB instance would cost ~USD 270/month), the swiss-nav-agent@
@@ -62,6 +63,14 @@ SWISS_LAW_MCP_URL=$MCP_URL
 NAV_PROFILE=$PROFILE
 GOOGLE_GENAI_USE_ENTERPRISE=TRUE
 EOF
+# Input screening (M10, ADR-031): unset template = off.
+if [[ -n "${MODEL_ARMOR_TEMPLATE:-}" ]]; then
+  cat >>"$AGENT/.env" <<EOF
+MODEL_ARMOR_TEMPLATE=$MODEL_ARMOR_TEMPLATE
+MODEL_ARMOR_MODE=${MODEL_ARMOR_MODE:-block}
+MODEL_ARMOR_MIN_LEVEL=${MODEL_ARMOR_MIN_LEVEL:-medium}
+EOF
+fi
 python3 -I - "infra/agent_runtime.json" "$STAGE/agent_runtime.json" "$SHA" <<'EOF'
 import json, sys
 src, dst, sha = sys.argv[1:]
@@ -74,9 +83,11 @@ echo "   $(grep -c '==' "$AGENT/requirements.txt") pinned requirements, $(find "
 if [[ "${SKIP_IMPORT_CHECK:-0}" != 1 ]]; then
   echo "== import check: Python 3.11 (the deploy image's base) with exactly the staged pins"
   (cd "$STAGE" && env -i HOME="$HOME" PATH="$PATH" SWISS_LAW_MCP_URL="$MCP_URL" \
+    MODEL_ARMOR_TEMPLATE="${MODEL_ARMOR_TEMPLATE:-}" MODEL_ARMOR_MODE="${MODEL_ARMOR_MODE:-}" \
+    MODEL_ARMOR_MIN_LEVEL="${MODEL_ARMOR_MIN_LEVEL:-}" \
     "$UV" run --quiet --isolated --no-project --python 3.11 \
     --with-requirements navigator/requirements.txt \
-    python -c 'import sys, agentplatform, navigator.agent as a; print("  ", sys.version.split()[0], a.root_agent.name, a.profile.agent, a.profile.memory)')
+    python -c 'import sys, agentplatform, navigator.agent as a; s = a.root_agent.before_agent_callback.__self__; print("  ", sys.version.split()[0], a.root_agent.name, a.profile.agent, a.profile.memory, "model armor:", s.mode, s.min_level)')
 fi
 
 # --display_name must be passed: ADK otherwise overrides the config's with the folder name.

@@ -39,6 +39,8 @@ export interface Answer {
   out_of_scope: boolean;
   verification: Verification;
   notice: string;
+  /** Set when the agent's input screen (Model Armor, M10) stopped the question. */
+  screening?: { status: "blocked"; flags: string[] } | null;
 }
 
 /** One article as the MCP server's get_article returns it (the fields the panel shows). */
