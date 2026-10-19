@@ -103,6 +103,12 @@ branch.
 
 ## 4. `navigator_v2` (M8): multi-agent
 
+**Outcome (ADR-034):** built as an ADK dynamic workflow and measured; it
+loses to v1 (E2), so it is not deployed. The claim checker below lives in
+v1's verifier, opt-in via `NAV_CLAIM_CHECK=1`. The diagram is the design as
+planned; in the build the verifier sends redrafts back to the same
+specialist, not to the router.
+
 ```mermaid
 flowchart TD
   r["router<br/>(lang, domain, clarify?)"] -->|residence| s1[residence_specialist]

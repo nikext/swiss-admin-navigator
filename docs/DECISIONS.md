@@ -1071,3 +1071,83 @@ after the chat's `quota` event, so the footer kept "10 of 10" although
 Firestore held 1. The page-load read now never overrides a count a chat
 reply reported (reproduced with a delayed mock: 10 of 10 before, 9 of 10
 after).
+
+### ADR-034: Multi-agent loses: navigator_v1 stays; the LLM claim checker works but stays opt-in
+**Status:** accepted (2026-10-19, M8)
+**Context:** M8 asks whether multi-agent is worth it here (E2) and what the
+verifier is worth (E6). Built for it (commit 8f60d63):
+- `navigator_v2`: an ADK 2.x dynamic workflow (stable in the pinned release,
+  so no `LoopAgent` fallback). A router (structured output: language, domains,
+  clarify?) hands over to the primary domain's specialist or the generalist
+  (= v1's prompt). Specialists scope `search_law` to their domains' acts and
+  carry domain instructions. Every node runs in ADK's `chat` mode: the default
+  `single_turn` node mode tells the model it gets no user replies, which
+  suppressed clarifying questions in dev runs.
+- An LLM **claim checker** in the citation verifier (`agents/navigator/claims.py`,
+  `NAV_CLAIM_CHECK`, profile role `verifier`, thinking low): after the
+  deterministic checks pass, it rates each legal claim against the fetched
+  cited text (yes / partly / no). Unsupported claims go back for a redraft (two
+  at most); claims still rated `no` are removed and the answer is `degraded`.
+- **Paired-prefix scoring** (`evals/harness/derive.py`): the verifier policies
+  are nested, so the prefix of a recorded claim-check trajectory is a sample
+  of the cheaper policy. One run per agent yields the `none`, `deterministic`
+  (v1's ADR-018 verifier) and `claims` answers on the same trajectories,
+  paired case by case; only the judge runs again.
+
+**Experiment (2026-10-19, golden 150 + adversarial 50, gemini-3.8-flash for
+agent, router and checker, all on `global`; judge gemini-3.8-flash@global, and
+Qwen3 235B on golden as the cross-family check, ADR-026):** two recorded runs
+(`e2-v1-claims`, `e2-v2-claims`), four derived arms. Full tables with paired
+95% CIs in `docs/RESULTS.md`. Golden, paired differences:
+
+| comparison | Δ groundedness (Flash) | Δ groundedness (Qwen) | Δ key facts (Qwen) | Δ behaviour (Qwen) | Δ CHF/answer | Δ p50 latency |
+|---|---|---|---|---|---|---|
+| E2: v2 − v1, both with claim check | −2.0 (−4.8…+1.2) | −1.7 (−3.6…+0.0) | −2.1 (−5.1…+0.7) | −2.7 (−6.0…+0.7) | +0.0087 | +25 s |
+| E2: v2 − v1, no verifier | −2.2 (−5.6…+1.2) | **−2.8 (−5.4…−0.2)** | −1.3 (−3.8…+1.2) | −2.0 (−6.0…+1.3) | +0.0037 | +22 s |
+| E6: v1 deterministic − none | +1.3 (−0.2…+2.9) | +0.5 (−0.7…+1.9) | +0.3 | +2.0 (+0.0…+4.7) | +0.0026 | +5 s |
+| E6: v1 claims − none | **+9.4 (+7.3…+11.7)** | **+4.4 (+2.4…+6.5)** | +1.8 (+0.0…+4.0) | +1.3 (−1.3…+4.0) | +0.0305 | +78 s |
+
+- **E2:** v2 is never better. Every difference is ≤ 0 or noise, and without
+  the verifier the cross-family judge finds v2 less grounded. It is not a
+  routing problem: the router picks the right domain in 98% of cases (195/199,
+  CI 96–99.5). Specialists see fewer acts and add a model call (15 vs 12.5 per
+  answer) for nothing. Must_not violations under Qwen: v1 2, v2 5 (with claim
+  check). Hallucinated citations 0 in every arm; quote fidelity 99.7% both.
+- **E6:** the deterministic verifier lifts quote fidelity from 98.5% to 99.6%
+  (it repairs misquotes) for +7% cost; groundedness moves within noise. The
+  claim checker is the only intervention with a clear quality gain. It sends
+  54% of v1's answers back (101/185; first verdicts on 933 claims: 82% yes,
+  6% partly, 13% no) and removes claims in 6. The gain under Flash is twice the
+  gain under Qwen: part of it is Flash grading Flash's own standard, which is
+  why headline claims about the checker cite the Qwen number. Must_not
+  violations under Qwen fall from 4 to 2. The price: cost per answer ×1.8
+  (CHF 0.036 → 0.067) and p50 latency ×2 (65 → 127 s).
+- **Caveat on latency:** the runs were made while `global` and `eu` were
+  degraded (calls queued until their deadline, 429s; Google's status page
+  showed nothing). Absolute latencies are inflated; the paired deltas are fair
+  because arms ran side by side or on the same trajectories. 44 cases (19 v1,
+  25 v2) failed on 504s/timeouts and were re-run once or twice, merged with
+  `answer_eval --from` (later rows win); 1 case per arm still failed (v1
+  adv-48, v2 work-05) and counts as an error.
+
+**Decision:**
+1. `navigator_v1` stays the served agent; `navigator_v2` is kept as a package
+   for the record but not deployed (PLAN: adopt v2 only if it wins).
+2. The deterministic verifier stays on (quote fidelity, behaviour).
+3. The claim checker stays **opt-in** (`NAV_CLAIM_CHECK=1`). +4.4
+   groundedness (Qwen) is real, but doubling a ~65 s answer and its cost is a
+   product call, not an eval call; M9 re-measures it on a healthy endpoint with
+   the chosen model before it is switched on for the web app.
+4. Robustness kept from the experiment: model calls carry a 90 s deadline
+   that Gemini answers with a 504, which the client retries (a queued call used
+   to hang until the 600 s case timeout); `answer_eval --traces` checkpoints
+   each case so a cut-off run resumes (the first runs on 2026-10-16 were lost to
+   a shutdown); the judge retries six times over ~3 min (three 504s in a row
+   ended a derive run).
+
+**Consequences:** M9 compares models on v1, with and without the claim
+checker. Spend for the 2026-10-19 runs: ≈ CHF 35 of the CHF 40 cap (raised
+from 30 by Nikola that day): runs and re-runs 28.5 (CHF 0.06–0.07 per answer
+with the checker's redrafts), derived arms 3.5, Qwen 0.7, runs stopped during
+the outage and checks ≈ 2.3. Add ≈ CHF 20 (estimated from ~370 answered cases;
+no report survived) for the 2026-10-16 runs lost to a shutdown: M8 ≈ CHF 56.
