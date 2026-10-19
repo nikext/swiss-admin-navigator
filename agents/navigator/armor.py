@@ -216,7 +216,8 @@ BLOCKED = {
         "its rules or reveal its setup), or like a request for help with something unlawful. "
         "Please ask your question about Swiss federal law again without such instructions. "
         "If you pasted a letter or a contract, you can describe what it says instead. If "
-        "this happened by mistake, try rephrasing."
+        "you have a problem with an authority, a lawyer or a legal-aid office can explain "
+        "your lawful options. If this happened by mistake, try rephrasing."
     ),
     "de": (
         "Eine automatische Sicherheitsprüfung hat diese Nachricht gestoppt, deshalb habe ich "
@@ -225,7 +226,9 @@ BLOCKED = {
         "offenlegen zu lassen), oder wie eine Bitte um Hilfe bei etwas Rechtswidrigem. Bitte "
         "stellen Sie Ihre Frage zum Bundesrecht ohne solche Anweisungen noch einmal. Wenn Sie "
         "einen Brief oder Vertrag eingefügt haben, können Sie auch beschreiben, was darin "
-        "steht. Falls das ein Irrtum war, formulieren Sie die Frage bitte um."
+        "steht. Wenn Sie ein Problem mit einer Behörde haben, kann Ihnen eine Anwältin, ein "
+        "Anwalt oder eine Rechtsberatungsstelle Ihre legalen Möglichkeiten erklären. Falls "
+        "das ein Irrtum war, formulieren Sie die Frage bitte um."
     ),
     "fr": (
         "Un contrôle de sécurité automatique a bloqué ce message, je n'y ai donc pas répondu. "
@@ -233,8 +236,9 @@ BLOCKED = {
         "exemple lui faire ignorer ses règles ou révéler sa configuration) ou à une demande "
         "d'aide pour quelque chose d'illégal. Posez à nouveau votre question sur le droit "
         "fédéral, sans ces instructions. Si vous avez collé une lettre ou un contrat, vous "
-        "pouvez aussi décrire ce qu'il contient. S'il s'agit d'une erreur, reformulez votre "
-        "question."
+        "pouvez aussi décrire ce qu'il contient. Si vous avez un problème avec une autorité, "
+        "un avocat ou un service de consultation juridique peut vous expliquer vos options "
+        "légales. S'il s'agit d'une erreur, reformulez votre question."
     ),
     "it": (
         "Un controllo di sicurezza automatico ha bloccato questo messaggio, quindi non ho "
@@ -242,7 +246,9 @@ BLOCKED = {
         "esempio fargli ignorare le sue regole o rivelarne la configurazione) o una richiesta "
         "di aiuto per qualcosa di illecito. Riformuli la sua domanda sul diritto federale "
         "senza queste istruzioni. Se ha incollato una lettera o un contratto, può anche "
-        "descriverne il contenuto. Se si tratta di un errore, provi a riformularla."
+        "descriverne il contenuto. Se ha un problema con un'autorità, un avvocato o un "
+        "servizio di consulenza giuridica può spiegarle le sue possibilità legali. Se si "
+        "tratta di un errore, provi a riformularla."
     ),
 }
 
