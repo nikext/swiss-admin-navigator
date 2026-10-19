@@ -6,7 +6,9 @@ answer passes the deterministic citation verifier (`verifier.py`, ADR-018).
 With the user's opt-in (session state set by the web BFF), remembered facts are
 loaded into the instruction and each turn is sent to Memory Bank (`memory.py`,
 M7, ADR-029); the memory service is the runner's (`agentengine://` on Agent
-Runtime).
+Runtime). With `MODEL_ARMOR_TEMPLATE` set, each user message is screened by Model
+Armor before the first model call and obvious injections get a fixed refusal
+(`armor.py`, M10, ADR-032).
 
 Config: `NAV_PROFILE` picks the model (profiles/, ADR-008);
 `SWISS_LAW_MCP_URL` the MCP server (`make mcp-dev` locally, Cloud Run
@@ -26,6 +28,7 @@ from google.adk.models import Gemini
 from google.adk.tools.mcp_tool import McpToolset, StreamableHTTPConnectionParams
 from google.genai import types
 
+from .armor import InputScreen
 from .claims import ClaimChecker
 from .config import CALL_TIMEOUT_MS, RETRY, LlmRef, load_profile
 from .contract import DraftAnswer
@@ -91,11 +94,13 @@ def build_agent(
     prompt: str = PROMPT,
     toolset: McpToolset | None = None,
     before_tool_callback: BeforeToolCallback | None = None,
+    screen: InputScreen | None = None,
 ) -> LlmAgent:
     """navigator_v1 against one MCP server. The eval harness builds its own.
 
     `claim_check` None follows `NAV_CLAIM_CHECK`; `observer` sees every verifier round
-    (eval harness)."""
+    (eval harness); `screen` None follows the MODEL_ARMOR_* env."""
+    screen = screen or InputScreen.from_env()
     toolset = toolset or new_toolset(mcp_url)
     if claim_check is None:
         claim_check = claim_check_enabled()
@@ -109,6 +114,7 @@ def build_agent(
         generate_content_config=generate_config(model),
         tools=[toolset, MemoryContext()],
         output_schema=DraftAnswer,
+        before_agent_callback=screen.before_agent,
         before_model_callback=verifier.before_model,
         after_model_callback=verifier.after_model,
         before_tool_callback=before_tool_callback,

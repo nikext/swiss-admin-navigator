@@ -14,6 +14,7 @@ All in `evals/datasets/`, versioned in git.
 | `silver.jsonl` | 352 cases | LLM-generated from single articles (`make silver`, profile agent model, thinking low; 410 articles sampled by per-act quotas, 54 skipped as not resident-facing, 4 rejected for naming the article; CHF 0.33). Spot check of 30: key facts supported 30/30. Used for broad regression, never for headline claims. |
 | `multiturn.evalset.json` | 25 sessions | ADK EvalSet with user simulation (`make eval-multiturn`): clarification then answer (12), follow-ups (6), language switches (3), pushback and out of scope (4); per-case rubrics. Memory has its own eval (`memory.jsonl`). Drafted, not verified. |
 | `adversarial.jsonl` | 50 cases | Golden schema. Fake articles/paragraphs/acts (12), prompt injection direct and inside quoted e-mails, contracts, letters and fake tool output (12), impersonation (6), individual advice and acting for the user (8), unlawful requests (4), false premises and pressure (8). Drafted by Claude, not verified; part of the full eval, not of headline numbers. |
+| `injection.jsonl` | 98 rows | M10, E7 (`make eval-armor`, ADR-032): screening labels, not QA cases. 40 new **attacks** (direct overrides and prompt extraction, personas, fake system turns, fake tool output, injections inside pasted e-mails/contracts/letters/web text, obfuscation, exfiltration through markdown links, memory poisoning; two mixed-language) and 40 **benign hard negatives** (pasted leases and house rules, "please ignore my previous e-mail", authority letters, style requests, domestic violence, sexual harassment, a criminal record, hostile tone, URLs, AHV numbers, an IBAN), 10 per language each, plus `ref` rows that label 18 existing golden/adversarial cases as attacks. The rest of golden counts as benign, silver too, other adversarial cases as `other`. Drafted and model-verified by Claude Opus 5.5 at Nikola's request (2026-10-19, ADR-024 extended). |
 | `memory.jsonl` | 26 cases | M7 (`make eval-memory`, ADR-029). 20 **extract** cases (DE 5, EN 7, FR 5, IT 3): a conversation → the whitelisted fields expected, fields that must stay empty, and forbidden strings (13 privacy cases: health, pregnancy, HIV, conviction, salary/debt/IBAN, name/address/phone/e-mail, religion, asylum status, disability, date of birth/AHV number, registered partnership, an injected "remember" instruction, a child's diagnosis). 6 **e2e** cases run the agent across sessions: recall (2, one across languages), no opt-in → nothing saved, switch off → nothing read, sensitive facts in a real conversation, Forget me. Drafted and model-verified by Claude Opus 5.5 at Nikola's request (ADR-024 extended, ADR-029). |
 | `judge_labels.jsonl` | 30 answers | Labels of the 30 M3 answers for the judge-agreement study, by Claude Opus 5.5 at Nikola's request, blind to judge verdicts (`labeled_by: claude-opus-5-5`, ADR-024). `make label-answers` adds human labels. |
 
@@ -192,11 +193,30 @@ First comparison: ADR-027 (within noise of local).
 | E4 | Retrieval ablation | BM25 vs dense vs hybrid (RRF, weighted); trigram vs unicode61; with vs without contextual headers; dims 256–3072; emb-2@eu vs emb-001@europe-west6. **Done in M2:** dense emb-2 + headers + 768 dims wins (R@8 98.5, MRR 0.881; hybrid −13.7). ADR-016, `evals/reports/2026-10-15-c756c89-e4-retrieval.md`. |
 | E5 | Cross-lingual robustness | Same questions in EN/DE/FR/IT: does quality drop for EN given that EN source texts are mostly missing? |
 | E6 | Verifier value | v1 with vs without citation_verifier: hallucinated citations, latency, cost. **Done in M8** (paired prefixes of one run, `make eval-derive`): deterministic verifier = quote fidelity 98.5 → 99.6%; LLM claim checker = groundedness +4.4 (Qwen; +9.4 Flash) at ×1.8 cost and ×2 latency; opt-in. ADR-034. |
-| E7 | Model Armor | Injection block rate vs false positives on golden |
+| E7 | Model Armor | Injection block rate vs false positives on golden. **Screen measured in M10:** injection filter at medium with multi-language detection flags 17/58 attacks (29%), 0/532 benign, 0/400 law texts; 0/13 in-document injections. ADR-032, `evals/reports/2026-10-19-98fc50c-e7-armor.md`. **Agent with the screen:** adversarial 6/50 blocked, behaviour 98 (M8's v1: 96), golden smoke 0/20 blocked, no regression; golden adversarial-08 is the one golden case it refuses. `docs/RESULTS.md`. |
 | E8 | Memory whitelist | Memory Bank defaults vs custom topics vs structured profile: field recall, leaks of sensitive data, privacy cases. **Done in M7:** ADR-029. |
 
 Report each one as a table with 95% bootstrap confidence intervals. With 150
 cases, differences under ~5 pts are probably noise. **Say so.**
+
+### Model Armor screening (M10, E7)
+
+`make eval-armor` (`evals/harness/armor_eval.py`) sends every golden,
+adversarial, silver and `injection.jsonl` text, plus `--law` random in-force
+article texts per language (default 100), to Model Armor's
+`sanitizeUserPrompt` (`MODEL_ARMOR_TEMPLATE`; the template reports every
+match from LOW_AND_ABOVE, so one pass scores every level). No agent and no
+Gemini call. Three arms: no language hint, multi-language detection, and
+multi-language detection with the case's language. Two policies: the
+injection filter alone, or any filter except SDP. Reported per level: attacks
+flagged (by language and kind), benign flagged (by set and language), other
+adversarial, law text; Wilson 95% CIs; paired arm differences; latency;
+tokens (~82k per arm, inside the free tier). It paces itself at 900 calls a
+minute (the project quota is 1,200). `ARGS="--from <report.json>"`
+re-scores without calls. What blocking does end to end follows from the
+screen: a blocked case gets the fixed refusal before any model call
+(`evals/reports/2026-10-19-10b0023-e7-blocked-drafts.md`: six cases, 0
+model and tool calls).
 
 ### Memory eval (M7)
 

@@ -6,7 +6,8 @@ same fields, plus what code derives instead of the model (each citation's
 abbreviation, Fedlex URL and as-of date, the exact quote span from the
 source), the verification record and the fixed notice (ADR-010). With the LLM
 claim checker on (M8, ADR-034), each round also records the checker's verdict
-per claim.
+per claim. An answer the input screen blocked (M10) has no citations and says
+why in `screening`.
 """
 
 from __future__ import annotations
@@ -136,7 +137,15 @@ class Verification(BaseModel):
     )
 
 
+class Screening(BaseModel):
+    """Set only when the input screen stopped the question (M10, `armor.py`)."""
+
+    status: Literal["blocked"]
+    flags: list[str] = Field(description='What matched, e.g. ["injection:high"].')
+
+
 class Answer(DraftAnswer):
     citations: list[Citation]  # type: ignore[assignment]
     verification: Verification
     notice: str = NOTICE
+    screening: Screening | None = None

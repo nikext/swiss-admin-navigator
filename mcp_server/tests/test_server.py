@@ -3,11 +3,24 @@
 import json
 import logging
 from pathlib import Path
+from types import SimpleNamespace
+from typing import Any
 
 import pytest
 from mcp import Client
+from starlette.requests import Request
 
-from mcp_server.server import App, JsonFormatter, RateLimiter, build_server
+from mcp_server.server import (
+    App,
+    BodyLimit,
+    JsonFormatter,
+    RateLimiter,
+    build_server,
+    client_ip,
+    forwarded_hops,
+    rate_key,
+)
+from mcp_server.tests.conftest import bow_vector
 
 TOOLS = {"search_law", "get_article", "get_toc", "list_acts", "resolve_citation"}
 
@@ -94,3 +107,100 @@ async def test_no_list_changed_so_clients_open_no_listen_stream(app: App, mode: 
         caps = client.server_capabilities
     assert caps.tools is not None
     assert not caps.tools.list_changed
+
+
+def request_ctx(xff: str | None = None, peer: str = "10.0.0.9") -> Any:
+    headers = [(b"x-forwarded-for", xff.encode())] if xff is not None else []
+    scope = {"type": "http", "headers": headers, "client": (peer, 1234)}
+    return SimpleNamespace(request_context=SimpleNamespace(request=Request(scope)))
+
+
+def test_client_ip_is_the_hop_cloud_run_appended() -> None:
+    assert client_ip(request_ctx("203.0.113.7")) == "203.0.113.7"
+    # A client-supplied header comes first; Cloud Run's front end appends the real address.
+    assert client_ip(request_ctx("1.2.3.4, 203.0.113.7")) == "203.0.113.7"
+    assert client_ip(request_ctx()) == "10.0.0.9"
+    assert client_ip(None) == "stdio"
+    assert forwarded_hops(request_ctx("1.2.3.4,  203.0.113.7")) == ["1.2.3.4", "203.0.113.7"]
+
+
+def test_rate_key_groups_ipv6_by_slash_64() -> None:
+    assert rate_key("203.0.113.7") == "203.0.113.7"
+    assert rate_key("2001:db8:1:2:aaaa::1") == rate_key("2001:db8:1:2:ffff::9")
+    assert rate_key("2001:db8:1:2::1") == "2001:db8:1:2::/64"
+    assert rate_key("2001:db8:1:3::1") != rate_key("2001:db8:1:2::1")
+    assert rate_key("::ffff:203.0.113.7") == "203.0.113.7"
+    assert rate_key("stdio") == "stdio"
+
+
+class FakeEmbedder:
+    def __init__(self) -> None:
+        self.calls: list[str] = []
+        self.cache: dict[str, Any] = {}
+
+    def cached(self, query: str) -> Any:
+        return self.cache.get(query)
+
+    async def embed(self, query: str) -> Any:
+        self.calls.append(query)
+        self.cache[query] = bow_vector(query)
+        return self.cache[query]
+
+    def describe(self) -> dict[str, Any]:
+        return {}
+
+
+async def test_embedding_budget_degrades_to_keywords(app: App) -> None:
+    fake = FakeEmbedder()
+    app.embedder = fake  # type: ignore[assignment]
+    app.embed_budget = RateLimiter(per_minute=0.001, burst=1)
+    async with Client(build_server(app)) as client:
+        first = await client.call_tool("search_law", {"query": "Kündigung Vermieter"})
+        second = await client.call_tool("search_law", {"query": "Mietzins Erhöhung"})
+        again = await client.call_tool("search_law", {"query": "Kündigung Vermieter"})
+    assert fake.calls == ["Kündigung Vermieter"]  # the cache hit costs no budget
+    assert "degraded" not in (first.structured_content or {})
+    assert (second.structured_content or {})["mode"] == "bm25"
+    assert "budget" in (second.structured_content or {})["degraded"]
+    assert "degraded" not in (again.structured_content or {})
+
+
+async def asgi_call(app: Any, body: bytes, chunked: bool = False) -> tuple[int, bytes]:
+    headers = [] if chunked else [(b"content-length", str(len(body)).encode())]
+    scope = {"type": "http", "method": "POST", "path": "/mcp", "headers": headers}
+    chunks = [body[i : i + 1000] for i in range(0, len(body), 1000)] or [b""]
+    queue = [{"type": "http.request", "body": c, "more_body": i < len(chunks) - 1}
+             for i, c in enumerate(chunks)]  # fmt: skip
+    sent: list[dict[str, Any]] = []
+
+    async def receive() -> dict[str, Any]:
+        return queue.pop(0)
+
+    async def send(message: dict[str, Any]) -> None:
+        sent.append(message)
+
+    await app(scope, receive, send)
+    status = next(m["status"] for m in sent if m["type"] == "http.response.start")
+    return status, b"".join(m.get("body", b"") for m in sent if m["type"] == "http.response.body")
+
+
+async def echo_app(scope: Any, receive: Any, send: Any) -> None:
+    body = b""
+    while True:
+        message = await receive()
+        body += message.get("body", b"")
+        if not message.get("more_body"):
+            break
+    await send({"type": "http.response.start", "status": 200, "headers": []})
+    await send({"type": "http.response.body", "body": str(len(body)).encode()})
+
+
+async def test_body_limit() -> None:
+    limited = BodyLimit(echo_app, max_bytes=4096)
+    assert await asgi_call(limited, b"x" * 4096) == (200, b"4096")
+    status, body = await asgi_call(limited, b"x" * 4097)
+    assert status == 413
+    assert b"too large" in body
+    # No Content-Length (chunked): counted while streaming.
+    assert (await asgi_call(limited, b"x" * 5000, chunked=True))[0] == 413
+    assert await asgi_call(limited, b"x" * 3000, chunked=True) == (200, b"3000")

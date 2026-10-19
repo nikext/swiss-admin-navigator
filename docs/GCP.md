@@ -45,7 +45,8 @@ Ran on 2026-10-15; a second run reported every resource as existing.
 - **APIs:** aiplatform, cloudresourcemanager, run, artifactregistry,
   cloudbuild, secretmanager, firestore (API only; the `swiss-nav` database comes from `make gcp-web`, M6), cloudtrace,
   logging, monitoring, iamcredentials, sts, billingbudgets.
-  `modelarmor.googleapis.com` is added in M10 (verify the service name then).
+  `modelarmor.googleapis.com` (verified name) is enabled by `make gcp-armor`
+  (M10, 2026-10-19), not by this script.
 - **Artifact Registry:** `swiss-nav` (docker, europe-west6). The GPU repo
   `swiss-nav-gpu` (europe-west4) is added in M9.
 - **Bucket:** `gs://$PROJECT_ID-swiss-nav` (europe-west6, uniform access,
@@ -60,9 +61,9 @@ All five exist since 2026-10-15.
 | SA | Used by | Roles |
 |---|---|---|
 | `swiss-nav-mcp@` | Cloud Run MCP | `roles/aiplatform.user` (query embeddings only) |
-| `swiss-nav-agent@` | Agent Runtime (runtime identity, `--service_account`; verified M5) | `roles/aiplatform.user`, `roles/logging.logWriter`, `roles/cloudtrace.agent`, and for the OTLP export to `telemetry.googleapis.com` `roles/telemetry.tracesWriter`, `roles/monitoring.metricWriter`, `roles/serviceusage.serviceUsageConsumer` (M5, ADR-027). Without a custom SA the agent runs as `service-<number>@gcp-sa-aiplatform-re.iam.gserviceaccount.com`. |
+| `swiss-nav-agent@` | Agent Runtime (runtime identity, `--service_account`; verified M5) | `roles/aiplatform.user`, `roles/logging.logWriter`, `roles/cloudtrace.agent`, and for the OTLP export to `telemetry.googleapis.com` `roles/telemetry.tracesWriter`, `roles/monitoring.metricWriter`, `roles/serviceusage.serviceUsageConsumer` (M5, ADR-027); `roles/modelarmor.user` (M10, ADR-032). Without a custom SA the agent runs as `service-<number>@gcp-sa-aiplatform-re.iam.gserviceaccount.com`. |
 | `swiss-nav-web@` | Cloud Run web | `roles/aiplatform.user` (to call `reasoningEngines:streamQuery`), `roles/datastore.user` (Firestore database `swiss-nav`), `roles/secretmanager.secretAccessor` on the secret `swiss-nav-access-code` only (M6, `make gcp-web`) |
-| `swiss-nav-ci@` | GitHub Actions via WIF | `roles/aiplatform.user`, `roles/storage.objectAdmin` on the bucket |
+| `swiss-nav-ci@` | GitHub Actions via WIF | `roles/aiplatform.user`, `roles/storage.objectAdmin` on the bucket, `roles/modelarmor.user` (M10) |
 | `swiss-nav-apertus@` | Cloud Run GPU | none (no GCP API calls) |
 
 ### CI: Workload Identity Federation and the published index (M4, ADR-021)
@@ -108,6 +109,31 @@ us-central1 only gpt-oss. List prices come from the Cloud Billing catalog
 (service `C7E2-9256-1C43`), since the pricing page doesn't render for our
 fetcher.
 
+### Model Armor (M10, ADR-032)
+
+`make gcp-armor` (`infra/model_armor.sh`, idempotent, `DRY_RUN=1`) ran on
+2026-10-19: it enables the API, creates or updates the template
+**`projects/$PROJECT_ID/locations/eu/templates/swiss-nav-input`** (label
+`app=swiss-nav`) and grants `roles/modelarmor.user` to `swiss-nav-agent@` and
+`swiss-nav-ci@` (project-level; there is no per-template IAM).
+
+- **Location `eu`:** Model Armor has no europe-west6 (its Europe regions are
+  europe-west1/2/3/4/9 and europe-southwest1, plus `eu`). Endpoint
+  `https://modelarmor.eu.rep.googleapis.com/v1/<template>:sanitizeUserPrompt`.
+- **Template:** prompt injection + jailbreak and the four RAI filters at
+  LOW_AND_ABOVE, malicious URLs and SDP basic on. The agent applies its own
+  threshold (`MODEL_ARMOR_MIN_LEVEL`). `logSanitizeOperations` is off: it
+  would put user questions into Cloud Logging.
+- **No floor settings and no `model_armor_config` on Gemini calls.** Floor
+  settings apply to every Gemini call in the shared project. Per-request
+  templates work only in europe-west1/2/3 (and two Asian regions), not on the
+  `eu` endpoint the agent's model is served from (ADR-013).
+- **Pricing (2026-10-19):** 2M tokens a month free, then USD 0.10 per 1M
+  (standalone). Quota: 1,200 calls a minute per project.
+- The agent reads `MODEL_ARMOR_TEMPLATE`, `MODEL_ARMOR_MODE`
+  (block | log | off) and `MODEL_ARMOR_MIN_LEVEL` from `.env`, and
+  `make deploy-agent` stages them into the Agent Runtime env.
+
 ### Budget guardrail (done in M0)
 
 `make gcp-budget` (`infra/budget.sh`, idempotent by display name) created
@@ -147,7 +173,11 @@ gcloud run deploy swiss-nav-mcp --image … --region europe-west6 \
   `/mcp`, health at **`/health`**. Cloud Run answers `/healthz` itself with
   404 (paths ending in "z" are reserved; verified).
 - Public and read-only by design (ADR-003). `search_law` is rate-limited per
-  client IP in-app (30/min, burst 10); max 2 instances caps the rest.
+  client in-app (30/min, burst 10; the last `X-Forwarded-For` hop, IPv6 per
+  /64), paid query embeddings have a budget of 30/min per instance across
+  all clients (then keyword search), bodies over 64 KiB get 413, and max 2
+  instances caps the rest (M10, ADR-033). Rate-limit and budget hits are
+  logged at WARNING.
 - Logs are structured JSON; they carry a salted hash instead of the client
   IP and no query text (`LOG_QUERIES=1` to opt in for debugging).
 - gen2, not the default gen1, and the image preloads the files it imports:
@@ -337,6 +367,7 @@ Quota refused on 2026-10-16 (§ above, ADR-026); kept for reference.
 | Gemini Flash | tokens; an answer ≈ 4–6 LLM calls × 5–10k input tokens | ~0.5–2 Rp. per answer (verify pricing) |
 | Embeddings | one-time corpus embed (~30k chunks) + per query | < 2 CHF build, negligible per query |
 | Cloud Run (MCP, web) | scale to zero | ~0–3 CHF |
+| Model Armor | ~150 tokens per screened question; 2M tokens/month free, then USD 0.10/1M (2026-10-19) | 0 CHF at demo traffic; the E7 eval used ~245k tokens |
 | Apertus GPU (L4) | per-second while running; scale to zero | ~1 CHF/h while active; eval runs only |
 | Full eval matrix run | ~150 cases × 5 configs + judge | ~5–20 CHF per run |
 

@@ -29,6 +29,7 @@ flowchart LR
   end
 
   mg["Model Garden MaaS<br/>(open models: judge cross-check, eval comparison)"]
+  armor["Model Armor · eu<br/>(input screen, M10)"]
   fs[("Firestore<br/>quotas · feedback")]
   trace["Cloud Trace / Logging<br/>(OpenTelemetry)"]
 
@@ -36,6 +37,7 @@ flowchart LR
   web --> fs
   runtime --> sessions
   runtime --> memory
+  runtime -- "screen each message" --> armor
   runtime --> gemini
   runtime -- "MCP tools" --> mcp
   runtime -. "LiteLLM (M9)" .-> apertus
@@ -76,6 +78,7 @@ sequenceDiagram
   U->>W: "Can my landlord terminate because I asked for repairs?" (EN)
   W->>W: check access code + quota
   W->>A: streamQuery(user_id, session_id, message)
+  A->>A: Model Armor screen (eu); an injection gets a fixed refusal and nothing else runs
   A->>MB: preload_memory (only if user opted in)
   A->>G: plan: language=en, domain=housing, needs clarification? no
   A->>M: resolve_citation / search_law("retaliatory termination tenant repairs", sr=[220, 221.213.11])
@@ -167,6 +170,9 @@ Rules (enforced by the prompt, the verifier, and evals):
 - In the README say "agent deployed in europe-west6 (Zürich), model calls
   processed in the EU". Don't say "runs in Zürich" or "data never leaves
   Switzerland".
+- **Model Armor has no europe-west6** either (verified 2026-10-19). The input
+  screen uses the `eu` multi-region (EU data centres), like the model calls
+  (ADR-032).
 - **Cloud Run GPUs are not offered in europe-west6.** L4 runs in
   europe-west1/europe-west4/us-central1, and RTX PRO 6000 (preview) in
   europe-west4 among others. Apertus therefore runs in **europe-west4**. Say so

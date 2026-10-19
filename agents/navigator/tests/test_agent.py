@@ -1,5 +1,6 @@
 """Construction only: agent behaviour is tested through evals, not mocks."""
 
+import pytest
 from google.adk.models import Gemini
 from google.adk.tools.mcp_tool import McpToolset
 
@@ -11,6 +12,7 @@ from agents.navigator.agent import (
     profile,
     root_agent,
 )
+from agents.navigator.armor import InputScreen
 from agents.navigator.config import CALL_TIMEOUT_MS, RETRY, LlmRef
 from agents.navigator.contract import DraftAnswer
 from agents.navigator.memory import MemoryContext, save_memory
@@ -44,6 +46,17 @@ def test_tools_contract_and_verifier_are_wired() -> None:
     assert verifier.toolset is toolset
     assert agent.before_model_callback == verifier.before_model
     assert agent.after_tool_callback is compact_tool_result
+    screen = agent.before_agent_callback.__self__  # type: ignore[union-attr]
+    assert isinstance(screen, InputScreen)
+
+
+def test_input_screen_follows_the_env(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("MODEL_ARMOR_TEMPLATE", raising=False)
+    off = build_agent("http://127.0.0.1:1/mcp").before_agent_callback.__self__  # type: ignore[union-attr]
+    assert off.mode == "off"
+    monkeypatch.setenv("MODEL_ARMOR_TEMPLATE", "projects/p/locations/eu/templates/t")
+    on = build_agent("http://127.0.0.1:1/mcp").before_agent_callback.__self__  # type: ignore[union-attr]
+    assert (on.mode, on.min_level) == ("block", 2)
 
 
 def test_prompt_is_served_verbatim() -> None:

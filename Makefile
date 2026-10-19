@@ -10,7 +10,7 @@ todo = @echo "make $@: not implemented yet (lands in $(1), see docs/PLAN.md)" >&
         resolve ingest spotcheck fixtures index index-e4 publish-index eval-retrieval mcp-dev mcp-coldstart agent-dev \
         eval-smoke eval-smoke-remote eval-full eval-multiturn eval-memory eval-derive eval-compare memory-bank silver \
         review-golden check-cases \
-        label-answers judge-study query-remote deploy-mcp deploy-agent deploy-web \
+        label-answers judge-study query-remote deploy-mcp deploy-agent deploy-web gcp-armor eval-armor \
         web-install web-dev web-check gcp-web
 
 help: ## List targets
@@ -46,6 +46,9 @@ gcp-wif: ## Workload Identity Federation for GitHub Actions -> swiss-nav-ci@ (DR
 
 gcp-budget: ## Monthly budget alert at 50/90/100% (DRY_RUN=1 to preview)
 	bash infra/budget.sh
+
+gcp-armor: ## Model Armor API + template swiss-nav-input (eu) + modelarmor.user for agent/CI (DRY_RUN=1)
+	bash infra/model_armor.sh
 
 resolve: ## Re-resolve acts.yaml on Fedlex -> corpus/manifest.lock.json (AS_OF=YYYY-MM-DD)
 	$(UV) run python -m ingest.resolve $(if $(AS_OF),--as-of $(AS_OF))
@@ -92,6 +95,9 @@ query-remote: ## One question to the deployed agent, streamed (Q="..."; ARGS=--t
 
 eval-multiturn: ## 25 simulated conversations via ADK AgentEvaluator + rubric judge (billable, ~CHF 3; ARGS=...)
 	$(UV) run python -m evals.harness.multiturn $(ARGS)
+
+eval-armor: ## E7: Model Armor on every eval input + law text (MODEL_ARMOR_TEMPLATE; free tier; ARGS=...)
+	$(UV) run python -m evals.harness.armor_eval $(ARGS)
 
 eval-memory: ## Memory eval on the eval Memory Bank (MEMORY_EVAL_RUNTIME_ID; billable, < CHF 1; ARGS="--variant profile")
 	$(UV) run python -m evals.harness.memory_eval $(ARGS)

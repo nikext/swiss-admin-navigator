@@ -21,9 +21,9 @@ what was verified. Update the status table in the same PR.
 |  | *Follow-ups from M7* | | Live check done by Nikola (2026-10-16): "I live in canton St. Gallen" was stored as `canton: SG` and a new conversation used it. Whitelist gap he found: residence duration ("6 years in CH") is not storable, yet it decides C permit and naturalisation; add an arrival-year field (not "years", which goes stale) with new memory cases (need Nikola's go-ahead to model-verify), re-apply the config, redeploy agent + web; Nikola adds the M7 agreements (eval instance, CHF 10 cap, model-verified memory cases) to CLAUDE.md's session settings and `eval-memory`/`memory-bank` to its command list; decide whether to commit or ignore `web/AGENTS.md`/`web/CLAUDE.md` that `next dev` writes; employment from salary mentions is missed (mem-06); answer latency spiked to p50 232 s on the `eu` endpoint during the final e2e run (CI smoke an hour later: p50 44 s; transient). |
 |  | *UI redesign* | ✅ done | ADR-030. Components and styles rebuilt from a Claude Design handoff (29 artboards); no BFF/agent change, new trail/timing/verified-tick data derived in the browser (`present.ts`). axe 0 violations in 35 mocked states (desk + phone, light + dark); Lighthouse mobile a11y 100, best practices 100, performance 86–96 (web fonts). Deployed 2026-10-19 (revision `00004-4gr`); live question via the UI: 109 s, 3/3 quotes verified, panel + phone layout OK, axe 0. Fixed an M6 race that left the quota footer stale (#14, needs a `make deploy-web`). Open: Nikola checks it on a real phone. |
 | M8 | `navigator_v2` multi-agent + verifier, A/B (E2) | ✅ done | PR (ADR-034, `docs/RESULTS.md`). Golden 150 + adversarial 50, paired arms from one recorded run per agent. **E2:** v2 (router + specialists) never beats v1: golden groundedness −2.0 (Flash) / −1.7 (Qwen) with the claim checker, −2.8 (CI −5.4…−0.2, Qwen) without; +13% cost; router 98% correct. v1 stays, v2 not deployed. **E6 (v1):** deterministic verifier = quote fidelity 98.5 → 99.6%, +7% cost; LLM claim checker = groundedness +4.4 (Qwen, CI +2.4…+6.5; +9.4 Flash), must_not 4 → 2 (Qwen), at CHF 0.036 → 0.067 per answer and p50 65 → 127 s; stays opt-in (`NAV_CLAIM_CHECK`). Hallucinated citations 0 in every arm. Runs during a Gemini degradation on `global`/`eu`: 44 cases re-run, latencies inflated. Hardening: 90 s per-call deadline + retry, `answer_eval --traces` resume, judge retries ×6. Spend 2026-10-19 ≈ CHF 35 of the CHF 40 cap (raised from 30 by Nikola that day), plus ≈ CHF 20 estimated for the 2026-10-16 runs lost to a shutdown |
-|  | *Follow-ups from M8* | | Re-measure the claim checker's latency on a healthy endpoint in M9 and decide whether the web app turns it on; a one-redraft claim check (cheaper) is untested; served config is still on `eu` without the 90 s deadline until the next `make deploy-agent`. |
+|  | *Follow-ups from M8* | | Re-measure the claim checker's latency on a healthy endpoint in M9 and decide whether the web app turns it on; a one-redraft claim check (cheaper) is untested; the served agent (still on `eu`) got the 90 s deadline with M10's deploy (2026-10-19). |
 | M9 | Model comparison incl. Apertus + Claude via Model Garden (E1) | ⬜ todo | |
-| M10 | Security hardening: Model Armor, injection evals, limits | ⬜ todo | From M6: the MCP server rate-limits on the *first* `X-Forwarded-For` hop, which a client can forge (Cloud Run appends the real IP last; the web BFF uses the last hop). |
+| M10 | Security hardening: Model Armor, injection evals, limits | ✅ done | PR #16. Before M9 (ADR-031). **E7 (screen alone, ADR-032):** Model Armor's injection filter at medium with multi-language detection flags 17/58 attacks (29%, CI 19–42), 0/532 benign (golden, silver, 40 hard negatives) and 0/400 law texts; direct overrides 9/10, injections inside pasted documents 0/13 at every level. The agent screens each message before the first model call and blocks at medium with a fixed refusal (no model, tool or memory call; fails open). No tool-output screening. MCP server: last `X-Forwarded-For` hop, IPv6 per /64, an embedding budget (≤ ~USD 5/day worst case), 64 KiB body cap (ADR-033). Model Armor setup done (template `swiss-nav-input`, `eu`). **Agent with the screen** (after M8): adversarial 6/50 blocked, behaviour 98 (M8's v1: 96, paired +2.0), groundedness +1.2 (CI −5.3…+8.5); golden smoke 0/20 blocked, groundedness 77.2 (M5 smoke: 78.5/78.0); the only golden case it refuses is adversarial-08 (`docs/RESULTS.md`). Merged main (M8) in. Spend ≈ CHF 2.4. **Deployed and checked on Cloud Run** (2026-10-19, MCP revision `00008-4mr`, agent f27e147): a forged `X-Forwarded-For` gets the same client hash as none, a 70 KB body gets 413, an injection gets the refusal, a normal question is answered. |
 | M11 | Showcase: README results, demo video, write-up | ⬜ todo | |
 
 Legend: ⬜ todo · 🟨 in progress · ✅ done · ⏭️ skipped (say why)
@@ -259,6 +259,17 @@ Tasks
 - Review MCP server rate limits, max instances, and logging of abuse.
 - Stretch: Agent Gateway in front of the MCP server, with an audit log
   screenshot.
+
+Done when: E7 (block rate vs false positives, with CIs) is in EVALS.md and
+DECISIONS.md, the agent with the screen shows no regression on adversarial
+and the golden smoke, and the MCP fixes are deployed and checked on Cloud
+Run.
+
+As built (2026-10-19): `make gcp-armor`, `make eval-armor`,
+`agents/navigator/armor.py` (ADR-032), MCP limits (ADR-033). Tool output is
+not screened (the corpus is ours, and the filter misses in-document
+injections anyway). The Agent Gateway stretch is skipped: its Model Armor
+integration needs both in one region, and Model Armor has no europe-west6.
 
 ## M11: Showcase
 

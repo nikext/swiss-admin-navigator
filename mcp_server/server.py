@@ -6,18 +6,27 @@
 
 Tools: search_law, get_article, get_toc, list_acts, resolve_citation.
 The index (`INDEX_PATH`, default data/index.sqlite) is read-only and loaded at
-startup; the only outbound call is the query embedding in `search_law`, which
-is rate-limited per client IP.
+startup; the only outbound call is the query embedding in `search_law`.
+
+Limits (M10, ADR-033): `search_law` is rate-limited per client (the last
+X-Forwarded-For hop, which Cloud Run's front end appends; IPv6 clients by /64),
+`SEARCH_RATE_PER_MIN`/`SEARCH_BURST`. Embedding calls (cache misses) also have a
+per-process budget, `EMBED_RATE_PER_MIN`/`EMBED_BURST`, across all clients:
+past it, search falls back to keywords (`degraded`), so spreading requests over
+many addresses can't run up the embedding bill. Request bodies over
+`MAX_BODY_BYTES` get 413 before they are parsed.
 
 Logs are one JSON object per line (Cloud Logging's structured format). They
 carry the tool, latency and result counts, a salted hash instead of the client
 IP, and no query text unless LOG_QUERIES=1: questions can be personal.
+Rate-limit and budget hits are WARNING, so `severity>=WARNING` shows abuse.
 """
 
 from __future__ import annotations
 
 import argparse
 import hashlib
+import ipaddress
 import json
 import logging
 import os
@@ -96,18 +105,96 @@ class RateLimiter:
         return False, (1.0 - tokens) / self.rate
 
 
-def client_ip(ctx: Context | None) -> str:
-    """First X-Forwarded-For hop (Cloud Run's front end sets it), else the peer."""
+def _request(ctx: Context | None) -> Request | None:
     try:
         request = ctx.request_context.request if ctx else None
     except ValueError:
         request = None
-    if not isinstance(request, Request):
+    return request if isinstance(request, Request) else None
+
+
+def forwarded_hops(ctx: Context | None) -> list[str]:
+    request = _request(ctx)
+    header = request.headers.get("x-forwarded-for", "") if request else ""
+    return [h.strip() for h in header.split(",") if h.strip()]
+
+
+def client_ip(ctx: Context | None) -> str:
+    """The last X-Forwarded-For hop, else the peer. Cloud Run's front end appends the
+    address it saw; earlier hops come from the client and can be forged."""
+    request = _request(ctx)
+    if request is None:
         return "stdio"
-    forwarded = request.headers.get("x-forwarded-for", "")
-    if forwarded:
-        return forwarded.split(",")[0].strip()
+    if hops := forwarded_hops(ctx):
+        return hops[-1]
     return request.client.host if request.client else "unknown"
+
+
+def rate_key(ip: str) -> str:
+    """What a client is limited by: its IPv4 address, or its IPv6 /64 (one subscriber
+    usually gets a whole /64, so per-address limits would be trivial to dodge)."""
+    try:
+        addr = ipaddress.ip_address(ip)
+    except ValueError:
+        return ip
+    if isinstance(addr, ipaddress.IPv6Address):
+        if addr.ipv4_mapped is not None:
+            return str(addr.ipv4_mapped)
+        return str(ipaddress.ip_network(f"{addr}/64", strict=False))
+    return str(addr)
+
+
+class BodyLimit:
+    """ASGI middleware: 413 for HTTP request bodies over `max_bytes`, declared or streamed.
+
+    Cloud Run accepts up to 32 MiB; an MCP tool call is a few hundred bytes, and a
+    parsed 32 MiB JSON body per concurrent request would exhaust a 1 GiB instance. The
+    body is read here (at most `max_bytes`) and replayed to the app, so an oversized
+    one never reaches it, chunked or not."""
+
+    def __init__(self, app: Any, max_bytes: int) -> None:
+        self.app = app
+        self.max_bytes = max_bytes
+
+    async def __call__(self, scope: dict[str, Any], receive: Any, send: Any) -> None:
+        if scope["type"] != "http":
+            await self.app(scope, receive, send)
+            return
+        length = dict(scope.get("headers") or []).get(b"content-length")
+        if length is not None and (not length.isdigit() or int(length) > self.max_bytes):
+            await self._reject(send)
+            return
+        parts, seen = [], 0
+        while True:
+            message = await receive()
+            if message["type"] != "http.request":  # the client went away
+                return
+            seen += len(message.get("body", b""))
+            if seen > self.max_bytes:
+                await self._reject(send)
+                return
+            parts.append(message.get("body", b""))
+            if not message.get("more_body"):
+                break
+        replayed = False
+
+        async def replay() -> dict[str, Any]:
+            nonlocal replayed
+            if replayed:
+                return await receive()  # later calls: disconnect notices
+            replayed = True
+            return {"type": "http.request", "body": b"".join(parts), "more_body": False}
+
+        await self.app(scope, replay, send)
+
+    async def _reject(self, send: Any) -> None:
+        log.warning("request body too large", extra={"fields": {"max_bytes": self.max_bytes}})
+        response = JSONResponse({"error": "request body too large"}, status_code=413)
+        await response({"type": "http"}, _no_body, send)
+
+
+async def _no_body() -> dict[str, Any]:
+    return {"type": "http.request", "body": b"", "more_body": False}
 
 
 class App:
@@ -144,6 +231,13 @@ class App:
         self.limiter = RateLimiter(
             float(env.get("SEARCH_RATE_PER_MIN", "30")), int(env.get("SEARCH_BURST", "10"))
         )
+        # One bucket for all clients: at most 30 paid embeddings a minute per instance.
+        # Worst case, a flood all day over both instances: 2 x 43,200 queries x <= 300
+        # tokens x USD 0.20 per 1M = USD 5/day, instead of no bound at all.
+        self.embed_budget = RateLimiter(
+            float(env.get("EMBED_RATE_PER_MIN", "30")), int(env.get("EMBED_BURST", "30"))
+        )
+        self.max_body = int(env.get("MAX_BODY_BYTES", str(64 * 1024)))
         self.log_queries = env.get("LOG_QUERIES") == "1"
         self._salt = secrets.token_bytes(16)  # per process: hashes can't be joined across days
 
@@ -177,14 +271,18 @@ def build_server(app: App) -> MCPServer:
         subscriptions=False,
     )
 
-    def logged(tool: str, start: float, ctx: Context | None, **fields: Any) -> None:
+    def logged(
+        tool: str, start: float, ctx: Context | None, level: int = logging.INFO, **fields: Any
+    ) -> None:
         fields = {
             "tool": tool,
             "latency_ms": round((time.perf_counter() - start) * 1000, 1),
-            "client": app.client_hash(client_ip(ctx)),
+            "client": app.client_hash(rate_key(client_ip(ctx))),
             **fields,
         }
-        log.info(tool, extra={"fields": fields})
+        if (hops := len(forwarded_hops(ctx))) > 1:
+            fields["forwarded_hops"] = hops  # the client sent its own X-Forwarded-For
+        log.log(level, tool, extra={"fields": fields})
 
     async def call(tool: str, ctx: Context | None, fn: Any, *args: Any, **log_fields: Any) -> Any:
         start = time.perf_counter()
@@ -213,19 +311,23 @@ def build_server(app: App) -> MCPServer:
         """Search in-force Swiss federal law; returns the k best articles with snippets and
         Fedlex links. Fetch an article with get_article before quoting it."""
         start = time.perf_counter()
-        ip = client_ip(ctx)
-        allowed, wait = app.limiter.allow(ip)
+        allowed, wait = app.limiter.allow(rate_key(client_ip(ctx)))
         if not allowed:
-            logged("search_law", start, ctx, error="rate_limited")
+            logged("search_law", start, ctx, logging.WARNING, error="rate_limited")
             raise ToolError(f"rate limit exceeded; retry in {wait:.0f} s")
         qvec, degraded = None, None
         t_embed = time.perf_counter()
         if app.embedder is not None:
-            try:
-                qvec = await app.embedder.embed(query)
-            except Exception as exc:  # degrade to keyword search, never fail the call
-                degraded = f"semantic search unavailable ({type(exc).__name__}); keyword only"
-                log.warning("embedding failed", extra={"fields": {"error": repr(exc)[:300]}})
+            qvec = app.embedder.cached(query)
+            if qvec is None and not app.embed_budget.allow("*")[0]:
+                degraded = "semantic search is over this server's budget; keyword only"
+                logged("search_law", start, ctx, logging.WARNING, error="embed_budget")
+            elif qvec is None:
+                try:
+                    qvec = await app.embedder.embed(query)
+                except Exception as exc:  # degrade to keyword search, never fail the call
+                    degraded = f"semantic search unavailable ({type(exc).__name__}); keyword only"
+                    log.warning("embedding failed", extra={"fields": {"error": repr(exc)[:300]}})
         fields: dict[str, Any] = {
             "lang": lang,
             "k": k,
@@ -338,6 +440,7 @@ def main(argv: list[str] | None = None) -> int:
     # Stateless + JSON responses: any instance can answer any request (no session
     # affinity needed with max-instances 2), and responses are plain JSON.
     asgi = mcp.streamable_http_app(stateless_http=True, json_response=True, host=host)
+    asgi = BodyLimit(asgi, app.max_body)
     uvicorn.run(asgi, host=host, port=port, log_config=None, access_log=False)
     return 0
 
