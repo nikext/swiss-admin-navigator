@@ -45,6 +45,11 @@ PROFILES_DIR = Path(__file__).parent / "profiles"
 # Model calls retry on 408/429/5xx with exponential backoff (google-genai's default codes).
 # Without it one transient `eu` 500/503 ended a whole answer (M4 CI flake, M5 remote case).
 RETRY = types.HttpRetryOptions(attempts=4, initial_delay=2, max_delay=30)
+# Per-call deadline. Gemini honours it and answers 504, which RETRY retries; without it a
+# call the endpoint queued and never started hung until the eval's case timeout (600 s,
+# `global` and `eu` on 2026-10-19). Healthy calls take 2-30 s.
+CALL_TIMEOUT_MS = 90_000
+HTTP = types.HttpOptions(timeout=CALL_TIMEOUT_MS, retry_options=RETRY)
 
 
 class ProfileError(ValueError):

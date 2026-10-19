@@ -27,7 +27,7 @@ from google.genai import types
 from pydantic import BaseModel
 
 from .citecheck import Checked
-from .config import RETRY, LlmRef
+from .config import HTTP, LlmRef
 from .contract import ClaimCheck, DraftAnswer, Problem, TokenUsage
 
 PROMPT_PATH = Path(__file__).parent / "prompts" / "claim_check.md"
@@ -121,7 +121,7 @@ class ClaimChecker:
                 vertexai=True,
                 project=self._project,
                 location=self.ref.location,
-                http_options=types.HttpOptions(retry_options=RETRY),
+                http_options=HTTP,
             )
         return self._client
 

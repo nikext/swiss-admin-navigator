@@ -27,7 +27,7 @@ from google.adk.tools.mcp_tool import McpToolset, StreamableHTTPConnectionParams
 from google.genai import types
 
 from .claims import ClaimChecker
-from .config import RETRY, LlmRef, load_profile
+from .config import CALL_TIMEOUT_MS, RETRY, LlmRef, load_profile
 from .contract import DraftAnswer
 from .memory import MemoryContext, save_memory
 from .verifier import CitationVerifier, Observer, compact_tool_result
@@ -70,12 +70,14 @@ def gemini(model: LlmRef) -> Gemini:
     )
 
 
-def generate_config(model: LlmRef) -> types.GenerateContentConfig | None:
-    """The profile's thinking level, if any (unset = the model's default)."""
-    if model.thinking is None:
-        return None
-    level = types.ThinkingLevel(model.thinking.upper())
-    return types.GenerateContentConfig(thinking_config=types.ThinkingConfig(thinking_level=level))
+def generate_config(model: LlmRef) -> types.GenerateContentConfig:
+    """The per-call deadline and the profile's thinking level (unset = the model's default)."""
+    # Per request: ADK builds the client's http_options itself; the client's RETRY still applies.
+    config = types.GenerateContentConfig(http_options=types.HttpOptions(timeout=CALL_TIMEOUT_MS))
+    if model.thinking is not None:
+        level = types.ThinkingLevel(model.thinking.upper())
+        config.thinking_config = types.ThinkingConfig(thinking_level=level)
+    return config
 
 
 def build_agent(
