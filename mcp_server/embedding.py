@@ -67,10 +67,20 @@ class QueryEmbedder:
     def describe(self) -> dict[str, Any]:
         return {"model": self.model, "location": self.location, "dims": self.dims}
 
-    async def embed(self, query: str) -> np.ndarray:
-        key = " ".join(query.split())
+    @staticmethod
+    def key(query: str) -> str:
+        return " ".join(query.split())
+
+    def cached(self, query: str) -> np.ndarray | None:
+        """The vector of an earlier identical query, if still cached (no call)."""
+        key = self.key(query)
         if (hit := self._cache.get(key)) is not None:
             self._cache.move_to_end(key)
+        return hit
+
+    async def embed(self, query: str) -> np.ndarray:
+        key = self.key(query)
+        if (hit := self.cached(key)) is not None:
             return hit
         if time.monotonic() < self._down_until:
             raise EmbeddingUnavailableError("embedding endpoint failed recently; cooling down")
