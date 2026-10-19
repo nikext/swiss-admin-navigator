@@ -1,4 +1,4 @@
-"""navigator_v2: router + domain specialists as an ADK dynamic workflow (M8, ADR-030).
+"""navigator_v2: router + domain specialists as an ADK dynamic workflow (M8, ADR-034).
 
     START -> orchestrate: router -> dispatch -> {residence|work|housing|tax|mobility}_specialist
                                              -> generalist (navigator_v1's prompt, all acts)

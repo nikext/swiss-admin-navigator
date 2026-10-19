@@ -7,7 +7,7 @@ holds the final answer JSON, every tool call, the verifier's `citation_check`
 rounds, per-model-call token usage and latency; for v2 also the router's route
 and its token usage. Locally, a `RoundRecorder` (the verifier's observer)
 adds every checked draft with the usage and time at that point, so policies
-that stop earlier can be scored from the same run (`derive.py`, ADR-030).
+that stop earlier can be scored from the same run (`derive.py`, ADR-034).
 """
 
 from __future__ import annotations
@@ -87,7 +87,7 @@ class Target(Protocol):
 
 class RoundRecorder:
     """The verifier's observer: logs each checked draft into its case's trace, with the
-    answering agent's usage and the elapsed time at that point (ADR-030)."""
+    answering agent's usage and the elapsed time at that point (ADR-034)."""
 
     def __init__(self) -> None:
         self.traces: dict[str, Trace] = {}  # session id -> trace

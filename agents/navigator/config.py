@@ -19,7 +19,7 @@ can lower it per run (M4).
 The optional `memory` role (M7) is the model Memory Bank extracts memories
 with; without it Memory Bank uses its default (ADR-029). The optional `router`
 and `verifier` roles (M8) are navigator_v2's router and the LLM claim checker;
-without them both use the agent's model and location (ADR-030).
+without them both use the agent's model and location (ADR-034).
 
 The profile is chosen by `NAV_PROFILE` (default: `default`). Single fields can
 be overridden per run with `<ROLE>_<FIELD>` (e.g. `AGENT_MODEL`,

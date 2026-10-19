@@ -11,7 +11,7 @@ sees `citation_check` as a declared tool and cannot call it itself. After the
 last round the answer is finalised: verified fields filled in by code, the
 verification record attached, unverifiable parts dropped (`citecheck.finalize`).
 
-With a `ClaimChecker` (M8, ADR-030) a draft that passes the deterministic
+With a `ClaimChecker` (M8, ADR-034) a draft that passes the deterministic
 check is also graded claim by claim by an LLM; claims the cited text does not
 (fully) support go back as `unsupported` problems, through the same reserved
 call, and up to two redrafts are allowed. Claims still rated `no` after the
@@ -107,7 +107,7 @@ class CitationVerifier:
     ) -> None:
         self.toolset = toolset
         self.claims = claims
-        # One redraft for the deterministic check (ADR-018); two with the claim checker (ADR-030).
+        # One redraft for the deterministic check (ADR-018); two with the claim checker (ADR-034).
         self.max_retries = max_retries if max_retries is not None else (2 if claims else 1)
         self.observer = observer
         self._check_tool = FunctionTool(func=citation_check)

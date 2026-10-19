@@ -1,4 +1,4 @@
-"""The LLM claim checker (M8, ADR-030): does the cited text support each legal claim?
+"""The LLM claim checker (M8, ADR-034): does the cited text support each legal claim?
 
 The deterministic check (`citecheck.py`) proves that every citation exists and
 every quote is verbatim. It cannot see a true quote attached to a claim the

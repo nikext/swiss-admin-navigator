@@ -1,4 +1,4 @@
-"""Score earlier-stopping verifier policies from one recorded run (M8, E6; ADR-030).
+"""Score earlier-stopping verifier policies from one recorded run (M8, E6; ADR-034).
 
 The verifier policies are nested: with the claim checker on, the agent behaves
 exactly like the deterministic-only verifier until the claim checker first

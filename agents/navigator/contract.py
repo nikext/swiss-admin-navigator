@@ -5,7 +5,7 @@ The model fills `DraftAnswer` (ADK `output_schema`). The citation verifier
 same fields, plus what code derives instead of the model (each citation's
 abbreviation, Fedlex URL and as-of date, the exact quote span from the
 source), the verification record and the fixed notice (ADR-010). With the LLM
-claim checker on (M8, ADR-030), each round also records the checker's verdict
+claim checker on (M8, ADR-034), each round also records the checker's verdict
 per claim.
 """
 

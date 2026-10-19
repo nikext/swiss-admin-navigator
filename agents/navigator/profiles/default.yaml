@@ -22,7 +22,7 @@ embedding:
 memory:
   model: gemini-3.8-flash
   location: global
-# navigator_v2's router and the LLM claim checker (M8, ADR-030), on the agent's endpoint.
+# navigator_v2's router and the LLM claim checker (M8, ADR-034), on the agent's endpoint.
 # Both at thinking low: this model rejects THINKING_LEVEL_MINIMAL (400, 2026-10-16).
 router:
   model: gemini-3.8-flash

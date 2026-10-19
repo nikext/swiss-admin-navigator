@@ -1,4 +1,4 @@
-"""Routing for navigator_v2 (M8, ADR-030): the router's output, dispatch, search scope.
+"""Routing for navigator_v2 (M8, ADR-034): the router's output, dispatch, search scope.
 
 Pure logic, unit-tested. The SR lists mirror `corpus/acts.yaml` (a test keeps
 them in sync); they are spelled out here because the agent ships without the

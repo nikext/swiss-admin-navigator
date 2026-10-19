@@ -11,7 +11,7 @@ Runtime).
 Config: `NAV_PROFILE` picks the model (profiles/, ADR-008);
 `SWISS_LAW_MCP_URL` the MCP server (`make mcp-dev` locally, Cloud Run
 otherwise); `NAV_CLAIM_CHECK=1` adds the LLM claim checker to the verifier
-(M8, ADR-030; off unless set). The toolset is built synchronously here, as
+(M8, ADR-034; off unless set). The toolset is built synchronously here, as
 Agent Runtime requires. navigator_v2 (M8) builds its specialists with
 `build_agent` too.
 """
