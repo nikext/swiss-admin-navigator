@@ -140,6 +140,9 @@ make eval-derive  # no-verifier / v1-verifier answers from a recorded --claim-ch
 make eval-compare # experiment tables with paired CIs (ARGS="--report a=A.json --report b=B.json [--study a=S.json --judge model@loc] [--subset golden|adversarial]")
 make gcp-armor    # Model Armor API + template swiss-nav-input (eu) + IAM (ask first; DRY_RUN=1)
 make eval-armor   # E7: Model Armor on every eval input + law text (MODEL_ARMOR_TEMPLATE; free tier)
+make eval-apertus # E1: Apertus 1.5 8B on a Cloud Run L4 (europe-west4) + eval + teardown (Nikola runs it; DRY_RUN=1; EVAL_ARGS=…; USD 1.42/h)
+                  # M9 eval knobs: AGENT_MODEL=<id> AGENT_LOCATION=eu|global|<vLLM URL> JUDGE_LOCATION=eu (when global is degraded);
+                  # answer_eval --without-tool get_toc (E3); python -m evals.harness.crosslingual --report E5.json --original GOLDEN.json (E5)
 ```
 
 Integration tests (network/GCP) are marked `@pytest.mark.integration` and
@@ -171,3 +174,12 @@ skipped by default: `uv run pytest -m integration`.
 - Deploys (`make deploy-agent`, `deploy-web`, `deploy-mcp`) are run by Nikola; Claude
   prepares them (DRY_RUN=1) and verifies afterwards.
 - M10 (agreed 2026-10-19): done before M9 (ADR-031); Claude ran make gcp-armor; the 80 new injection.jsonl cases are drafted and model-verified by Claude (ADR-024 extended).
+- M9 (agreed 2026-10-20): model spend cap CHF 50, made soft by Nikola the same day (used
+  ≈ CHF 63, ≈ CHF 10 of it re-runs while `eu`/`global` were degraded). Flash ran on `eu`,
+  the other arms on `global`; the judge may run on `eu` (`JUDGE_LOCATION=eu`). The 120
+  `crosslingual.jsonl` cases are Claude's translations, unverified, never a headline number.
+  Apertus: Nikola dropped the answer-writer arm; its AR repo and HF secret are deleted
+  (`make eval-apertus` recreates both). The served agent stays on `eu` even when it is
+  degraded: no `global` fallback, no Provisioned Throughput, default thinking level
+  (Nikola, 2026-10-20). A CI smoke that fails on 429s/timeouts is re-run (`gh run rerun
+  --failed`) once `eu` answers fast again, not "fixed" with commits.
