@@ -43,6 +43,7 @@ from google.genai import types
 from pydantic import ValidationError
 
 from . import claims as claim_check
+from .budget import answer_only
 from .citecheck import (
     ArticleNotFoundError,
     FetchError,
@@ -117,6 +118,17 @@ class CitationVerifier:
     ) -> LlmResponse | None:
         # Executable but undeclared: the model cannot call it on its own.
         llm_request.tools_dict[CHECK_TOOL] = self._check_tool
+        rounds = callback_context.state.get(ROUNDS_KEY) or []
+        if (
+            rounds
+            and len(rounds) <= self.max_retries
+            and any(p["kind"] == "parse" for p in rounds[-1]["problems"])
+        ):
+            # The redraft of a draft that was not the answer format can only submit, so a
+            # server with structured outputs decodes it against the schema: Apertus 8B left
+            # out required fields in 9/9 golden cases without this (M9, ADR-035). Only this
+            # one redraft: a model without constrained decoding must not loop on it.
+            answer_only(llm_request)
         return None
 
     async def _fetch(self, ctx: CallbackContext, sr: str, article: str, lang: str) -> dict:
@@ -158,6 +170,8 @@ class CitationVerifier:
             self._observe(callback_context, text, rounds[-1], llm_response)
             if len(rounds) <= self.max_retries:
                 return self._reject(callback_context, rounds, {"raw": text[:4000]})
+            # Recorded, so `before_model` knows the requested redraft is over.
+            callback_context.state[ROUNDS_KEY] = [r.model_dump() for r in rounds]
             log.warning("final answer is not valid JSON after %d rounds", len(rounds))
             return None
 

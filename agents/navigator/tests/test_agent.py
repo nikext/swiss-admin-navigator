@@ -9,10 +9,12 @@ from agents.navigator.agent import (
     TOOLS,
     build_agent,
     generate_config,
+    llm,
     profile,
     root_agent,
 )
 from agents.navigator.armor import InputScreen
+from agents.navigator.budget import CallBudget
 from agents.navigator.config import CALL_TIMEOUT_MS, RETRY, LlmRef
 from agents.navigator.contract import DraftAnswer
 from agents.navigator.memory import MemoryContext, save_memory
@@ -44,7 +46,9 @@ def test_tools_contract_and_verifier_are_wired() -> None:
     verifier = agent.after_model_callback.__self__  # type: ignore[union-attr]
     assert isinstance(verifier, CitationVerifier)
     assert verifier.toolset is toolset
-    assert agent.before_model_callback == verifier.before_model
+    budget, check = agent.before_model_callback  # type: ignore[misc]
+    assert isinstance(budget.__self__, CallBudget)  # type: ignore[union-attr]
+    assert check == verifier.before_model
     assert agent.after_tool_callback is compact_tool_result
     screen = agent.before_agent_callback.__self__  # type: ignore[union-attr]
     assert isinstance(screen, InputScreen)
@@ -71,7 +75,33 @@ def test_every_model_call_has_a_deadline() -> None:
     assert plain.http_options is not None
     assert plain.http_options.timeout == CALL_TIMEOUT_MS
     assert plain.thinking_config is None
-    low = generate_config(LlmRef("m", "global", thinking="low"))
+    low = generate_config(LlmRef(profile.agent.model, "global", thinking="low"))  # a Gemini
     assert low.thinking_config is not None
     assert low.thinking_config.thinking_level == "LOW"
     assert build_agent(claim_check=False).generate_content_config is not None
+
+
+def test_open_models_go_through_litellm_and_submit_through_a_tool() -> None:
+    # M9 (E1): any non-Gemini profile model runs through LiteLLM on Vertex MaaS.
+    from google.adk.models.lite_llm import LiteLlm
+
+    ref = LlmRef("some-publisher/some-model-maas", "global", "medium")
+    model = llm(ref)
+    assert isinstance(model, LiteLlm)
+    assert model.model == "vertex_ai/some-publisher/some-model-maas"
+    assert model._additional_args["vertex_location"] == "global"
+    assert model._additional_args["reasoning_effort"] == "medium"
+    assert model._additional_args["num_retries"] == RETRY.attempts
+    assert model.capabilities.output_schema_and_tools is False  # set_model_response, not JSON mode
+    assert generate_config(ref).thinking_config is None
+    agent = build_agent("http://127.0.0.1:1/mcp", ref)
+    assert agent.model is not None
+    assert not isinstance(agent.model, Gemini)
+
+
+def test_a_url_location_is_a_vllm_server() -> None:
+    model = llm(LlmRef("some-org/some-model", "http://127.0.0.1:8081/v1"))
+    assert model.model == "hosted_vllm/some-org/some-model"
+    assert model._additional_args["api_base"] == "http://127.0.0.1:8081/v1"  # type: ignore[attr-defined]
+    assert "vertex_location" not in model._additional_args  # type: ignore[attr-defined]
+    assert model.capabilities.output_schema_and_tools is False

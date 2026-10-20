@@ -82,11 +82,12 @@ def answer_checks(report: dict[str, Any], base: dict[str, Any]) -> list[Check]:
 def cost_line(report: dict[str, Any]) -> str:
     s = report["summary"]
     run = s["run_cost_chf"]
-    total = run.get("agent", 0.0) + run.get("judge", 0.0)
+    agent, judge = run.get("agent") or 0.0, run.get("judge") or 0.0
+    per, p50 = s["cost_per_answer"]["chf"], s["latency_s"]["p50"]  # None when every case errored
     return (
-        f"cost: CHF {total:.3f} (agent {run.get('agent', 0.0):.3f}, judge "
-        f"{run.get('judge', 0.0):.3f}); CHF {s['cost_per_answer']['chf']:.4f} per answer; "
-        f"latency p50 {s['latency_s']['p50']:.0f} s"
+        f"cost: CHF {agent + judge:.3f} (agent {agent:.3f}, judge {judge:.3f}); "
+        f"CHF {'–' if per is None else f'{per:.4f}'} per answer; "
+        f"latency p50 {'–' if p50 is None else f'{p50:.0f}'} s"
     )
 
 

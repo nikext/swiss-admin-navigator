@@ -44,7 +44,7 @@ from typing import Any
 import yaml
 from dotenv import load_dotenv
 
-from agents.navigator.agent import build_agent, claim_check_enabled, profile
+from agents.navigator.agent import TOOLS, build_agent, claim_check_enabled, new_toolset, profile
 from agents.navigator.armor import InputScreen
 from agents.navigator.claims import PROMPT_PATH as CLAIM_PROMPT
 from agents.navigator.contact import answer_contact_details
@@ -557,10 +557,16 @@ async def evaluate(
             if probe.canonical_model.capabilities.output_schema_and_tools
             else "set_model_response tool"
         )
+        tools = [t for t in TOOLS if t not in args.without_tool]
         root: Any = (
             build_workflow(url, claim_check=args.claim_check, observer=recorder)
             if args.agent == "v2"
-            else build_agent(url, claim_check=args.claim_check, observer=recorder)
+            else build_agent(
+                url,
+                claim_check=args.claim_check,
+                observer=recorder,
+                toolset=new_toolset(url, tools) if args.without_tool else None,
+            )
         )
         target, where, deployed = LocalAgent(root, recorder), url, None
 
@@ -573,6 +579,8 @@ async def evaluate(
             "profile": profile.name,
             "case_timeout_s": args.case_timeout,
         }
+        if args.without_tool:
+            setup["without_tools"] = sorted(args.without_tool)
         if screen := InputScreen.from_env().as_dict():
             setup["screen"] = screen
         try:
@@ -650,6 +658,7 @@ async def evaluate(
             "agent": {
                 "variant": args.agent,
                 "claim_check": bool(args.claim_check),
+                "without_tools": sorted(args.without_tool),
                 "router": asdict(profile.role("router")) if args.agent == "v2" else None,
                 "verifier": asdict(profile.role("verifier")) if args.claim_check else None,
                 "v2_prompts_sha": tree_sha(V2_PROMPTS) if args.agent == "v2" else None,
@@ -744,6 +753,13 @@ def main(argv: list[str] | None = None) -> int:
         default=None,
         help="local target: add the LLM claim checker to the verifier (default: NAV_CLAIM_CHECK)",
     )
+    ap.add_argument(
+        "--without-tool",
+        action="append",
+        default=[],
+        choices=TOOLS,
+        help="local v1: leave this MCP tool out (ablation; repeatable)",
+    )
     ap.add_argument("--name", default=None)
     ap.add_argument(
         "--traces",
@@ -761,6 +777,8 @@ def main(argv: list[str] | None = None) -> int:
         args.claim_check = claim_check_enabled()
     if args.target == "remote" and args.agent != "v1":
         raise SystemExit("--agent v2 runs locally only (it is not deployed)")
+    if args.without_tool and (args.target == "remote" or args.agent != "v1"):
+        raise SystemExit("--without-tool applies to the local navigator_v1 only")
     dataset = load_dataset(args.dataset)
     cases = select(dataset.cases, args)
     if not cases:

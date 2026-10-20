@@ -1372,3 +1372,121 @@ from 30 by Nikola that day): runs and re-runs 28.5 (CHF 0.06–0.07 per answer
 with the checker's redrafts), derived arms 3.5, Qwen 0.7, runs stopped during
 the outage and checks ≈ 2.3. Add ≈ CHF 20 (estimated from ~370 answered cases;
 no report survived) for the 2026-10-16 runs lost to a shutdown: M8 ≈ CHF 56.
+
+### ADR-035: Model comparison (E1): Flash stays; argon is better grounded but loops; a model-call budget per turn
+**Status:** accepted (2026-10-20, M9)
+**Context:** M9 asks which model to serve, at what cost (E1), whether tree
+navigation helps (E3), and whether quality depends on the question's language
+(E5). Built for it:
+- **Non-Gemini agent models** through ADK's `LiteLlm` (`agent.llm()`): open
+  models on Model as a Service (`vertex_ai/<publisher>/<model>-maas`, ADC) and
+  a vLLM server when the profile location is a URL (Apertus). They submit the
+  answer through `set_model_response`: LiteLLM reports a JSON-schema mode for
+  GLM-5.2, ADK then sends the schema with the tools, and the model answered
+  "Recherche en cours…" without calling a tool. litellm stays an evals
+  dependency; the deployed agent is Gemini only.
+- `answer_eval --without-tool` (E3); `evals/datasets/crosslingual.jsonl` and
+  `evals.harness.crosslingual` (E5); `make eval-apertus` (GCP.md §4).
+- Probed and dropped: gpt-oss-120b (reasoning without content or a tool call
+  after the first tool result, at any reasoning effort); GLM-5.2 (works, CHF
+  0.075 per answer on the probe); Claude (still 429, ADR-026).
+
+**Experiment (golden 150, navigator_v1 with the served verifier and input
+screen; judge gemini-3.8-flash plus Qwen3 235B; full tables in
+`docs/RESULTS.md`).** Gemini on `global` was degraded all night (50 of 150
+Flash cases failed with 429/504/499; grading passes on `global` died on six
+504s in a row), so Flash ran again in full on `eu`, the other arms' errored
+cases were re-run once and merged, and the judge ran on `eu` (same model).
+Paired differences to Flash:
+
+| model | Δ groundedness (Flash judge) | Δ groundedness (Qwen) | Δ key facts (Qwen) | Δ behaviour | CHF/answer | p50 |
+|---|---|---|---|---|---|---|
+| gemini-3.8-flash (`eu`) | – (81.9 / 91.9) | – | – | – (97.3) | 0.039 (0.078 from 2027) | 39 s |
+| gemini-4-argon | **+7.4 (+3.7…+10.9)** | **+4.8 (+2.6…+7.1)** | +2.2 (−0.9…+5.4) | −4.0 (5 loops) | 0.049 (**0.099 from 2026-12-01**) | 46 s |
+| gemini-3.1-pro-preview | −7.3 (−11.3…−3.5) | −4.4 (−7.1…−1.9) | −0.0 | −0.7 | 0.071 | 51 s |
+| gemini-3.5-flash-lite | −1.8 (−6.5…+2.7) | −3.7 (−7.1…−0.2) | −8.9 (−13.6…−4.3) | −8.0 | 0.005 | 5 s |
+| DeepSeek V3.2 (MaaS) | −4.7 (−9.6…−0.1) | −2.7 (−5.9…+0.3) | −8.5 | −18.7 | 0.019 | 85 s |
+| Qwen3 235B (MaaS) | −13.3 (−17.8…−8.9) | −9.1 (−12.6…−5.7) | −20.7 | −12.0 | 0.020 | 31 s |
+
+Quote fidelity ≥ 98.6% and 0 hallucinated citations in every arm: the
+deterministic verifier holds for every model, at the price of redrafts (Flash
+sends back 8 drafts, argon 27, DeepSeek 47, Qwen 82).
+
+- **argon** is the only model better grounded than Flash, under both judges.
+  It cites and reads more (5.3 vs 3.7 citations per answer). But it **loops**:
+  5/150 golden cases in E1 (89-215 `get_article` calls, ~100 model calls, until
+  the 600 s case timeout; re-run, all five answered in 5-16 calls) and 2/20 in
+  a smoke run on `eu`. Its price doubles on 2026-12-01 (USD 4/20 per 1M), to
+  2.5× Flash per answer (1.3× once Flash's own price doubles in 2027). On `eu`
+  (smoke, degraded endpoint) it cost CHF 0.078 per answer, loops included.
+- **Pro preview** reads fewer articles (3.4 tool calls vs 6.4) and is less
+  grounded at 1.8× the cost. **Flash-Lite** matches Flash's groundedness under
+  the Flash judge at 1/7.5 of the cost and 1/8 of the latency but misses key
+  facts and mishandles clarification and out-of-scope questions. The **open
+  models** are cheaper but worse on every quality metric; Qwen never asks a
+  clarifying question, DeepSeek answers where it should ask or refuse.
+- **E3:** the prompt never asks for `get_toc`, and most models rarely call it
+  (Flash 11/150 cases, Qwen 44/150). Flash without it on its 11 cases: −2.8
+  (−12.5…+6.3), key facts and behaviour unchanged. Qwen3 235B
+  without it on all 150: required-citation recall −5.7 (−11.5…−0.4; it
+  searches more instead), groundedness −2.1 (−7.2…+2.9), key facts and
+  behaviour within noise.
+- **E5:** no language effect beyond noise (EN − DE groundedness +0.7,
+  −3.6…+4.9; FR +1.5; IT −1.4, key facts −4.6, −11.7…+0.8); English answers
+  quote the German text; answers to Claude's translations score like the
+  originals (−0.4, −4.2…+3.1).
+- **Apertus 1.5 8B** (self-hosted, one L4, FP8, as the full agent with tools)
+  is not viable: groundedness 14.0 (Flash judge; −68.0, −73.1…−62.5) and
+  −58.1 (−64.8…−51.6) with Qwen, key facts 34.3, behaviour 26.7, 27 must_not. It
+  calls ~2 tools per answer and fetches an article in 69/150 cases (Flash
+  140); 144/150 first drafts miss required answer fields, and unconstrained 0
+  of 9 cases ended valid. With a forced `set_model_response` redraft (below)
+  149/150 end valid, 117 `degraded` (citations dropped: "Art. 273 OR" as the
+  article, misquotes, wrong paragraphs). Quote fidelity stays 100% (90 quotes),
+  0 hallucinated. GPU time is CHF 0.012 per answer while busy, but serving it
+  needs an always-on L4 (13 min cold start), ≈ CHF 850/month. Apertus as the
+  answer writer over Gemini-retrieved context was not run (dropped by Nikola,
+  2026-10-20).
+
+**Decision:**
+1. **gemini-3.8-flash stays the served model.** argon's grounding gain is real,
+   but a loop costs a user minutes and about CHF 0.3 even when capped, it loops
+   in a few percent of cases, and from December it costs 2.5× Flash. Revisit
+   argon when its loop rate is known to be low (e.g. on the next Gemini
+   release) or if grounding matters more than cost; the switch is one profile
+   line and a redeploy.
+2. **A model-call budget per turn ships with the served agent**
+   (`agents/navigator/budget.py`, 40 calls): from the 40th model call of a turn
+   the request keeps only `set_model_response` (forced, `mode=ANY`) or no tool
+   at all, plus an instruction to answer from what was fetched; the verifier
+   still checks the answer. Normal answers stay well below (Flash max 37, argon
+   23); live, argon's social-04 hit it and answered instead of looping on.
+3. `get_toc` stays available (it costs nothing when unused) but is not pushed
+   in the prompt: E3 finds no gain.
+4. No language-specific handling: E5 shows none is needed.
+5. The claim checker stays opt-in (ADR-034): its latency could not be
+   re-measured on a healthy endpoint (the `eu` smoke on 2026-10-20 03:00 had
+   p50 271 s and 5 errors; `eu` was degraded as well).
+6. Eval robustness: the judge runs on `eu` when `global` is degraded
+   (`JUDGE_LOCATION`), and a run whose grading died resumes from its traces
+   without repeating agent calls.
+7. **After an unparseable draft, the verifier's one redraft can only submit
+   the answer** (`set_model_response` forced, the same `answer_only` as the
+   budget; e8c7498). It made Apertus usable at all and ships with the served
+   agent; Flash had no unparseable draft in E1, so its numbers stand. The open
+   models ran without it (Qwen had 57 unparseable first drafts) and were not
+   re-measured.
+8. Apertus is not served and gets no further runs: Nikola dropped the
+   answer-writer configuration (2026-10-20), and its image cache and HF token
+   secret are deleted (`make eval-apertus` recreates both).
+
+**Consequences:** PLAN's CV line becomes "chose Gemini 3.8 Flash at CHF
+0.039 per answer over Gemini 4 argon (+5 groundedness, 1.3-2.5× the cost,
+loops), Pro, Flash-Lite, two open models and self-hosted Apertus 8B (vLLM on
+Cloud Run GPU)". Spend ≈ CHF 63 (eval reports CHF 57.2, Apertus GPU ≈ 4.4,
+probes and grading passes that died ≈ 1.5) against a CHF 50 cap that Nikola
+made soft on 2026-10-20; the degraded endpoints cost ≈ CHF 10 of it (a second
+Flash arm, re-runs, re-grading). No GPU or endpoint is left running; the
+`swiss-nav-ghcr` remote repo (8.9 GB of cached image) and the
+`swiss-nav-hf-token` secret were deleted after the runs. Nikola deployed the
+agent with the budget and the answer-only redraft on 2026-10-20.

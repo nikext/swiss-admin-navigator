@@ -64,3 +64,16 @@ def test_main_exit_code_and_step_summary(tmp_path: Path, monkeypatch: pytest.Mon
     path = tmp_path / "bad.json"
     path.write_text(json.dumps(bad), encoding="utf-8")
     assert main(["--answers", str(path)]) == 1
+
+
+def test_a_run_where_every_case_errored_fails_with_a_table(tmp_path: Path) -> None:
+    bad = load("2026-10-15-7d081e6-smoke-drafts.json")
+    s = bad["summary"]
+    s["errors"] = s["cases"]
+    s["quote_fidelity"] = {"verbatim": 0, "quotes": 0, "rate": None}
+    s["latency_s"]["p50"] = None
+    s["cost_per_answer"]["chf"] = None
+    s["run_cost_chf"] = {"agent": 0.0}
+    path = tmp_path / "errored.json"
+    path.write_text(json.dumps(bad), encoding="utf-8")
+    assert main(["--answers", str(path)]) == 1
