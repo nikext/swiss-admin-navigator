@@ -73,7 +73,10 @@ PROXY_PID=""
 START=$(date +%s)
 cleanup() {
   status=$?
-  [[ -n "$PROXY_PID" ]] && kill "$PROXY_PID" 2>/dev/null || true
+  if [[ -n "$PROXY_PID" ]]; then
+    kill "$PROXY_PID" 2>/dev/null || true  # the restart loop first, then its proxy
+    pkill -f "run services proxy $SERVICE" 2>/dev/null || true
+  fi
   echo "== teardown: delete $SERVICE (GPU up ~$(( ($(date +%s) - START) / 60 )) min)" >&2
   run "$GCLOUD" run services delete "$SERVICE" --project "$PROJECT_ID" --region "$REGION" \
     --quiet || true
@@ -110,8 +113,14 @@ echo "== proxy on 127.0.0.1:$PORT; wait for vLLM (up to 45 min; ~13 min when the
 if [[ "$DRY_RUN" != 1 ]]; then
   until "$GCLOUD" run services describe "$SERVICE" --project "$PROJECT_ID" --region "$REGION" \
     --format='value(status.url)' 2>/dev/null | grep -q .; do sleep 5; done
-  "$GCLOUD" run services proxy "$SERVICE" --project "$PROJECT_ID" --region "$REGION" \
-    --port "$PORT" >data/logs/apertus-proxy.log 2>&1 &
+  # Restarted whenever it exits: on 2026-10-20 the proxy died after 85 cases ("failed to
+  # shutdown server: context deadline exceeded") and the other 65 got connection errors.
+  ( while true; do
+      "$GCLOUD" run services proxy "$SERVICE" --project "$PROJECT_ID" --region "$REGION" \
+        --port "$PORT" >>data/logs/apertus-proxy.log 2>&1
+      echo "   $(date +%H:%M:%S) proxy exited; restarting" >&2
+      sleep 2
+    done ) &
   PROXY_PID=$!
   deadline=$(( $(date +%s) + 45 * 60 ))
   until curl -sf --max-time 10 "http://127.0.0.1:$PORT/v1/models" >/dev/null; do
