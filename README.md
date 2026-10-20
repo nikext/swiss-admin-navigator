@@ -19,9 +19,11 @@ golden set, and the numbers are in this repo.
 
 ![Demo: a question in French, the cited answer, the article side panel and the memory panel](docs/media/demo.gif)
 
-*A question in French → an answer citing CO Art. 271a with the verbatim French
-text → the article opened beside the answer → opt-in memory. Recorded on the
-deployed app; waiting time sped up.*
+*A question in French → an answer with four citations, led by CO Art. 271a,
+every quote verified in the French text → the article opened beside the answer →
+opt-in memory remembers "Lausanne, permit B" → Forget me. Recorded on the
+deployed app on 2026-10-20; the 66 s and 57 s waits for the answers are sped
+up.*
 
 ## Results
 
@@ -34,20 +36,21 @@ domains; run 2026-10-20 on the Fedlex consolidations resolved 2026-10-15):
   ask, point to the canton, decline) in **97.3%** of cases
 - **CHF 0.039** per answer, p50 39 s
 
-| metric (golden 150, 95% bootstrap CIs) | `gemini-3.8-flash` judge | Qwen3 235B judge |
-|---|---|---|
-| quote fidelity (quote is a substring of the cited article) | 99.6% (547/549) | (deterministic) |
-| hallucinated citations (article does not exist) | 0 | (deterministic) |
-| required-citation recall | 96.5 (93.1–99.2) | (deterministic) |
-| groundedness (claims supported by the cited text) | 81.9 (77.9–85.4) | 91.9 (89.7–93.8) |
-| key-fact coverage | 95.4 (93.1–97.6) | 94.8 (91.7–97.4) |
-| behaviour | 97.3 (94.7–99.3) | 96.7 (93.3–99.3) |
-| answer in the user's language | 100 | |
-| cost / latency per answer | CHF 0.039 / p50 39 s, p95 109 s | |
+| metric (golden 150, 95% bootstrap CIs) | value |
+|---|---|
+| quote fidelity (the quote is a substring of the cited article) | 99.6% (547/549) |
+| hallucinated citations (the article does not exist) | 0 of 549 |
+| required-citation recall | 96.5 (93.1–99.2) |
+| groundedness (claims supported by the cited text), judged | 81.9 (77.9–85.4) Flash judge · 91.9 (89.7–93.8) Qwen3 judge |
+| key-fact coverage, judged | 95.4 (93.1–97.6) · 94.8 (91.7–97.4) |
+| behaviour (rule + judge) | 97.3 (94.7–99.3) · 96.7 (93.3–99.3) |
+| answer in the user's language | 100 |
+| cost / latency per answer | CHF 0.039 / p50 39 s, p95 109 s |
 
 Agent `gemini-3.8-flash` on the `eu` endpoint, deterministic citation
-verifier, Model Armor screen. Two judges from different model families grade
-the same answers, so no model grades only itself (ADR-026). The golden cases
+verifier, Model Armor screen. The judged metrics are graded twice, by
+`gemini-3.8-flash` and by Qwen3 235B (a different model family), so the agent's
+own family is never the only judge (ADR-026). The golden cases
 were checked against the article text by Claude Opus 5.5, not by a lawyer
 (ADR-024). Report: [`evals/reports/2026-10-20-66315a7-e1-flash-eu.md`](evals/reports/2026-10-20-66315a7-e1-flash-eu.md).
 
@@ -57,7 +60,7 @@ were checked against the article text by Claude Opus 5.5, not by a lawyer
 |---|---|---|
 | **E4** retrieval (102 queries) | dense recall@8 **98.5%**; BM25 51%; BM25 + dense fusion 85% | dense with contextual chunk headers; BM25 only as the fallback (ADR-016) |
 | **E2** multi-agent (golden + adversarial) | router + domain specialists: groundedness −1.7 to −2.8, +13% cost, although the router picks the right domain 98% of the time | single agent stays (ADR-034) |
-| **E6** verifier | code check (re-fetch, substring, paragraph): fidelity 98.5% → 99.6% for +7% cost. LLM claim checker: groundedness +4.4 (CI +2.4…+6.5) for ×1.8 cost and ×2 latency | code check on; claim checker opt-in (ADR-034) |
+| **E6** verifier | code check (re-fetch, substring, paragraph): fidelity 98.5% → 99.6% for +7% cost. LLM claim checker: groundedness +4.4 (CI +2.4…+6.5) for ×1.8 cost; on a healthy endpoint p50 45 → 78 s, p95 78 → 166 s | code check on; claim checker opt-in, off in the web app (ADR-034) |
 | **E1** models (golden) | table below | Flash stays (ADR-035) |
 | **E7** Model Armor (58 attacks, 532 benign questions, 400 law texts) | blocks 29% of attacks (9/10 direct overrides, **0/13 injections inside pasted documents**), 0 false positives | screen user input at medium; the verifier stays the main defence (ADR-032) |
 | **E8** memory (26 cases) | Memory Bank defaults pass **2/13** privacy cases (stored a diagnosis, a conviction, a religion); a structured profile whose schema is the whitelist passes 39/39 | opt-in structured profile (ADR-029) |
@@ -128,7 +131,7 @@ Details: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 | Single agent | Multi-agent lost on the same cases (E2). |
 | Eval-gated CI | Every ready PR runs retrieval recall plus a 20-case smoke eval against Gemini (WIF, no keys). Quote fidelity 100%, 0 hallucinated citations and recall@8 within 2 points of baseline are hard gates. |
 
-Decision log, 35 ADRs with the numbers behind them: [docs/DECISIONS.md](docs/DECISIONS.md)
+Decision log, 36 ADRs with the numbers behind them: [docs/DECISIONS.md](docs/DECISIONS.md)
 
 ## What I learned
 

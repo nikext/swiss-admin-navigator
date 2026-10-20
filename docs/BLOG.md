@@ -167,8 +167,11 @@ their focused instructions gained. The single agent stays
   99.6%, for 7% more cost. It is always on.
 - **LLM claim checker** (rates each claim against the cited text, sends
   unsupported claims back, removes what still fails): groundedness **+4.4**
-  (CI +2.4…+6.5) under the Qwen judge, at 1.8× the cost and twice the latency.
-  It stays opt-in.
+  (CI +2.4…+6.5) under the Qwen judge, at 1.8× the cost. Re-measured on a
+  healthy endpoint, it moves the median answer from 45 s to 78 s and the 95th
+  percentile from 78 s to 166 s. It stays opt-in: verbatim quotes and real
+  articles are already guaranteed by the code check, and +4–5 points on an
+  already high score didn't justify a near-three-minute wait.
 
 Under the Flash judge the claim checker's gain was +9.4, twice the Qwen
 number. Part of it was Flash agreeing with Flash. Without the second judge I
@@ -266,12 +269,12 @@ most of it.
   ground truth is model-verified.
 - Cantonal law, starting with Zürich, so the cantonal pointer becomes an
   answer.
-- Decide whether the web app turns on the claim checker: +4.4 groundedness
-  for twice the wait is a product decision, not an eval result.
+- A cheaper claim check with one redraft instead of two, which might keep most
+  of the gain for less of the wait.
 - Expose the agent over A2A, and rebuild the index monthly with an eval run
   before each deploy.
 
-The code, every eval report and the 35 decision records are in the repo:
+The code, every eval report and the 36 decision records are in the repo:
 <https://github.com/nikext/swiss-admin-navigator>. The MCP server is public,
 so you can plug Swiss federal law into your own MCP client:
 

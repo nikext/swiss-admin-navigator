@@ -12,8 +12,9 @@ repos:
       - id: check-merge-conflict
       - id: check-added-large-files
         args: [--maxkb=1024]
-        # Full eval reports (answers + judgements, ~1.5 MB for 150 cases) are the evidence.
-        exclude: ^evals/reports/.*\.json$
+        # Full eval reports (answers + judgements, ~1.5 MB for 150 cases) are the evidence;
+        # the README demo GIF (M11, ADR-036) is ~5.6 MB.
+        exclude: ^(evals/reports/.*\.json|docs/media/.*\.gif)$
       - id: detect-private-key
 
   - repo: https://github.com/astral-sh/ruff-pre-commit

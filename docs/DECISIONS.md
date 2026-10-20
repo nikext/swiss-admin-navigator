@@ -1373,6 +1373,22 @@ with the checker's redrafts), derived arms 3.5, Qwen 0.7, runs stopped during
 the outage and checks ≈ 2.3. Add ≈ CHF 20 (estimated from ~370 answered cases;
 no report survived) for the 2026-10-16 runs lost to a shutdown: M8 ≈ CHF 56.
 
+**Update (2026-10-20, M11): the latency on a healthy endpoint.** The 20 smoke
+cases with `--claim-check` on `eu` (served config; five pings a minute apart
+just before answered "Say OK." in 1.3–3.6 s), the deterministic arm derived
+from the same trajectories, graded by the Flash judge and by Qwen3:
+groundedness **+4.8** (Qwen, CI +2.0…+7.7, 92.6 → 97.4) / +11.8 (Flash,
++6.0…+18.0); latency p50 45 → 78 s, p95 78 → 166 s, paired mean **+35 s**
+(+22…+50); CHF 0.031 → 0.059 per answer (+0.027). Both arms: 0 errors, quote
+fidelity 100%, 0 hallucinated; key facts, behaviour and must_not at the
+ceiling. The gain matches M8's golden number (+4.4); the latency cost is half
+of what the degraded runs showed (+78 s). **Decision (Nikola, 2026-10-20):
+the web app keeps the claim checker off**; it stays opt-in
+(`NAV_CLAIM_CHECK=1`). Verbatim quotes and real articles are already
+guaranteed by the deterministic checks, and +4.8 on a high score does not
+justify a p95 near three minutes. Reports:
+`evals/reports/2026-10-20-28b6549-m11-smoke-claims*.md` (RESULTS.md, M11).
+
 ### ADR-035: Model comparison (E1): Flash stays; argon is better grounded but loops; a model-call budget per turn
 **Status:** accepted (2026-10-20, M9)
 **Context:** M9 asks which model to serve, at what cost (E1), whether tree
@@ -1490,3 +1506,37 @@ Flash arm, re-runs, re-grading). No GPU or endpoint is left running; the
 `swiss-nav-ghcr` remote repo (8.9 GB of cached image) and the
 `swiss-nav-hf-token` secret were deleted after the runs. Nikola deployed the
 agent with the budget and the answer-only redraft on 2026-10-20.
+
+### ADR-036: Showcase: the served config's golden run is the headline; a README GIF instead of a video
+**Status:** accepted (2026-10-20, M11)
+**Context:** M11 asks for a README with the top numbers, a 2–3 minute video,
+a blog post, CV bullets and a portfolio entry. Golden numbers exist from many
+runs on different code (M4 baseline, M8 arms, M9 arms), and the golden set is
+model-verified, not human-verified (ADR-024), although the PLAN's CV template
+said "human-verified".
+**Decision:**
+1. **Headline numbers come from the served configuration's latest full golden
+   run:** E1 `flash-eu` (2026-10-20 at 66315a7: `navigator_v1`, deterministic
+   verifier, Model Armor screen, `gemini-3.8-flash@eu`). The judged metrics are
+   shown under both judges (Flash and Qwen3), never only the higher one. The
+   call budget and the answer-only redraft (ADR-035) came after 66315a7. That
+   run had no unparseable draft, and its longest answer used 37 model calls
+   (budget 40), so its numbers stand for the deployed agent.
+2. **Wording:** "a 150-case golden set, checked against the article text by
+   Claude Opus 5.5", never "human-verified" (README, blog, CV, portfolio).
+3. **A README GIF instead of the narrated video** (Nikola, 2026-10-20). It is
+   recorded with Playwright on the deployed web app (login through the API
+   outside the recording): a French question → the verified answer → the
+   article panel → memory on → a question with personal facts → "What I
+   remember" (municipality Lausanne, permit B) → Forget me. ffmpeg squeezes each
+   wait for an answer to 4 s and cuts the wait for memory extraction; 800 px,
+   8 fps, 64 colours: 54 s and 5.6 MB in `docs/media/demo.gif`. The trace view
+   stays a sentence (Cloud Console needs a Google login). The one-off
+   recording scripts are not committed.
+4. The blog draft lives in `docs/BLOG.md` and Nikola publishes it. The CV
+   bullets go to Nikola, not into the repo. The portfolio entry is
+   nikext/portfolio2#1, which Nikola merges (merging deploys).
+**Consequences:** M11 model spend ≈ CHF 1.5 of the CHF 5 cap: the
+claim-checker smoke (agent 1.17, judge 0.12), its derived arm (judge 0.09),
+the Qwen3 grades (0.04), and two answers plus one memory extraction for the
+GIF (≈ 0.1).
