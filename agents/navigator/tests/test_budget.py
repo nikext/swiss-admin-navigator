@@ -38,6 +38,9 @@ async def test_tools_stay_until_the_budget_then_only_the_answer_tool() -> None:
     req = request("search_law", "get_article", "set_model_response")
     await budget.before_model(ctx("a"), req)
     assert names(req) == ["set_model_response"]
+    fcc = req.config.tool_config.function_calling_config  # type: ignore[union-attr]
+    assert fcc is not None
+    assert (fcc.mode, fcc.allowed_function_names) == ("ANY", ["set_model_response"])
     assert NOTICE in str(req.config.system_instruction)
     other = request("search_law")
     await budget.before_model(ctx("b"), other)  # another turn has its own count

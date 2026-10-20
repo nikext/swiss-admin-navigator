@@ -5,8 +5,8 @@ In E1, gemini-4-argon looped in 5 of 150 golden cases (89-215 `get_article` call
 stopped it before ADK's 500-call default. Normal answers take at most 23 (argon) and
 37 (Flash) model calls. From the `max_calls`-th model call of an invocation on, the
 request keeps only the declarations the answer needs (ADK's `set_model_response`, for
-models without native schema + tools) and tells the model to answer from what it has
-fetched. The citation verifier still checks that answer (its redrafts run without the
+models without native schema + tools, then forced) and tells the model to answer from
+what it has fetched. The citation verifier still checks that answer (its redrafts run without the
 tools too).
 """
 
@@ -54,7 +54,16 @@ class CallBudget:
             if decls:
                 tools.append(tool.model_copy(update={"function_declarations": decls}))
         config.tools = tools or None
-        if not tools:
-            config.tool_config = None
+        # The answer tool is then the only move (LiteLLM: tool_choice "required"); a model
+        # left to choose wrote plain text instead (DeepSeek V3.2, 2026-10-20).
+        config.tool_config = (
+            types.ToolConfig(
+                function_calling_config=types.FunctionCallingConfig(
+                    mode=types.FunctionCallingConfigMode.ANY, allowed_function_names=sorted(KEEP)
+                )
+            )
+            if tools
+            else None
+        )
         llm_request.append_instructions([NOTICE])
         return None
