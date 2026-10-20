@@ -14,6 +14,7 @@ from agents.navigator.agent import (
     root_agent,
 )
 from agents.navigator.armor import InputScreen
+from agents.navigator.budget import CallBudget
 from agents.navigator.config import CALL_TIMEOUT_MS, RETRY, LlmRef
 from agents.navigator.contract import DraftAnswer
 from agents.navigator.memory import MemoryContext, save_memory
@@ -45,7 +46,9 @@ def test_tools_contract_and_verifier_are_wired() -> None:
     verifier = agent.after_model_callback.__self__  # type: ignore[union-attr]
     assert isinstance(verifier, CitationVerifier)
     assert verifier.toolset is toolset
-    assert agent.before_model_callback == verifier.before_model
+    budget, check = agent.before_model_callback  # type: ignore[misc]
+    assert isinstance(budget.__self__, CallBudget)  # type: ignore[union-attr]
+    assert check == verifier.before_model
     assert agent.after_tool_callback is compact_tool_result
     screen = agent.before_agent_callback.__self__  # type: ignore[union-attr]
     assert isinstance(screen, InputScreen)

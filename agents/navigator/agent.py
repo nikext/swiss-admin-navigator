@@ -31,6 +31,7 @@ from google.adk.tools.mcp_tool import McpToolset, StreamableHTTPConnectionParams
 from google.genai import types
 
 from .armor import InputScreen
+from .budget import CallBudget
 from .claims import ClaimChecker
 from .config import CALL_TIMEOUT_MS, RETRY, LlmRef, load_profile
 from .contract import DraftAnswer
@@ -161,7 +162,8 @@ def build_agent(
         tools=[toolset, MemoryContext()],
         output_schema=DraftAnswer,
         before_agent_callback=screen.before_agent,
-        before_model_callback=verifier.before_model,
+        # The call budget first: past it, the verifier's redrafts run without tools too.
+        before_model_callback=[CallBudget().before_model, verifier.before_model],
         after_model_callback=verifier.after_model,
         before_tool_callback=before_tool_callback,
         after_tool_callback=compact_tool_result,
