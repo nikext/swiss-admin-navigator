@@ -1445,7 +1445,8 @@ sends back 8 drafts, argon 27, DeepSeek 47, Qwen 82).
   article, misquotes, wrong paragraphs). Quote fidelity stays 100% (90 quotes),
   0 hallucinated. GPU time is CHF 0.012 per answer while busy, but serving it
   needs an always-on L4 (13 min cold start), ≈ CHF 850/month. Apertus as the
-  answer writer over Gemini-retrieved context was not run.
+  answer writer over Gemini-retrieved context was not run (dropped by Nikola,
+  2026-10-20).
 
 **Decision:**
 1. **gemini-3.8-flash stays the served model.** argon's grounding gain is real,
@@ -1475,17 +1476,17 @@ sends back 8 drafts, argon 27, DeepSeek 47, Qwen 82).
    agent; Flash had no unparseable draft in E1, so its numbers stand. The open
    models ran without it (Qwen had 57 unparseable first drafts) and were not
    re-measured.
-8. Apertus is not served and needs no further GPU runs for M9; the
-   answer-writer configuration stays a follow-up.
+8. Apertus is not served and gets no further runs: Nikola dropped the
+   answer-writer configuration (2026-10-20), and its image cache and HF token
+   secret are deleted (`make eval-apertus` recreates both).
 
-**Consequences:** the budget and the answer-only redraft need a `make
-deploy-agent` (Nikola). PLAN's CV line becomes "chose Gemini 3.8 Flash at CHF
+**Consequences:** PLAN's CV line becomes "chose Gemini 3.8 Flash at CHF
 0.039 per answer over Gemini 4 argon (+5 groundedness, 1.3-2.5× the cost,
 loops), Pro, Flash-Lite, two open models and self-hosted Apertus 8B (vLLM on
 Cloud Run GPU)". Spend ≈ CHF 63 (eval reports CHF 57.2, Apertus GPU ≈ 4.4,
 probes and grading passes that died ≈ 1.5) against a CHF 50 cap that Nikola
 made soft on 2026-10-20; the degraded endpoints cost ≈ CHF 10 of it (a second
-Flash arm, re-runs, re-grading). No GPU or endpoint is left running. The
-`swiss-nav-ghcr` remote repo (8.9 GB of cached image, ≈ USD 0.9/month) stays
-until the answer-writer follow-up is decided (with the cache a start takes 13
-min instead of 27); the script recreates it if it is gone.
+Flash arm, re-runs, re-grading). No GPU or endpoint is left running; the
+`swiss-nav-ghcr` remote repo (8.9 GB of cached image) and the
+`swiss-nav-hf-token` secret were deleted after the runs. Nikola deployed the
+agent with the budget and the answer-only redraft on 2026-10-20.

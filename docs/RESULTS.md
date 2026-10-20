@@ -344,8 +344,9 @@ Why it fails as an agent:
   of ~22,000 Flash answers.
 
 Not run: Apertus as the answer writer over articles that Gemini retrieved
-(the second configuration in PLAN M9). With tools the 8B model is far from
-usable; whether it can write a grounded answer from good context is open.
+(the second configuration in PLAN M9; dropped by Nikola, 2026-10-20). With
+tools the 8B model is far from usable; whether it can write a grounded answer
+from good context is open.
 
 ### argon's loops and the call budget
 

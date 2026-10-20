@@ -323,10 +323,11 @@ deploys, evaluates and tears down in one go:
   **Model Garden's Hugging Face deploy is out** (it runs stock vLLM). Cloud Run
   pulls the image through an Artifact Registry **remote repository** of ghcr.io
   (`swiss-nav-ghcr`, europe-west4): no local pull/push. Cached layers bill as
-  storage (8.9 GB ≈ USD 0.9/month); delete the repo when no more Apertus runs
-  are planned (the script recreates it).
+  storage (8.9 GB ≈ USD 0.9/month), so the repo was deleted after M9; the
+  script recreates it (the first start then takes ~27 min again).
 - **Weights:** downloaded from Hugging Face on start with `HF_TOKEN` from
-  Secret Manager (`swiss-nav-hf-token`, readable by `swiss-nav-apertus@`
+  Secret Manager (`swiss-nav-hf-token`, created by the script from `.env`; deleted
+  after M9; readable by `swiss-nav-apertus@`
   only; the model is gated: accept the license first). They land in the
   in-memory filesystem (~18.5 GB of the 32 GiB).
 - **Fit on an L4 (24 GB, 22 GiB usable):** the text model is 8.6B BF16 params

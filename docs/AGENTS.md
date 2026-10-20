@@ -253,7 +253,7 @@ verifier's redraft after an unparseable draft therefore offers only a forced
 with a valid answer, but 117 are `degraded` (citations to articles written as
 "Art. 273 OR", misquotes, wrong paragraphs). Groundedness 14 (Flash 82).
 Apertus as the answer writer over context that Gemini retrieved was not run
-(PLAN M9 follow-up).
+(dropped, 2026-10-20).
 
 ## 7. Observability
 
