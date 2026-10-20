@@ -58,9 +58,9 @@ flowchart LR
 | **ingest** | `ingest/` | local / CI | Resolve acts via SPARQL, download XML, parse Akoma Ntoso, chunk, embed, build `index.sqlite`. Deterministic, cached, reproducible from `manifest.lock.json`. |
 | **swiss-law MCP server** | `mcp_server/` | Cloud Run (europe-west6), public, read-only | The retrieval boundary. Tools: `search_law`, `get_article`, `get_toc`, `list_acts`, `resolve_citation`. Any MCP client can use it (Claude Code, Claude Desktop, ADK). The query embedding calls Gemini. Everything else is local SQLite. |
 | **navigator agent** | `agents/navigator/` | Agent Runtime (europe-west6) | ADK agent(s). Language detection, clarification, retrieval through MCP tools, grounded answer drafting, citation verification, memory. |
-| **web** | `web/` | Cloud Run (europe-west6) | Chat UI with streaming, a citation side panel, a language switcher, the memory opt-in, feedback, and an admin trace link. The BFF holds the service-account credentials and enforces the access code and quotas. |
+| **web** | `web/` | Cloud Run (europe-west6) | Chat UI with streaming, a citation side panel, a language switcher, the memory opt-in and feedback (the planned admin trace link was not built; traces are read in Cloud Trace). The BFF holds the service-account credentials and enforces the access code and quotas. |
 | **evals** | `evals/` | local / GitHub Actions | Golden sets, ADK evalsets, custom metrics (citation precision/recall, groundedness), model comparison runner, reports. |
-| **apertus serving** | `serving/apertus/` | Cloud Run GPU (europe-west4) | Self-hosted Swiss open model for the sovereignty comparison (M9). Scales to zero. |
+| **apertus serving** | `infra/apertus_eval.sh` | Cloud Run GPU (europe-west4), eval runs only | Self-hosted Swiss open model for the sovereignty comparison (M9): swiss-ai's vLLM fork pinned by digest, created for an eval run and deleted on exit (trap). Not served (ADR-035). |
 | **infra** | `infra/` | — | Idempotent `gcloud` setup scripts, IAM, budget alerts, Artifact Registry. Terraform is a stretch goal. |
 
 ## 3. Request flow (single question)

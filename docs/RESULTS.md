@@ -18,7 +18,8 @@ How to read the tables:
 
 Earlier experiments: E4 retrieval (M2, ADR-016,
 `evals/reports/2026-10-15-c756c89-e4-retrieval.md`); E8 memory (M7, ADR-029).
-M9 (E1 models, E3, E5) follows M8; M10 (E7, Model Armor) is at the end.
+M9 (E1 models, E3, E5) follows M8, then M10 (E7, Model Armor) and M11 (the
+claim checker's latency on a healthy endpoint).
 
 ## M8: multi-agent (E2) and verifier (E6), 2026-10-19
 
@@ -506,3 +507,56 @@ make eval-compare ARGS="--report m8-v1=evals/reports/2026-10-19-bd7595a-e2-v1-de
 
 Spend: ≈ CHF 2.4 (agent 2.0, judge 0.4); Model Armor ≈ 250k tokens, inside
 the free tier.
+
+## M11: the claim checker on a healthy endpoint (E6 follow-up), 2026-10-20
+
+Setup: the 20 smoke cases (golden, 5 per language) on the served config
+(`navigator_v1`, Model Armor screen, `gemini-3.8-flash@eu` for agent and
+claim checker) with `--claim-check`; the `deterministic` arm (the served
+verifier) is the paired prefix of the same trajectories (`make eval-derive`).
+`eu` was healthy: five "Say OK." pings a minute apart just before the run took
+1.3–3.6 s, and no case errored. Judge `gemini-3.8-flash@global`, Qwen3 235B as
+the cross-family judge. Decision: **ADR-034, update**.
+
+Flash judge:
+
+| config | n | errors | quote fidelity | halluc. | groundedness | key facts | must_not | behaviour | req. recall | CHF/answer | p50 / p95 s | model calls |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| deterministic | 20 | 0 | 100.0% (100.0–100.0) | 0 | 75.5 (61.6–86.5) | 100.0 (100.0–100.0) | 0 | 100.0 (100.0–100.0) | 100.0 (100.0–100.0) | 0.0314 | 45 / 78 | 6.1 |
+| claims | 20 | 0 | 100.0% (100.0–100.0) | 0 | 87.2 (72.2–98.3) | 100.0 (100.0–100.0) | 0 | 100.0 (100.0–100.0) | 100.0 (100.0–100.0) | 0.0586 | 78 / 166 | 11.9 |
+
+Paired differences to **deterministic** (mean, 95% CI):
+
+| config | Δ groundedness | Δ key facts | Δ behaviour | Δ must_not | Δ CHF/answer | Δ latency s |
+|---|---|---|---|---|---|---|
+| claims | +11.8 (+6.0…+18.0), n=20 | +0.0 (+0.0…+0.0) | +0.0 (+0.0…+0.0) | +0.0 (+0.0…+0.0) | +0.0271 (+0.0153…+0.0400) | +35.4 (+21.8…+49.9) |
+
+Qwen3 judge:
+
+| config | n | errors | quote fidelity | halluc. | groundedness | key facts | must_not | behaviour | req. recall | CHF/answer | p50 / p95 s | model calls |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| deterministic | 20 | 0 | 100.0% (100.0–100.0) | 0 | 92.6 (89.3–95.9) | 100.0 (100.0–100.0) | 0 | 100.0 (100.0–100.0) | 100.0 (100.0–100.0) | 0.0314 | 45 / 78 | 6.1 |
+| claims | 20 | 0 | 100.0% (100.0–100.0) | 0 | 97.4 (94.5–99.7) | 100.0 (100.0–100.0) | 0 | 100.0 (100.0–100.0) | 100.0 (100.0–100.0) | 0.0586 | 78 / 166 | 11.9 |
+
+Paired differences to **deterministic** (mean, 95% CI):
+
+| config | Δ groundedness | Δ key facts | Δ behaviour | Δ must_not | Δ CHF/answer | Δ latency s |
+|---|---|---|---|---|---|---|
+| claims | +4.8 (+2.0…+7.7), n=18 | +0.0 (+0.0…+0.0) | +0.0 (+0.0…+0.0) | +0.0 (+0.0…+0.0) | +0.0271 (+0.0153…+0.0400) | +35.4 (+21.8…+49.9) |
+
+The checker sent 13 of 20 first drafts back (21 unsupported claims) and left
+one answer `degraded` (mobility-01). The gain under Qwen (+4.8) matches M8's
+golden number (+4.4); under Flash it is again more than twice as large. On a
+healthy endpoint the checker costs +35 s per answer, not M8's +78 s, but the
+p95 still doubles to 166 s (the web BFF's limit is 300 s). The web app keeps
+it off (Nikola, 2026-10-20).
+
+```bash
+make eval-smoke ARGS="--claim-check --name m11-smoke-claims --traces data/logs/m11-smoke-claims.traces.jsonl"
+make eval-derive ARGS="--from evals/reports/2026-10-20-28b6549-m11-smoke-claims.json --policy deterministic"
+make judge-study ARGS="--report <each report>.json --name <name>-qwen" JUDGES="qwen/qwen3-235b-a22b-instruct-2507-maas@global"
+make eval-compare ARGS="--report deterministic=…-derived-deterministic.json --report claims=…-m11-smoke-claims.json \
+  [--study deterministic=…-qwen.json --study claims=…-qwen.json --judge qwen/qwen3-235b-a22b-instruct-2507-maas@global]"
+```
+
+Spend ≈ CHF 1.4 (agent 1.17, judges 0.25).
