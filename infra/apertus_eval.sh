@@ -93,7 +93,10 @@ echo "== deploy (waits until vLLM has downloaded and loaded the model)"
 # download, load, compile), hence the 40-min probe window; at 0.92 GPU memory and the default
 # 256 sequences, the sampler warm-up (131k vocab) ran out of memory: 0.88 and 8 sequences
 # (the eval sends at most 2 conversations at a time).
-run "$GCLOUD" run deploy "$SERVICE" --project "$PROJECT_ID" --region "$REGION" \
+# --async: the second start's revision was ready after 13 min, but the service had already
+# reported "Resource readiness deadline exceeded" (and turned ready a second after the trap
+# deleted it), so the script waits for vLLM itself below.
+run "$GCLOUD" run deploy "$SERVICE" --project "$PROJECT_ID" --region "$REGION" --async \
   --image "$IMAGE" --service-account "$SA" --no-allow-unauthenticated \
   --gpu 1 --gpu-type "$GPU_TYPE" --no-gpu-zonal-redundancy \
   --cpu 8 --memory 32Gi --no-cpu-throttling \
@@ -103,17 +106,25 @@ run "$GCLOUD" run deploy "$SERVICE" --project "$PROJECT_ID" --region "$REGION" \
   --command vllm \
   --args="^|^serve|${MODEL}|--host|0.0.0.0|--port|8000|--max-model-len|${MAX_MODEL_LEN}|--gpu-memory-utilization|0.88|--max-num-seqs|8|--chat-template-content-format|string|--enable-auto-tool-choice|--tool-call-parser|apertus|${VLLM_ARGS// /|}"
 
-echo "== proxy on 127.0.0.1:$PORT"
+echo "== proxy on 127.0.0.1:$PORT; wait for vLLM (up to 45 min; ~13 min when the image is cached)"
 if [[ "$DRY_RUN" != 1 ]]; then
+  until "$GCLOUD" run services describe "$SERVICE" --project "$PROJECT_ID" --region "$REGION" \
+    --format='value(status.url)' 2>/dev/null | grep -q .; do sleep 5; done
   "$GCLOUD" run services proxy "$SERVICE" --project "$PROJECT_ID" --region "$REGION" \
     --port "$PORT" >data/logs/apertus-proxy.log 2>&1 &
   PROXY_PID=$!
-  for _ in $(seq 60); do
-    curl -sf "http://127.0.0.1:$PORT/v1/models" >/dev/null && break
-    sleep 5
+  deadline=$(( $(date +%s) + 45 * 60 ))
+  until curl -sf --max-time 10 "http://127.0.0.1:$PORT/v1/models" >/dev/null; do
+    # A revision that failed (container exit, probe timeout) won't come back: stop early.
+    ready=$("$GCLOUD" run revisions list --service "$SERVICE" --project "$PROJECT_ID" \
+      --region "$REGION" --format='value(status.conditions[0].status,status.conditions[0].message)' \
+      2>/dev/null | head -1)
+    if [[ "$ready" == False* ]]; then echo "revision failed: $ready" >&2; exit 1; fi
+    if (( $(date +%s) > deadline )); then echo "vLLM not reachable after 45 min" >&2; exit 1; fi
+    echo "   $(date +%H:%M:%S) waiting: ${ready:-starting}" | cut -c1-120
+    sleep 30
   done
-  curl -sf "http://127.0.0.1:$PORT/v1/models" || { echo "vLLM not reachable" >&2; exit 1; }
-  echo
+  echo "   vLLM up after $(( ($(date +%s) - START) / 60 )) min"
 fi
 
 echo "== eval (rerun to resume from data/logs/e1-apertus.traces.jsonl)"
