@@ -319,6 +319,26 @@ Flash without `get_toc` on the 11 cases where it used it (paired; the other
 chance): groundedness −2.8 (−12.5…+6.3, n=11), key facts and behaviour
 unchanged; it finds the same articles through `search_law`.
 
+Qwen3 235B, the model that browses most, on all 150 cases with and without
+`get_toc` (Flash judge; errored cases re-run once):
+
+| config | n | errors | quote fidelity | halluc. | groundedness | key facts | must_not | behaviour | req. recall | CHF/answer | p50 / p95 s | model calls |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| with-toc | 150 | 5 | 100.0% (100.0–100.0) | 0 | 70.9 (66.5–75.1) | 71.5 (65.9–76.9) | 6 | 85.3 (79.3–91.3) | 87.8 (82.0–93.0) | 0.0199 | 31 / 78 | 8.5 |
+| without | 150 | 0 | 100.0% (100.0–100.0) | 0 | 67.0 (62.1–71.7) | 69.4 (63.6–75.0) | 6 | 84.0 (78.0–90.0) | 80.9 (74.4–87.2) | 0.0280 | 23 / 70 | 8.8 |
+
+Paired differences to **with-toc** (mean, 95% CI):
+
+| config | Δ groundedness | Δ key facts | Δ behaviour | Δ must_not | Δ CHF/answer | Δ latency s |
+|---|---|---|---|---|---|---|
+| without | -2.1 (-7.2…+2.9), n=133 | -1.4 (-6.7…+3.8) | -1.3 (-7.3…+4.7) | +0.0 (-0.0…+0.0) | +0.0050 (-0.0070…+0.0204) | -9.7 (-14.9…-4.4) |
+
+Without the tree Qwen searches more (2.8 vs 1.9 `search_law` calls per answer)
+and finds fewer of the required articles: **required-citation recall −5.7
+(−11.5…−0.4, n=122)**. Groundedness, key facts and behaviour move within
+noise. Tree navigation helps a model that uses it locate the articles; it does
+not measurably improve the answers, and the served model hardly uses it.
+
 ### E5: the same questions in four languages (Flash, `eu`)
 
 40 golden answerable questions, 10 per original language, translated into the

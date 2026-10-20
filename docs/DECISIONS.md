@@ -1427,7 +1427,10 @@ sends back 8 drafts, argon 27, DeepSeek 47, Qwen 82).
   clarifying question, DeepSeek answers where it should ask or refuse.
 - **E3:** the prompt never asks for `get_toc`, and most models rarely call it
   (Flash 11/150 cases, Qwen 44/150). Flash without it on its 11 cases: −2.8
-  (−12.5…+6.3), key facts and behaviour unchanged. QWEN_E3_PLACEHOLDER
+  (−12.5…+6.3), key facts and behaviour unchanged. Qwen3 235B
+  without it on all 150: required-citation recall −5.7 (−11.5…−0.4; it
+  searches more instead), groundedness −2.1 (−7.2…+2.9), key facts and
+  behaviour within noise.
 - **E5:** no language effect beyond noise (EN − DE groundedness +0.7,
   −3.6…+4.9; FR +1.5; IT −1.4, key facts −4.6, −11.7…+0.8); English answers
   quote the German text; answers to Claude's translations score like the
