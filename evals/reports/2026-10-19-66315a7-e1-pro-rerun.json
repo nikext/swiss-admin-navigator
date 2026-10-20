@@ -1,0 +1,747 @@
+{
+ "name": "e1-pro-rerun",
+ "run_at": "2026-10-19T23:31:00+00:00",
+ "git_sha": "66315a7",
+ "summary": {
+  "cases": 1,
+  "errors": 0,
+  "quote_fidelity": {
+   "verbatim": 1,
+   "quotes": 4,
+   "rate": 0.25,
+   "ci95": [
+    0.25,
+    0.25
+   ]
+  },
+  "hallucinated_citations": {
+   "count": 0,
+   "citations": 4,
+   "rate": 0.0,
+   "ci95": [
+    0.0,
+    0.0
+   ]
+  },
+  "not_in_force_citations": 0,
+  "unchecked_citations": 0,
+  "first_draft": {
+   "citations": 4,
+   "quotes": 4,
+   "problems": {
+    "paragraph": 3,
+    "quote": 3
+   },
+   "cases_sent_back": 1
+  },
+  "verification": {
+   "passed_after_retry": 1
+  },
+  "dropped_citations": 0,
+  "claim_check": {
+   "answers_checked": 0,
+   "first_verdicts": {},
+   "cases_sent_back": 0,
+   "dropped_claims": 0
+  },
+  "required_recall": {
+   "mean": 0.0,
+   "ci95": [
+    0.0,
+    0.0
+   ],
+   "n": 1
+  },
+  "precision_expected": {
+   "mean": 0.0,
+   "ci95": [
+    0.0,
+    0.0
+   ],
+   "n": 1
+  },
+  "behaviour_det": {
+   "mean": 1.0,
+   "ci95": [
+    1.0,
+    1.0
+   ],
+   "n": 1
+  },
+  "contact_answers": [],
+  "screened": [],
+  "lang_match": {
+   "mean": 1.0,
+   "ci95": [
+    1.0,
+    1.0
+   ],
+   "n": 1
+  },
+  "groundedness": {
+   "mean": 0.1,
+   "ci95": [
+    0.1,
+    0.1
+   ],
+   "n": 1
+  },
+  "key_facts": {
+   "mean": 1.0,
+   "ci95": [
+    1.0,
+    1.0
+   ],
+   "n": 1
+  },
+  "must_not_violations": 0,
+  "behaviour": {
+   "mean": 1.0,
+   "ci95": [
+    1.0,
+    1.0
+   ],
+   "n": 1
+  },
+  "precision_judged": {
+   "mean": 0.25,
+   "ci95": [
+    0.25,
+    0.25
+   ],
+   "n": 1
+  },
+  "latency_s": {
+   "p50": 171.79,
+   "p95": 171.79
+  },
+  "tool_calls_mean": 12.0,
+  "model_calls_mean": 14.0,
+  "tokens_mean": {
+   "prompt": 186414.0,
+   "cached": 0.0,
+   "output": 2659.0,
+   "thoughts": 10045.0
+  },
+  "cost_per_answer": {
+   "usd": 0.52528,
+   "chf": 0.43072959999999993,
+   "p95_chf": 0.43072959999999993
+  },
+  "run_cost_chf": {
+   "agent": 0.43072959999999993,
+   "judge": 0.011400869999999999
+  },
+  "usage_split": {
+   "router": 0.0,
+   "claims": 0.0
+  },
+  "by": {
+   "category": {
+    "answerable": {
+     "n": 1,
+     "behaviour": 1.0,
+     "groundedness": 0.1,
+     "key_facts": 1.0,
+     "lang_match": 1.0
+    }
+   },
+   "lang": {
+    "it": {
+     "n": 1,
+     "behaviour": 1.0,
+     "groundedness": 0.1,
+     "key_facts": 1.0,
+     "lang_match": 1.0
+    }
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "residence-15",
+   "lang": "it",
+   "category": "answerable",
+   "domain": "residence",
+   "error": null,
+   "status": "passed_after_retry",
+   "rounds": 2,
+   "first_draft": {
+    "citations": 4,
+    "quotes": 4,
+    "problems": {
+     "paragraph": 3,
+     "quote": 3
+    }
+   },
+   "dropped": [],
+   "repairs": [],
+   "dropped_claims": [],
+   "claim_check": {
+    "rounds": 0,
+    "first": {},
+    "sent_back": 0
+   },
+   "route": null,
+   "routed_to": null,
+   "route_ok": null,
+   "citations": 4,
+   "quotes": 4,
+   "verbatim": 1,
+   "hallucinated": 0,
+   "not_in_force": 0,
+   "unchecked": 0,
+   "required_recall": 0.0,
+   "precision_expected": 0.0,
+   "behaviour_det": true,
+   "contact_details": [],
+   "detected_lang": "it",
+   "lang_ok": true,
+   "tool_calls": 12,
+   "tools": {
+    "search_law": 1,
+    "get_article": 4,
+    "list_acts": 1,
+    "get_toc": 3,
+    "resolve_citation": 3
+   },
+   "usage": {
+    "model_calls": 14,
+    "prompt": 186414,
+    "cached": 0,
+    "output": 2659,
+    "thoughts": 10045
+   },
+   "router_usage": {
+    "model_calls": 0,
+    "prompt": 0,
+    "cached": 0,
+    "output": 0,
+    "thoughts": 0
+   },
+   "claims_usage": {
+    "model_calls": 0,
+    "prompt": 0,
+    "cached": 0,
+    "output": 0,
+    "thoughts": 0
+   },
+   "latency_s": 171.79,
+   "cost_usd": 0.52528,
+   "groundedness": 0.1,
+   "key_facts": 1.0,
+   "must_not_violations": 0,
+   "behaviour_judge": true,
+   "behaviour_ok": true,
+   "precision_judged": 0.25,
+   "answer": {
+    "language": "it",
+    "answer_markdown": "In quanto cittadino italiano (Paese UE) con un contratto a tempo indeterminato (quindi di durata uguale o superiore a un anno), riceverà un permesso di dimora UE/AELS (comunemente noto come permesso B) [1].\n\nSi applicano le seguenti regole principali:\n* **Durata e rinnovo:** Il permesso ha una validità di almeno 5 anni dalla data del rilascio ed è automaticamente rinnovabile per altri 5 anni [2]. Tuttavia, in occasione del primo rinnovo, la durata potrebbe essere limitata a un anno qualora si trovasse in una situazione di disoccupazione involontaria da oltre 12 mesi consecutivi [2].\n* **Documenti necessari:** Per il rilascio del permesso, le autorità possono richiederle esclusivamente il documento con cui è entrato in Svizzera (carta d'identità o passaporto) e una dichiarazione di assunzione o un attestato di lavoro da parte del suo datore [3].\n* **Inizio del lavoro:** Può iniziare a lavorare da subito; l'adempimento delle formalità necessarie per ottenere il permesso non costituisce un impedimento all'immediata esecuzione del contratto di lavoro [4].",
+    "citations": [
+     {
+      "ref": "1",
+      "sr": "142.203",
+      "article": "Art. 4",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "it",
+      "quote": "Ai cittadini dell’UE e dell’AELS è rilasciato, giusta le disposizioni dell’Accordo sulla libera circolazione delle persone o della Convenzione AELS, un permesso di soggiorno di breve durata UE/AELS, un permesso di dimora UE/AELS o un permesso per frontalieri UE/AELS.",
+      "translation": null,
+      "abbr": "OLCP",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2002/261/it#art_4",
+      "as_of": "2026-01-01"
+     },
+     {
+      "ref": "2",
+      "sr": "0.142.112.681",
+      "article": "Art. 6",
+      "paragraph": "(1)",
+      "letter": null,
+      "quote_lang": "it",
+      "quote": "Il lavoratore dipendente cittadino di una parte contraente (in appresso denominato lavoratore dipendente) che occupa un impiego di durata uguale o superiore a un anno al servizio di un datore di lavoro dello Stato ospitante riceve una carta di soggiorno della durata di almeno 5 anni a decorrere dalla data del rilascio, automaticamente rinnovabile per almeno 5 anni. In occasione del primo rinnovo, la validità della carta di soggiorno può essere limitata, per un periodo non inferiore ad un anno, qualora il possessore si trovi in una situazione di disoccupazione involontaria da oltre 12 mesi consecutivi.",
+      "translation": null,
+      "abbr": "ALC",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2002/243/it#annex_I/lvl_u1/lvl_II/art_6",
+      "as_of": "2020-12-15"
+     },
+     {
+      "ref": "3",
+      "sr": "0.142.112.681",
+      "article": "Art. 6",
+      "paragraph": "(3)",
+      "letter": null,
+      "quote_lang": "it",
+      "quote": "Per il rilascio dei documenti di soggiorno, le parti contraenti possono esigere dal lavoratore soltanto la presentazione dei documenti seguenti:\na) il documento in forza del quale è entrato nel loro territorio;\nb) una dichiarazione di assunzione del datore di lavoro o un attestato di lavoro.",
+      "translation": null,
+      "abbr": "ALC",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2002/243/it#annex_I/lvl_u1/lvl_II/art_6",
+      "as_of": "2020-12-15"
+     },
+     {
+      "ref": "4",
+      "sr": "0.142.112.681",
+      "article": "Art. 6",
+      "paragraph": "(7)",
+      "letter": null,
+      "quote_lang": "it",
+      "quote": "L’adempimento delle formalità necessarie per ottenere la carta di soggiorno non può costituire un impedimento all’immediata esecuzione dei contratti di lavoro conclusi dai richiedenti.",
+      "translation": null,
+      "abbr": "ALC",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2002/243/it#annex_I/lvl_u1/lvl_II/art_6",
+      "as_of": "2020-12-15"
+     }
+    ],
+    "clarifying_question": null,
+    "cantonal_note": "Per avviare la procedura e richiedere il permesso, deve annunciarsi e registrarsi presso l'ufficio controllo abitanti del suo Comune di domicilio svizzero o presso l'ufficio cantonale della migrazione.",
+    "follow_up_questions": [
+     "Posso portare in Svizzera la mia famiglia (coniuge e figli)?",
+     "Cosa succede al mio permesso di dimora se dovessi perdere il lavoro?",
+     "Posso cambiare datore di lavoro o Cantone di residenza con il permesso B?"
+    ],
+    "confidence": "high",
+    "out_of_scope": false,
+    "verification": {
+     "status": "passed_after_retry",
+     "rounds": [
+      {
+       "citations": 4,
+       "quotes": 4,
+       "problems": [
+        {
+         "ref": "2",
+         "kind": "paragraph",
+         "message": "SR 0.142.112.681 Art. 6 has no paragraph (1); it has no numbered paragraphs (omit paragraph)."
+        },
+        {
+         "ref": "2",
+         "kind": "quote",
+         "message": "[2] the quote is not verbatim in the IT text of SR 0.142.112.681 Art. 6. Copy it character for character from get_article (mark omissions with …), or drop the claim."
+        },
+        {
+         "ref": "3",
+         "kind": "paragraph",
+         "message": "SR 0.142.112.681 Art. 6 has no paragraph (3); it has no numbered paragraphs (omit paragraph)."
+        },
+        {
+         "ref": "3",
+         "kind": "quote",
+         "message": "[3] the quote is not verbatim in the IT text of SR 0.142.112.681 Art. 6. Copy it character for character from get_article (mark omissions with …), or drop the claim."
+        },
+        {
+         "ref": "4",
+         "kind": "paragraph",
+         "message": "SR 0.142.112.681 Art. 6 has no paragraph (7); it has no numbered paragraphs (omit paragraph)."
+        },
+        {
+         "ref": "4",
+         "kind": "quote",
+         "message": "[4] the quote is not verbatim in the IT text of SR 0.142.112.681 Art. 6. Copy it character for character from get_article (mark omissions with …), or drop the claim."
+        }
+       ],
+       "check_s": 0.014,
+       "claims": null,
+       "claims_s": null,
+       "claims_usage": null
+      },
+      {
+       "citations": 4,
+       "quotes": 4,
+       "problems": [],
+       "check_s": 0.016,
+       "claims": null,
+       "claims_s": null,
+       "claims_usage": null
+      }
+     ],
+     "dropped": [],
+     "repairs": [],
+     "dropped_claims": []
+    },
+    "notice": "Unofficial. Not legal advice. Sources: Fedlex (fedlex.admin.ch).",
+    "screening": null
+   },
+   "raw_final": null,
+   "tool_trace": [
+    {
+     "name": "search_law",
+     "args": {
+      "lang": "it",
+      "query": "durata di validità del permesso di dimora UE/AELS"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "it",
+      "sr": "142.203",
+      "article": "Art. 4"
+     }
+    },
+    {
+     "name": "list_acts",
+     "args": {}
+    },
+    {
+     "name": "get_toc",
+     "args": {
+      "depth": 1,
+      "sr": "0.142.112.681",
+      "lang": "it"
+     }
+    },
+    {
+     "name": "get_toc",
+     "args": {
+      "lang": "it",
+      "path": "annex_I",
+      "depth": 2,
+      "sr": "0.142.112.681"
+     }
+    },
+    {
+     "name": "get_toc",
+     "args": {
+      "path": "annex_I/lvl_u1/lvl_II",
+      "depth": 2,
+      "sr": "0.142.112.681",
+      "lang": "it"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "lang": "it",
+      "sr": "0.142.112.681",
+      "article": "Art. 6"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "0.142.112.681",
+      "article": "annex_I/lvl_u1/lvl_II/art_6",
+      "lang": "it"
+     }
+    },
+    {
+     "name": "resolve_citation",
+     "args": {
+      "text": "Art. 6 cpv. 1 ALC"
+     }
+    },
+    {
+     "name": "resolve_citation",
+     "args": {
+      "text": "annex_I/lvl_u1/lvl_II/art_6 ALC"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "article": "annex_I/lvl_u1/lvl_II/art_6",
+      "sr": "0.142.112.681",
+      "lang": "it"
+     }
+    },
+    {
+     "name": "resolve_citation",
+     "args": {
+      "text": "OLCP Art. 4 cpv. 1"
+     }
+    }
+   ],
+   "rounds_log": [
+    {
+     "draft": "{\n  \"language\": \"it\",\n  \"answer_markdown\": \"In quanto cittadino italiano (Paese UE) con un contratto a tempo indeterminato (quindi di durata uguale o superiore a un anno), riceverà un permesso di dimora UE/AELS (comunemente noto come permesso B) valido per 5 anni [1, 2].\\n\\nSi applicano le seguenti regole principali:\\n* **Rinnovo:** Alla scadenza, il permesso è automaticamente rinnovabile per almeno altri 5 anni [2]. Tuttavia, in occasione del primo rinnovo, la durata potrebbe essere limitata a un anno qualora si trovasse in una situazione di disoccupazione involontaria da oltre 12 mesi consecutivi [2].\\n* **Documenti necessari:** Per il rilascio del permesso, le autorità possono richiederle esclusivamente la presentazione del documento con cui è entrato in Svizzera (carta d'identità o passaporto) e una dichiarazione di assunzione o un attestato di lavoro da parte del suo datore [3].\\n* **Inizio del lavoro:** Può iniziare a lavorare da subito; l'adempimento delle formalità necessarie per ottenere il permesso non costituisce un impedimento all'immediata esecuzione del contratto di lavoro [4].\",\n  \"citations\": [\n    {\n      \"ref\": \"1\",\n      \"sr\": \"142.203\",\n      \"article\": \"Art. 4\",\n      \"paragraph\": \"1\",\n      \"letter\": null,\n      \"quote_lang\": \"it\",\n      \"quote\": \"Ai cittadini dell’UE e dell’AELS è rilasciato, giusta le disposizioni dell’Accordo sulla libera circolazione delle persone o della Convenzione AELS, un permesso di soggiorno di breve durata UE/AELS, un permesso di dimora UE/AELS o un permesso per frontalieri UE/AELS.\",\n      \"translation\": null\n    },\n    {\n      \"ref\": \"2\",\n      \"sr\": \"0.142.112.681\",\n      \"article\": \"Art. 6\",\n      \"paragraph\": \"(1)\",\n      \"letter\": null,\n      \"quote_lang\": \"it\",\n      \"quote\": \"Il lavoratore dipendente cittadino di una parte contraente (in appresso denominato lavoratore dipendente) che occupa un impiego di durata uguale o superiore a un anno al servizio di un datore di lavoro dello Stato ospitante riceve una carta di soggiorno della durata di almeno 5 anni a decorrere dalla data del rilascio, automaticamente rinnovabile per almeno 5 anni. In occasione del primo rinnovo, la validità della carta di soggiorno può essere limitata, per un periodo non inferiore ad un anno, qualora il possessore si trovi in una situazione di disoccupazione involontaria da oltre 12 mesi consecutivi.\",\n      \"translation\": null\n    },\n    {\n      \"ref\": \"3\",\n      \"sr\": \"0.142.112.681\",\n      \"article\": \"Art. 6\",\n      \"paragraph\": \"(3)\",\n      \"letter\": null,\n      \"quote_lang\": \"it\",\n      \"quote\": \"Per il rilascio dei documenti di soggiorno, le parti contraenti possono esigere dal lavoratore soltanto la presentazione dei documenti seguenti:\\na) il documento in forza del quale è entrato nel loro territorio;\\nb) una dichiarazione di assunzione del datore di lavoro o un attestato di lavoro.\",\n      \"translation\": null\n    },\n    {\n      \"ref\": \"4\",\n      \"sr\": \"0.142.112.681\",\n      \"article\": \"Art. 6\",\n      \"paragraph\": \"(7)\",\n      \"letter\": null,\n      \"quote_lang\": \"it\",\n      \"quote\": \"L’adempimento delle formalità necessarie per ottenere la carta di soggiorno non può costituire un impedimento all’immediata esecuzione dei contratti di lavoro conclusi dai richiedenti.\",\n      \"translation\": null\n    }\n  ],\n  \"clarifying_question\": null,\n  \"cantonal_note\": \"Per avviare la procedura e richiedere fisicamente il permesso, deve annunciarsi e registrarsi presso l'ufficio controllo abitanti del suo Comune di domicilio svizzero o presso l'ufficio cantonale della migrazione competente.\",\n  \"follow_up_questions\": [\n    \"Posso portare in Svizzera la mia famiglia (coniuge e figli)?\",\n    \"Cosa succede al mio permesso di dimora se dovessi perdere il lavoro?\",\n    \"Entro quanto tempo devo convertire la mia patente di guida italiana?\"\n  ],\n  \"confidence\": \"high\",\n  \"out_of_scope\": false\n}",
+     "round": {
+      "citations": 4,
+      "quotes": 4,
+      "problems": [
+       {
+        "ref": "2",
+        "kind": "paragraph",
+        "message": "SR 0.142.112.681 Art. 6 has no paragraph (1); it has no numbered paragraphs (omit paragraph)."
+       },
+       {
+        "ref": "2",
+        "kind": "quote",
+        "message": "[2] the quote is not verbatim in the IT text of SR 0.142.112.681 Art. 6. Copy it character for character from get_article (mark omissions with …), or drop the claim."
+       },
+       {
+        "ref": "3",
+        "kind": "paragraph",
+        "message": "SR 0.142.112.681 Art. 6 has no paragraph (3); it has no numbered paragraphs (omit paragraph)."
+       },
+       {
+        "ref": "3",
+        "kind": "quote",
+        "message": "[3] the quote is not verbatim in the IT text of SR 0.142.112.681 Art. 6. Copy it character for character from get_article (mark omissions with …), or drop the claim."
+       },
+       {
+        "ref": "4",
+        "kind": "paragraph",
+        "message": "SR 0.142.112.681 Art. 6 has no paragraph (7); it has no numbered paragraphs (omit paragraph)."
+       },
+       {
+        "ref": "4",
+        "kind": "quote",
+        "message": "[4] the quote is not verbatim in the IT text of SR 0.142.112.681 Art. 6. Copy it character for character from get_article (mark omissions with …), or drop the claim."
+       }
+      ],
+      "check_s": 0.014,
+      "claims": null,
+      "claims_s": null,
+      "claims_usage": null
+     },
+     "t_s": 113.029,
+     "usage": {
+      "model_calls": 10,
+      "prompt": 107455,
+      "cached": 0,
+      "output": 1424,
+      "thoughts": 6650
+     },
+     "tool_calls": 9
+    },
+    {
+     "draft": "{\n  \"language\": \"it\",\n  \"answer_markdown\": \"In quanto cittadino italiano (Paese UE) con un contratto a tempo indeterminato (quindi di durata uguale o superiore a un anno), riceverà un permesso di dimora UE/AELS (comunemente noto come permesso B) [1].\\n\\nSi applicano le seguenti regole principali:\\n* **Durata e rinnovo:** Il permesso ha una validità di almeno 5 anni dalla data del rilascio ed è automaticamente rinnovabile per altri 5 anni [2]. Tuttavia, in occasione del primo rinnovo, la durata potrebbe essere limitata a un anno qualora si trovasse in una situazione di disoccupazione involontaria da oltre 12 mesi consecutivi [2].\\n* **Documenti necessari:** Per il rilascio del permesso, le autorità possono richiederle esclusivamente il documento con cui è entrato in Svizzera (carta d'identità o passaporto) e una dichiarazione di assunzione o un attestato di lavoro da parte del suo datore [3].\\n* **Inizio del lavoro:** Può iniziare a lavorare da subito; l'adempimento delle formalità necessarie per ottenere il permesso non costituisce un impedimento all'immediata esecuzione del contratto di lavoro [4].\",\n  \"citations\": [\n    {\n      \"ref\": \"1\",\n      \"sr\": \"142.203\",\n      \"article\": \"Art. 4\",\n      \"paragraph\": \"1\",\n      \"letter\": null,\n      \"quote_lang\": \"it\",\n      \"quote\": \"Ai cittadini dell’UE e dell’AELS è rilasciato, giusta le disposizioni dell’Accordo sulla libera circolazione delle persone o della Convenzione AELS, un permesso di soggiorno di breve durata UE/AELS, un permesso di dimora UE/AELS o un permesso per frontalieri UE/AELS.\",\n      \"translation\": null\n    },\n    {\n      \"ref\": \"2\",\n      \"sr\": \"0.142.112.681\",\n      \"article\": \"annex_I/lvl_u1/lvl_II/art_6\",\n      \"paragraph\": \"(1)\",\n      \"letter\": null,\n      \"quote_lang\": \"it\",\n      \"quote\": \"Il lavoratore dipendente cittadino di una parte contraente (in appresso denominato lavoratore dipendente) che occupa un impiego di durata uguale o superiore a un anno al servizio di un datore di lavoro dello Stato ospitante riceve una carta di soggiorno della durata di almeno 5 anni a decorrere dalla data del rilascio, automaticamente rinnovabile per almeno 5 anni. In occasione del primo rinnovo, la validità della carta di soggiorno può essere limitata, per un periodo non inferiore ad un anno, qualora il possessore si trovi in una situazione di disoccupazione involontaria da oltre 12 mesi consecutivi.\",\n      \"translation\": null\n    },\n    {\n      \"ref\": \"3\",\n      \"sr\": \"0.142.112.681\",\n      \"article\": \"annex_I/lvl_u1/lvl_II/art_6\",\n      \"paragraph\": \"(3)\",\n      \"letter\": null,\n      \"quote_lang\": \"it\",\n      \"quote\": \"Per il rilascio dei documenti di soggiorno, le parti contraenti possono esigere dal lavoratore soltanto la presentazione dei documenti seguenti:\\na) il documento in forza del quale è entrato nel loro territorio;\\nb) una dichiarazione di assunzione del datore di lavoro o un attestato di lavoro.\",\n      \"translation\": null\n    },\n    {\n      \"ref\": \"4\",\n      \"sr\": \"0.142.112.681\",\n      \"article\": \"annex_I/lvl_u1/lvl_II/art_6\",\n      \"paragraph\": \"(7)\",\n      \"letter\": null,\n      \"quote_lang\": \"it\",\n      \"quote\": \"L’adempimento delle formalità necessarie per ottenere la carta di soggiorno non può costituire un impedimento all’immediata esecuzione dei contratti di lavoro conclusi dai richiedenti.\",\n      \"translation\": null\n    }\n  ],\n  \"clarifying_question\": null,\n  \"cantonal_note\": \"Per avviare la procedura e richiedere il permesso, deve annunciarsi e registrarsi presso l'ufficio controllo abitanti del suo Comune di domicilio svizzero o presso l'ufficio cantonale della migrazione.\",\n  \"follow_up_questions\": [\n    \"Posso portare in Svizzera la mia famiglia (coniuge e figli)?\",\n    \"Cosa succede al mio permesso di dimora se dovessi perdere il lavoro?\",\n    \"Posso cambiare datore di lavoro o Cantone di residenza con il permesso B?\"\n  ],\n  \"confidence\": \"high\",\n  \"out_of_scope\": false\n}",
+     "round": {
+      "citations": 4,
+      "quotes": 4,
+      "problems": [],
+      "check_s": 0.016,
+      "claims": null,
+      "claims_s": null,
+      "claims_usage": null
+     },
+     "t_s": 171.787,
+     "usage": {
+      "model_calls": 14,
+      "prompt": 186414,
+      "cached": 0,
+      "output": 2659,
+      "thoughts": 10045
+     },
+     "tool_calls": 12
+    }
+   ],
+   "citation_checks": [
+    {
+     "ref": "1",
+     "sr": "142.203",
+     "article": "Art. 4",
+     "quote_lang": "it",
+     "eid": "art_4",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "2",
+     "sr": "0.142.112.681",
+     "article": "Art. 6",
+     "quote_lang": "it",
+     "eid": "art_6",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": false,
+     "text": null
+    },
+    {
+     "ref": "3",
+     "sr": "0.142.112.681",
+     "article": "Art. 6",
+     "quote_lang": "it",
+     "eid": "art_6",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": false,
+     "text": null
+    },
+    {
+     "ref": "4",
+     "sr": "0.142.112.681",
+     "article": "Art. 6",
+     "quote_lang": "it",
+     "eid": "art_6",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": false,
+     "text": null
+    }
+   ],
+   "judgement": {
+    "claims": [
+     {
+      "claim": "In quanto cittadino italiano (Paese UE) con un contratto a tempo indeterminato (quindi di durata uguale o superiore a un anno), si riceve un permesso di dimora UE/AELS (comunemente noto come permesso B).",
+      "refs": [
+       "1"
+      ],
+      "supported": "partly"
+     },
+     {
+      "claim": "Il permesso ha una validità di almeno 5 anni dalla data del rilascio ed è automaticamente rinnovabile per altri 5 anni.",
+      "refs": [
+       "2"
+      ],
+      "supported": "no"
+     },
+     {
+      "claim": "In occasione del primo rinnovo, la durata del permesso può essere limitata a un anno qualora ci si trovi in una situazione di disoccupazione involontaria da oltre 12 mesi consecutivi.",
+      "refs": [
+       "2"
+      ],
+      "supported": "no"
+     },
+     {
+      "claim": "Per il rilascio del permesso, le autorità possono richiedere esclusivamente il documento di entrata (carta d'identità o passaporto) e una dichiarazione di assunzione o attestato di lavoro.",
+      "refs": [
+       "3"
+      ],
+      "supported": "no"
+     },
+     {
+      "claim": "È possibile iniziare a lavorare da subito; l'adempimento delle formalità per ottenere il permesso non costituisce impedimento all'immediata esecuzione del contratto di lavoro.",
+      "refs": [
+       "4"
+      ],
+      "supported": "no"
+     }
+    ],
+    "key_facts": [
+     {
+      "fact": "a worker from an EU/EFTA state with an employment contract of at least one year (or indefinite) receives a residence permit valid for at least five years",
+      "verdict": "stated"
+     },
+     {
+      "fact": "the permit is extended automatically by at least five years",
+      "verdict": "stated"
+     }
+    ],
+    "must_not": [
+     {
+      "item": "says an EU citizen needs a quota or labour-market test for this permit",
+      "violated": false
+     }
+    ],
+    "behaviour_ok": true,
+    "behaviour_note": "The assistant answered the question directly with citations without asking clarifying questions.",
+    "irrelevant_refs": [
+     "2",
+     "3",
+     "4"
+    ]
+   }
+  }
+ ],
+ "meta": {
+  "dataset": {
+   "spec": "golden",
+   "files": [
+    "evals/datasets/golden.jsonl"
+   ],
+   "sha": "283079d403c1",
+   "verified": true,
+   "verified_cases": 1,
+   "verified_by": [
+    "claude-opus-5-5"
+   ]
+  },
+  "case_timeout_s": 600.0,
+  "resumed_traces": 0,
+  "selection": {
+   "smoke": false,
+   "ids": "residence-15",
+   "limit": null,
+   "category": null
+  },
+  "profile": {
+   "name": "default",
+   "agent": {
+    "model": "gemini-3.1-pro-preview",
+    "location": "global",
+    "thinking": null
+   },
+   "judge": {
+    "model": "gemini-3.8-flash",
+    "location": "eu",
+    "thinking": null
+   },
+   "embedding": {
+    "model": "gemini-embedding-2",
+    "location": "eu",
+    "input_format": "instruction"
+   },
+   "memory": {
+    "model": "gemini-3.8-flash",
+    "location": "global"
+   },
+   "router": {
+    "model": "gemini-3.8-flash",
+    "location": "eu",
+    "thinking": "low"
+   },
+   "verifier": {
+    "model": "gemini-3.8-flash",
+    "location": "eu",
+    "thinking": "low"
+   }
+  },
+  "agent": {
+   "variant": "v1",
+   "claim_check": false,
+   "without_tools": [],
+   "router": null,
+   "verifier": null,
+   "v2_prompts_sha": null,
+   "claim_prompt_sha": null,
+   "screen": {
+    "template": "projects/random-projects-509513/locations/eu/templates/swiss-nav-input",
+    "mode": "block",
+    "min_level": "medium"
+   }
+  },
+  "system_prompt_sha": "604f3a1f7ee4",
+  "judge_prompt_sha": "d83d68626291",
+  "judged": true,
+  "adk": "2.12.0",
+  "output_mode": "native schema + tools",
+  "target": {
+   "kind": "local",
+   "deployed": null
+  },
+  "mcp": {
+   "url": "local (started by the harness)",
+   "health": {
+    "status": "ok",
+    "as_of": "2026-10-15",
+    "index_built": "2026-10-15T10:38:41+00:00",
+    "index_sha": "c756c89",
+    "records": 18396,
+    "chunks": 17310,
+    "embedding": {
+     "model": "gemini-embedding-2",
+     "location": "eu",
+     "dims": 768
+    },
+    "uptime_s": 172.3
+   }
+  },
+  "pricing": {
+   "as_of": "2026-10-15",
+   "usd_to_chf": 0.82
+  },
+  "judge_usage": {
+   "model_calls": 1,
+   "prompt": 2973,
+   "cached": 0,
+   "output": 585,
+   "thoughts": 2528
+  }
+ }
+}

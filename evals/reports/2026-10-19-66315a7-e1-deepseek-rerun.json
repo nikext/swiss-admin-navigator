@@ -1,0 +1,952 @@
+{
+ "name": "e1-deepseek-rerun",
+ "run_at": "2026-10-19T23:30:30+00:00",
+ "git_sha": "66315a7",
+ "summary": {
+  "cases": 2,
+  "errors": 0,
+  "quote_fidelity": {
+   "verbatim": 6,
+   "quotes": 6,
+   "rate": 1.0,
+   "ci95": [
+    1.0,
+    1.0
+   ]
+  },
+  "hallucinated_citations": {
+   "count": 0,
+   "citations": 6,
+   "rate": 0.0,
+   "ci95": [
+    0.0,
+    0.0
+   ]
+  },
+  "not_in_force_citations": 0,
+  "unchecked_citations": 0,
+  "first_draft": {
+   "citations": 6,
+   "quotes": 6,
+   "problems": {},
+   "cases_sent_back": 0
+  },
+  "verification": {
+   "passed": 2
+  },
+  "dropped_citations": 0,
+  "claim_check": {
+   "answers_checked": 0,
+   "first_verdicts": {},
+   "cases_sent_back": 0,
+   "dropped_claims": 0
+  },
+  "required_recall": {
+   "mean": 1.0,
+   "ci95": [
+    1.0,
+    1.0
+   ],
+   "n": 2
+  },
+  "precision_expected": {
+   "mean": 0.75,
+   "ci95": [
+    0.5,
+    1.0
+   ],
+   "n": 2
+  },
+  "behaviour_det": {
+   "mean": 1.0,
+   "ci95": [
+    1.0,
+    1.0
+   ],
+   "n": 2
+  },
+  "contact_answers": [],
+  "screened": [],
+  "lang_match": {
+   "mean": 1.0,
+   "ci95": [
+    1.0,
+    1.0
+   ],
+   "n": 2
+  },
+  "groundedness": {
+   "mean": 0.823076923076923,
+   "ci95": [
+    0.8,
+    0.8461538461538461
+   ],
+   "n": 2
+  },
+  "key_facts": {
+   "mean": 0.8333333333333333,
+   "ci95": [
+    0.6666666666666666,
+    1.0
+   ],
+   "n": 2
+  },
+  "must_not_violations": 0,
+  "behaviour": {
+   "mean": 1.0,
+   "ci95": [
+    1.0,
+    1.0
+   ],
+   "n": 2
+  },
+  "precision_judged": {
+   "mean": 1.0,
+   "ci95": [
+    1.0,
+    1.0
+   ],
+   "n": 2
+  },
+  "latency_s": {
+   "p50": 55.91,
+   "p95": 85.53
+  },
+  "tool_calls_mean": 6.0,
+  "model_calls_mean": 7.0,
+  "tokens_mean": {
+   "prompt": 61228.5,
+   "cached": 12736.0,
+   "output": 1596.5,
+   "thoughts": 0.0
+  },
+  "cost_per_answer": {
+   "usd": 0.03055,
+   "chf": 0.025051,
+   "p95_chf": 0.027880000000000002
+  },
+  "run_cost_chf": {
+   "agent": 0.050102,
+   "judge": 0.01362102
+  },
+  "usage_split": {
+   "router": 0.0,
+   "claims": 0.0
+  },
+  "by": {
+   "category": {
+    "answerable": {
+     "n": 2,
+     "behaviour": 1.0,
+     "groundedness": 0.823076923076923,
+     "key_facts": 0.8333333333333333,
+     "lang_match": 1.0
+    }
+   },
+   "lang": {
+    "de": {
+     "n": 1,
+     "behaviour": 1.0,
+     "groundedness": 0.8461538461538461,
+     "key_facts": 1.0,
+     "lang_match": 1.0
+    },
+    "fr": {
+     "n": 1,
+     "behaviour": 1.0,
+     "groundedness": 0.8,
+     "key_facts": 0.6666666666666666,
+     "lang_match": 1.0
+    }
+   }
+  }
+ },
+ "cases": [
+  {
+   "id": "residence-13",
+   "lang": "de",
+   "category": "answerable",
+   "domain": "residence",
+   "error": null,
+   "status": "passed",
+   "rounds": 1,
+   "first_draft": {
+    "citations": 5,
+    "quotes": 5,
+    "problems": {}
+   },
+   "dropped": [],
+   "repairs": [],
+   "dropped_claims": [],
+   "claim_check": {
+    "rounds": 0,
+    "first": {},
+    "sent_back": 0
+   },
+   "route": null,
+   "routed_to": null,
+   "route_ok": null,
+   "citations": 5,
+   "quotes": 5,
+   "verbatim": 5,
+   "hallucinated": 0,
+   "not_in_force": 0,
+   "unchecked": 0,
+   "required_recall": 1.0,
+   "precision_expected": 0.5,
+   "behaviour_det": true,
+   "contact_details": [],
+   "detected_lang": "de",
+   "lang_ok": true,
+   "tool_calls": 6,
+   "tools": {
+    "search_law": 2,
+    "get_article": 4
+   },
+   "usage": {
+    "model_calls": 7,
+    "prompt": 59079,
+    "cached": 4352,
+    "output": 1852,
+    "thoughts": 0
+   },
+   "router_usage": {
+    "model_calls": 0,
+    "prompt": 0,
+    "cached": 0,
+    "output": 0,
+    "thoughts": 0
+   },
+   "claims_usage": {
+    "model_calls": 0,
+    "prompt": 0,
+    "cached": 0,
+    "output": 0,
+    "thoughts": 0
+   },
+   "latency_s": 85.53,
+   "cost_usd": 0.034,
+   "groundedness": 0.8461538461538461,
+   "key_facts": 1.0,
+   "must_not_violations": 0,
+   "behaviour_judge": true,
+   "behaviour_ok": true,
+   "precision_judged": 1.0,
+   "answer": {
+    "language": "de",
+    "answer_markdown": "Für die Einbürgerung in der Schweiz müssen Sie in einer Landessprache (Deutsch, Französisch, Italienisch oder Rätoromanisch) bestimmte Sprachkenntnisse nachweisen [1].\n\n**Erforderliche Niveaus:**\n- Mündlich: mindestens **Niveau B1** des europäischen Referenzrahmens\n- Schriftlich: mindestens **Niveau A2** des europäischen Referenzrahmens [2]\n\n**Nachweis-Möglichkeiten:**\nDer Nachweis gilt als erbracht, wenn Sie [3]:\n1. **Muttersprache:** eine Landessprache als Muttersprache sprechen und schreiben\n2. **Schulbesuch:** während mindestens fünf Jahren die obligatorische Schule in einer Landessprache besucht haben\n3. **Ausbildung:** eine Ausbildung auf Sekundarstufe II oder Tertiärstufe in einer Landessprache abgeschlossen haben\n4. **Sprachtest:** einen Sprachnachweis besitzen, der diese Niveaus bescheinigt und auf einem anerkannten Sprachnachweisverfahren basiert\n\nDiese Anforderungen gelten für:\n- **Ordentliche Einbürgerung** (Art. 12 BüG) [1]\n- **Erleichterte Einbürgerung** (Art. 20 BüG) [4]\n- **Wiedereinbürgerung** (Art. 26 BüG) [5], wenn Sie in der Schweiz leben\n\n**Ausnahmen:** Bei Behinderung, Krankheit oder anderen gewichtigen persönlichen Umständen wird Ihrem Fall angemessen Rechnung getragen [1].\n\n**Kantonale Regelungen:** Die Kantone können weitere Integrationskriterien vorsehen [1] und haben eigene Verfahren für Sprachtests.",
+    "citations": [
+     {
+      "ref": "1",
+      "sr": "141.0",
+      "article": "Art. 12",
+      "paragraph": "1",
+      "letter": "c",
+      "quote_lang": "de",
+      "quote": "Eine erfolgreiche Integration zeigt sich insbesondere: … in der Fähigkeit, sich im Alltag in Wort und Schrift in einer Landessprache zu verständigen;",
+      "translation": null,
+      "abbr": "BüG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2016/404/de#art_12",
+      "as_of": "2023-09-01"
+     },
+     {
+      "ref": "2",
+      "sr": "141.01",
+      "article": "Art. 6",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Die Bewerberin oder der Bewerber muss in einer Landessprache mündliche Sprachkompetenzen mindestens auf dem Referenzniveau B1 und schriftliche Sprachkompetenzen mindestens auf dem Referenzniveau A2 des in Europa allgemein anerkannten Referenzrahmens für Sprachen nachweisen.",
+      "translation": null,
+      "abbr": "BüV",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2016/405/de#art_6",
+      "as_of": "2026-08-01"
+     },
+     {
+      "ref": "3",
+      "sr": "141.01",
+      "article": "Art. 6",
+      "paragraph": "2",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Der Nachweis für die Sprachkompetenzen nach Absatz 1 gilt als erbracht, wenn die Bewerberin oder der Bewerber:\na. eine Landessprache als Muttersprache spricht und schreibt;\nb. während mindestens fünf Jahren die obligatorische Schule in einer Landessprache besucht hat;\nc. eine Ausbildung auf Sekundarstufe II oder Tertiärstufe in einer Landessprache abgeschlossen hat; oder\nd. über einen Sprachnachweis verfügt, der die Sprachkompetenzen nach Absatz 1 bescheinigt und der sich auf ein Sprachnachweisverfahren abstützt, das den allgemein anerkannten Qualitätsstandards für Sprachtests entspricht.",
+      "translation": null,
+      "abbr": "BüV",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2016/405/de#art_6",
+      "as_of": "2026-08-01"
+     },
+     {
+      "ref": "4",
+      "sr": "141.0",
+      "article": "Art. 20",
+      "paragraph": "1",
+      "letter": null,
+      "quote_lang": "de",
+      "quote": "Bei der erleichterten Einbürgerung müssen die Integrationskriterien nach Artikel 12 Absätze 1 und 2 erfüllt sein.",
+      "translation": null,
+      "abbr": "BüG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2016/404/de#art_20",
+      "as_of": "2023-09-01"
+     },
+     {
+      "ref": "5",
+      "sr": "141.0",
+      "article": "Art. 26",
+      "paragraph": "1",
+      "letter": "a",
+      "quote_lang": "de",
+      "quote": "Die Wiedereinbürgerung erfordert, dass die Bewerberin oder der Bewerber:\na. erfolgreich integriert ist, wenn sie oder er sich in der Schweiz aufhält;",
+      "translation": null,
+      "abbr": "BüG",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2016/404/de#art_26",
+      "as_of": "2023-09-01"
+     }
+    ],
+    "clarifying_question": null,
+    "cantonal_note": "Die kantonale Einbürgerungsbehörde prüft im Detail, welcher Sprachnachweis akzeptiert wird und ob kantonal zusätzliche Anforderungen bestehen.",
+    "follow_up_questions": [
+     "Welche Sprachzertifikate werden für den Einbürgerungstest akzeptiert?",
+     "Gibt es Unterschiede bei den Sprachkenntnissen zwischen ordentlicher und erleichterter Einbürgerung?",
+     "Was passiert, wenn ich die Sprachprüfung nicht bestehe?"
+    ],
+    "confidence": "high",
+    "out_of_scope": false,
+    "verification": {
+     "status": "passed",
+     "rounds": [
+      {
+       "citations": 5,
+       "quotes": 5,
+       "problems": [],
+       "check_s": 0.022,
+       "claims": null,
+       "claims_s": null,
+       "claims_usage": null
+      }
+     ],
+     "dropped": [],
+     "repairs": [],
+     "dropped_claims": []
+    },
+    "notice": "Unofficial. Not legal advice. Sources: Fedlex (fedlex.admin.ch).",
+    "screening": null
+   },
+   "raw_final": null,
+   "tool_trace": [
+    {
+     "name": "search_law",
+     "args": {
+      "query": "Sprachkenntnisse Einbürgerung Nachweis",
+      "lang": "de"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "141.01",
+      "article": "6",
+      "lang": "de"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "141.0",
+      "article": "12",
+      "lang": "de"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "141.0",
+      "article": "20",
+      "lang": "de"
+     }
+    },
+    {
+     "name": "search_law",
+     "args": {
+      "query": "Wiedereinbürgerung Sprachkenntnisse",
+      "lang": "de",
+      "sr": [
+       "141.0",
+       "141.01"
+      ]
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "141.0",
+      "article": "26",
+      "lang": "de"
+     }
+    }
+   ],
+   "rounds_log": [
+    {
+     "draft": "{\"language\": \"de\", \"answer_markdown\": \"Für die Einbürgerung in der Schweiz müssen Sie in einer Landessprache (Deutsch, Französisch, Italienisch oder Rätoromanisch) bestimmte Sprachkenntnisse nachweisen [1].\\n\\n**Erforderliche Niveaus:**\\n- Mündlich: mindestens **Niveau B1** des europäischen Referenzrahmens\\n- Schriftlich: mindestens **Niveau A2** des europäischen Referenzrahmens [2]\\n\\n**Nachweis-Möglichkeiten:**\\nDer Nachweis gilt als erbracht, wenn Sie [3]:\\n1. **Muttersprache:** eine Landessprache als Muttersprache sprechen und schreiben\\n2. **Schulbesuch:** während mindestens fünf Jahren die obligatorische Schule in einer Landessprache besucht haben\\n3. **Ausbildung:** eine Ausbildung auf Sekundarstufe II oder Tertiärstufe in einer Landessprache abgeschlossen haben\\n4. **Sprachtest:** einen Sprachnachweis besitzen, der diese Niveaus bescheinigt und auf einem anerkannten Sprachnachweisverfahren basiert\\n\\nDiese Anforderungen gelten für:\\n- **Ordentliche Einbürgerung** (Art. 12 BüG) [1]\\n- **Erleichterte Einbürgerung** (Art. 20 BüG) [4]\\n- **Wiedereinbürgerung** (Art. 26 BüG) [5], wenn Sie in der Schweiz leben\\n\\n**Ausnahmen:** Bei Behinderung, Krankheit oder anderen gewichtigen persönlichen Umständen wird Ihrem Fall angemessen Rechnung getragen [1].\\n\\n**Kantonale Regelungen:** Die Kantone können weitere Integrationskriterien vorsehen [1] und haben eigene Verfahren für Sprachtests.\", \"citations\": [{\"ref\": \"1\", \"sr\": \"141.0\", \"article\": \"Art. 12\", \"quote_lang\": \"de\", \"quote\": \"Eine erfolgreiche Integration zeigt sich insbesondere: … in der Fähigkeit, sich im Alltag in Wort und Schrift in einer Landessprache zu verständigen;\", \"paragraph\": \"1\", \"letter\": \"c\"}, {\"ref\": \"2\", \"sr\": \"141.01\", \"article\": \"Art. 6\", \"quote_lang\": \"de\", \"quote\": \"Die Bewerberin oder der Bewerber muss in einer Landessprache mündliche Sprachkompetenzen mindestens auf dem Referenzniveau B1 und schriftliche Sprachkompetenzen mindestens auf dem Referenzniveau A2 des in Europa allgemein anerkannten Referenzrahmens für Sprachen nachweisen.\", \"paragraph\": \"1\"}, {\"ref\": \"3\", \"sr\": \"141.01\", \"article\": \"Art. 6\", \"quote_lang\": \"de\", \"quote\": \"Der Nachweis für die Sprachkompetenzen nach Absatz 1 gilt als erbracht, wenn die Bewerberin oder der Bewerber: a. eine Landessprache als Muttersprache spricht und schreibt; b. während mindestens fünf Jahren die obligatorische Schule in einer Landessprache besucht hat; c. eine Ausbildung auf Sekundarstufe II oder Tertiärstufe in einer Landessprache abgeschlossen hat; oder d. über einen Sprachnachweis verfügt, der die Sprachkompetenzen nach Absatz 1 bescheinigt und der sich auf ein Sprachnachweisverfahren abstützt, das den allgemein anerkannten Qualitätsstandards für Sprachtests entspricht.\", \"paragraph\": \"2\"}, {\"ref\": \"4\", \"sr\": \"141.0\", \"article\": \"Art. 20\", \"quote_lang\": \"de\", \"quote\": \"Bei der erleichterten Einbürgerung müssen die Integrationskriterien nach Artikel 12 Absätze 1 und 2 erfüllt sein.\", \"paragraph\": \"1\"}, {\"ref\": \"5\", \"sr\": \"141.0\", \"article\": \"Art. 26\", \"quote_lang\": \"de\", \"quote\": \"Die Wiedereinbürgerung erfordert, dass die Bewerberin oder der Bewerber: a. erfolgreich integriert ist, wenn sie oder er sich in der Schweiz aufhält;\", \"paragraph\": \"1\", \"letter\": \"a\"}], \"confidence\": \"high\", \"out_of_scope\": false, \"cantonal_note\": \"Die kantonale Einbürgerungsbehörde prüft im Detail, welcher Sprachnachweis akzeptiert wird und ob kantonal zusätzliche Anforderungen bestehen.\", \"follow_up_questions\": [\"Welche Sprachzertifikate werden für den Einbürgerungstest akzeptiert?\", \"Gibt es Unterschiede bei den Sprachkenntnissen zwischen ordentlicher und erleichterter Einbürgerung?\", \"Was passiert, wenn ich die Sprachprüfung nicht bestehe?\"]}",
+     "round": {
+      "citations": 5,
+      "quotes": 5,
+      "problems": [],
+      "check_s": 0.022,
+      "claims": null,
+      "claims_s": null,
+      "claims_usage": null
+     },
+     "t_s": 85.526,
+     "usage": {
+      "model_calls": 7,
+      "prompt": 59079,
+      "cached": 4352,
+      "output": 1852,
+      "thoughts": 0
+     },
+     "tool_calls": 6
+    }
+   ],
+   "citation_checks": [
+    {
+     "ref": "1",
+     "sr": "141.0",
+     "article": "Art. 12",
+     "quote_lang": "de",
+     "eid": "art_12",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "2",
+     "sr": "141.01",
+     "article": "Art. 6",
+     "quote_lang": "de",
+     "eid": "art_6",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "3",
+     "sr": "141.01",
+     "article": "Art. 6",
+     "quote_lang": "de",
+     "eid": "art_6",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "4",
+     "sr": "141.0",
+     "article": "Art. 20",
+     "quote_lang": "de",
+     "eid": "art_20",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    },
+    {
+     "ref": "5",
+     "sr": "141.0",
+     "article": "Art. 26",
+     "quote_lang": "de",
+     "eid": "art_26",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    }
+   ],
+   "judgement": {
+    "claims": [
+     {
+      "claim": "Für die Einbürgerung in der Schweiz müssen Sie Sprachkenntnisse in einer Landessprache nachweisen.",
+      "refs": [
+       "1"
+      ],
+      "supported": "yes"
+     },
+     {
+      "claim": "Erforderlich sind mündliche Sprachkompetenzen von mindestens Niveau B1 und schriftliche Sprachkompetenzen von mindestens Niveau A2 des europäischen Referenzrahmens für Sprachen.",
+      "refs": [
+       "2"
+      ],
+      "supported": "yes"
+     },
+     {
+      "claim": "Der Nachweis der Sprachkompetenzen gilt als erbracht, wenn man eine Landessprache als Muttersprache spricht und schreibt.",
+      "refs": [
+       "3"
+      ],
+      "supported": "yes"
+     },
+     {
+      "claim": "Der Nachweis der Sprachkompetenzen gilt als erbracht, wenn man während mindestens fünf Jahren die obligatorische Schule in einer Landessprache besucht hat.",
+      "refs": [
+       "3"
+      ],
+      "supported": "yes"
+     },
+     {
+      "claim": "Der Nachweis der Sprachkompetenzen gilt als erbracht, wenn man eine Ausbildung auf Sekundarstufe II oder Tertiärstufe in einer Landessprache abgeschlossen hat.",
+      "refs": [
+       "3"
+      ],
+      "supported": "yes"
+     },
+     {
+      "claim": "Der Nachweis der Sprachkompetenzen gilt als erbracht, wenn man über einen Sprachnachweis verfügt, der diese Niveaus bescheinigt und sich auf ein anerkanntes Sprachnachweisverfahren stützt.",
+      "refs": [
+       "3"
+      ],
+      "supported": "yes"
+     },
+     {
+      "claim": "Die Integrationskriterien bezüglich Sprache gelten für die ordentliche Einbürgerung nach Art. 12 BüG.",
+      "refs": [
+       "1"
+      ],
+      "supported": "yes"
+     },
+     {
+      "claim": "Bei der erleichterten Einbürgerung nach Art. 20 BüG müssen die Integrationskriterien nach Art. 12 Abs. 1 und 2 BüG ebenfalls erfüllt sein.",
+      "refs": [
+       "4"
+      ],
+      "supported": "yes"
+     },
+     {
+      "claim": "Die Wiedereinbürgerung nach Art. 26 BüG erfordert bei Aufenthalt in der Schweiz eine erfolgreiche Integration.",
+      "refs": [
+       "5"
+      ],
+      "supported": "yes"
+     },
+     {
+      "claim": "Bei Behinderung, Krankheit oder anderen gewichtigen persönlichen Umständen wird der Situation angemessen Rechnung getragen.",
+      "refs": [
+       "1"
+      ],
+      "supported": "yes"
+     },
+     {
+      "claim": "Die Kantone können weitere Integrationskriterien vorsehen.",
+      "refs": [
+       "1"
+      ],
+      "supported": "yes"
+     },
+     {
+      "claim": "Die Kantone haben eigene Verfahren für Sprachtests.",
+      "refs": [],
+      "supported": "no"
+     },
+     {
+      "claim": "Die kantonale Einbürgerungsbehörde prüft im Detail, welcher Sprachnachweis akzeptiert wird und ob kantonal zusätzliche Anforderungen bestehen.",
+      "refs": [],
+      "supported": "no"
+     }
+    ],
+    "key_facts": [
+     {
+      "fact": "oral skills at least at level B1 and written skills at least at level A2 in a national language are required",
+      "verdict": "stated"
+     },
+     {
+      "fact": "the proof is considered provided if the person speaks and writes a national language as mother tongue, attended compulsory school in a national language for at least five years, completed upper-secondary or tertiary education in a national language, or has a recognised language certificate",
+      "verdict": "stated"
+     }
+    ],
+    "must_not": [
+     {
+      "item": "states B2 or C1 as the federal requirement",
+      "violated": false
+     }
+    ],
+    "behaviour_ok": true,
+    "behaviour_note": "The answer directly and comprehensively addresses the question about required language levels and forms of proof under federal law, citing the relevant provisions without unnecessary clarifying questions.",
+    "irrelevant_refs": []
+   }
+  },
+  {
+   "id": "residence-14",
+   "lang": "fr",
+   "category": "answerable",
+   "domain": "residence",
+   "error": null,
+   "status": "passed",
+   "rounds": 1,
+   "first_draft": {
+    "citations": 1,
+    "quotes": 1,
+    "problems": {}
+   },
+   "dropped": [],
+   "repairs": [],
+   "dropped_claims": [],
+   "claim_check": {
+    "rounds": 0,
+    "first": {},
+    "sent_back": 0
+   },
+   "route": null,
+   "routed_to": null,
+   "route_ok": null,
+   "citations": 1,
+   "quotes": 1,
+   "verbatim": 1,
+   "hallucinated": 0,
+   "not_in_force": 0,
+   "unchecked": 0,
+   "required_recall": 1.0,
+   "precision_expected": 1.0,
+   "behaviour_det": true,
+   "contact_details": [],
+   "detected_lang": "fr",
+   "lang_ok": true,
+   "tool_calls": 6,
+   "tools": {
+    "search_law": 3,
+    "get_article": 3
+   },
+   "usage": {
+    "model_calls": 7,
+    "prompt": 63378,
+    "cached": 21120,
+    "output": 1341,
+    "thoughts": 0
+   },
+   "router_usage": {
+    "model_calls": 0,
+    "prompt": 0,
+    "cached": 0,
+    "output": 0,
+    "thoughts": 0
+   },
+   "claims_usage": {
+    "model_calls": 0,
+    "prompt": 0,
+    "cached": 0,
+    "output": 0,
+    "thoughts": 0
+   },
+   "latency_s": 55.91,
+   "cost_usd": 0.0271,
+   "groundedness": 0.8,
+   "key_facts": 0.6666666666666666,
+   "must_not_violations": 0,
+   "behaviour_judge": true,
+   "behaviour_ok": true,
+   "precision_judged": 1.0,
+   "answer": {
+    "language": "fr",
+    "answer_markdown": "**Oui, mais avec une nuance importante :** selon la loi fédérale sur la nationalité, les années passées en Suisse entre 8 et 18 ans (et non entre 10 et 16 ans) comptent double pour le calcul de la durée de séjour requise pour la naturalisation ordinaire [1].\n\n**Conditions principales :**\n- Ce double comptage s'applique uniquement au calcul des 10 ans de séjour total requis pour la naturalisation ordinaire [1].\n- Le séjour effectif doit cependant avoir duré au moins 6 ans [1].\n- Vous devez être titulaire d'une autorisation d'établissement (permis C) au moment de la demande [1].\n\n**Exemple concret :** Si vous avez vécu en Suisse entre 10 et 16 ans (6 ans), ces années comptent pour 12 ans dans le calcul de la durée de séjour totale. Vous devrez donc démontrer un séjour effectif total de 6 ans, et les années entre 8 et 18 ans seront doublées pour atteindre le total requis de 10 ans [1].",
+    "citations": [
+     {
+      "ref": "1",
+      "sr": "141.0",
+      "article": "Art. 9",
+      "paragraph": "2",
+      "letter": null,
+      "quote_lang": "fr",
+      "quote": "Dans le calcul de la durée de séjour prévue à l’al. 1, let. b, le temps que le requérant a passé en Suisse entre l’âge de huit et de 18 ans compte double. Le séjour effectif doit cependant avoir duré six ans au moins.",
+      "translation": null,
+      "abbr": "LN",
+      "url": "https://www.fedlex.admin.ch/eli/cc/2016/404/fr#art_9",
+      "as_of": "2023-09-01"
+     }
+    ],
+    "clarifying_question": null,
+    "cantonal_note": "Pour les demandes de naturalisation, vous devez également remplir les conditions cantonales et communales de durée de séjour (2 à 5 ans selon le canton). Adressez-vous à l'autorité cantonale compétente pour la naturalisation pour connaître les exigences spécifiques de votre canton.",
+    "follow_up_questions": [
+     "Quelle est la différence entre naturalisation ordinaire et naturalisation facilitée ?",
+     "Comment obtenir une autorisation d'établissement (permis C) ?",
+     "Les années entre 8 et 18 ans comptent-elles aussi double pour la naturalisation facilitée ?"
+    ],
+    "confidence": "high",
+    "out_of_scope": false,
+    "verification": {
+     "status": "passed",
+     "rounds": [
+      {
+       "citations": 1,
+       "quotes": 1,
+       "problems": [],
+       "check_s": 0.01,
+       "claims": null,
+       "claims_s": null,
+       "claims_usage": null
+      }
+     ],
+     "dropped": [],
+     "repairs": [],
+     "dropped_claims": []
+    },
+    "notice": "Unofficial. Not legal advice. Sources: Fedlex (fedlex.admin.ch).",
+    "screening": null
+   },
+   "raw_final": null,
+   "tool_trace": [
+    {
+     "name": "search_law",
+     "args": {
+      "query": "années entre 10 et 16 ans naturalisation double comptage résidence",
+      "lang": "fr"
+     }
+    },
+    {
+     "name": "search_law",
+     "args": {
+      "query": "calcul années résidence double naturalisation jeunesse",
+      "lang": "fr"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "141.0",
+      "article": "33",
+      "lang": "fr"
+     }
+    },
+    {
+     "name": "search_law",
+     "args": {
+      "query": "double durée séjour jeunesse 10 à 16 ans naturalisation",
+      "lang": "fr"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "141.0",
+      "article": "30",
+      "lang": "fr"
+     }
+    },
+    {
+     "name": "get_article",
+     "args": {
+      "sr": "141.0",
+      "article": "9",
+      "lang": "fr"
+     }
+    }
+   ],
+   "rounds_log": [
+    {
+     "draft": "{\"language\": \"fr\", \"answer_markdown\": \"**Oui, mais avec une nuance importante :** selon la loi fédérale sur la nationalité, les années passées en Suisse entre 8 et 18 ans (et non entre 10 et 16 ans) comptent double pour le calcul de la durée de séjour requise pour la naturalisation ordinaire [1].\\n\\n**Conditions principales :**\\n- Ce double comptage s'applique uniquement au calcul des 10 ans de séjour total requis pour la naturalisation ordinaire [1].\\n- Le séjour effectif doit cependant avoir duré au moins 6 ans [1].\\n- Vous devez être titulaire d'une autorisation d'établissement (permis C) au moment de la demande [1].\\n\\n**Exemple concret :** Si vous avez vécu en Suisse entre 10 et 16 ans (6 ans), ces années comptent pour 12 ans dans le calcul de la durée de séjour totale. Vous devrez donc démontrer un séjour effectif total de 6 ans, et les années entre 8 et 18 ans seront doublées pour atteindre le total requis de 10 ans [1].\", \"citations\": [{\"ref\": \"1\", \"sr\": \"141.0\", \"article\": \"Art. 9\", \"paragraph\": \"2\", \"quote_lang\": \"fr\", \"quote\": \"Dans le calcul de la durée de séjour prévue à l'al. 1, let. b, le temps que le requérant a passé en Suisse entre l'âge de huit et de 18 ans compte double. Le séjour effectif doit cependant avoir duré six ans au moins.\"}], \"confidence\": \"high\", \"out_of_scope\": false, \"cantonal_note\": \"Pour les demandes de naturalisation, vous devez également remplir les conditions cantonales et communales de durée de séjour (2 à 5 ans selon le canton). Adressez-vous à l'autorité cantonale compétente pour la naturalisation pour connaître les exigences spécifiques de votre canton.\", \"follow_up_questions\": [\"Quelle est la différence entre naturalisation ordinaire et naturalisation facilitée ?\", \"Comment obtenir une autorisation d'établissement (permis C) ?\", \"Les années entre 8 et 18 ans comptent-elles aussi double pour la naturalisation facilitée ?\"]}",
+     "round": {
+      "citations": 1,
+      "quotes": 1,
+      "problems": [],
+      "check_s": 0.01,
+      "claims": null,
+      "claims_s": null,
+      "claims_usage": null
+     },
+     "t_s": 55.904,
+     "usage": {
+      "model_calls": 7,
+      "prompt": 63378,
+      "cached": 21120,
+      "output": 1341,
+      "thoughts": 0
+     },
+     "tool_calls": 6
+    }
+   ],
+   "citation_checks": [
+    {
+     "ref": "1",
+     "sr": "141.0",
+     "article": "Art. 9",
+     "quote_lang": "fr",
+     "eid": "art_9",
+     "exists": true,
+     "in_force": true,
+     "has_quote": true,
+     "verbatim": true,
+     "text": null
+    }
+   ],
+   "judgement": {
+    "claims": [
+     {
+      "claim": "Selon la loi fédérale sur la nationalité, les années passées en Suisse entre 8 et 18 ans comptent double pour le calcul de la durée de séjour requise pour la naturalisation ordinaire.",
+      "refs": [
+       "1"
+      ],
+      "supported": "yes"
+     },
+     {
+      "claim": "Ce double comptage s'applique au calcul des 10 ans de séjour total requis pour la naturalisation ordinaire.",
+      "refs": [
+       "1"
+      ],
+      "supported": "yes"
+     },
+     {
+      "claim": "Le séjour effectif doit avoir duré au moins 6 ans.",
+      "refs": [
+       "1"
+      ],
+      "supported": "yes"
+     },
+     {
+      "claim": "Le requérant doit être titulaire d'une autorisation d'établissement (permis C) au moment de la demande.",
+      "refs": [
+       "1"
+      ],
+      "supported": "yes"
+     },
+     {
+      "claim": "Pour les demandes de naturalisation, le requérant doit également remplir les conditions cantonales et communales de durée de séjour (2 à 5 ans selon le canton).",
+      "refs": [],
+      "supported": "no"
+     }
+    ],
+    "key_facts": [
+     {
+      "fact": "time spent in Switzerland between the 8th and 18th birthdays counts double for the residence requirement",
+      "verdict": "stated"
+     },
+     {
+      "fact": "the actual residence must still be at least six years",
+      "verdict": "stated"
+     },
+     {
+      "fact": "the ordinary requirement is ten years of residence in total, three of them in the five years before the application, and a C permit at the time of application",
+      "verdict": "missing"
+     }
+    ],
+    "must_not": [
+     {
+      "item": "says the youth years count triple or do not count",
+      "violated": false
+     }
+    ],
+    "behaviour_ok": true,
+    "behaviour_note": "The assistant answered the question directly, supported its claims with legal citations, and did not ask unnecessary clarifying questions.",
+    "irrelevant_refs": []
+   }
+  }
+ ],
+ "meta": {
+  "dataset": {
+   "spec": "golden",
+   "files": [
+    "evals/datasets/golden.jsonl"
+   ],
+   "sha": "283079d403c1",
+   "verified": true,
+   "verified_cases": 2,
+   "verified_by": [
+    "claude-opus-5-5"
+   ]
+  },
+  "case_timeout_s": 600.0,
+  "resumed_traces": 0,
+  "selection": {
+   "smoke": false,
+   "ids": "residence-13,residence-14",
+   "limit": null,
+   "category": null
+  },
+  "profile": {
+   "name": "default",
+   "agent": {
+    "model": "deepseek-ai/deepseek-v3.2-maas",
+    "location": "global",
+    "thinking": null
+   },
+   "judge": {
+    "model": "gemini-3.8-flash",
+    "location": "eu",
+    "thinking": null
+   },
+   "embedding": {
+    "model": "gemini-embedding-2",
+    "location": "eu",
+    "input_format": "instruction"
+   },
+   "memory": {
+    "model": "gemini-3.8-flash",
+    "location": "global"
+   },
+   "router": {
+    "model": "gemini-3.8-flash",
+    "location": "eu",
+    "thinking": "low"
+   },
+   "verifier": {
+    "model": "gemini-3.8-flash",
+    "location": "eu",
+    "thinking": "low"
+   }
+  },
+  "agent": {
+   "variant": "v1",
+   "claim_check": false,
+   "without_tools": [],
+   "router": null,
+   "verifier": null,
+   "v2_prompts_sha": null,
+   "claim_prompt_sha": null,
+   "screen": {
+    "template": "projects/random-projects-509513/locations/eu/templates/swiss-nav-input",
+    "mode": "block",
+    "min_level": "medium"
+   }
+  },
+  "system_prompt_sha": "604f3a1f7ee4",
+  "judge_prompt_sha": "d83d68626291",
+  "judged": true,
+  "adk": "2.12.0",
+  "output_mode": "set_model_response tool",
+  "target": {
+   "kind": "local",
+   "deployed": null
+  },
+  "mcp": {
+   "url": "local (started by the harness)",
+   "health": {
+    "status": "ok",
+    "as_of": "2026-10-15",
+    "index_built": "2026-10-15T10:38:41+00:00",
+    "index_sha": "c756c89",
+    "records": 18396,
+    "chunks": 17310,
+    "embedding": {
+     "model": "gemini-embedding-2",
+     "location": "eu",
+     "dims": 768
+    },
+    "uptime_s": 142.0
+   }
+  },
+  "pricing": {
+   "as_of": "2026-10-15",
+   "usd_to_chf": 0.82
+  },
+  "judge_usage": {
+   "model_calls": 2,
+   "prompt": 5623,
+   "cached": 0,
+   "output": 1482,
+   "thoughts": 1823
+  }
+ }
+}

@@ -18,7 +18,7 @@ How to read the tables:
 
 Earlier experiments: E4 retrieval (M2, ADR-016,
 `evals/reports/2026-10-15-c756c89-e4-retrieval.md`); E8 memory (M7, ADR-029).
-M10 (E7, Model Armor) is at the end.
+M9 (E1 models, E3, E5) follows M8; M10 (E7, Model Armor) is at the end.
 
 ## M8: multi-agent (E2) and verifier (E6), 2026-10-19
 
@@ -177,6 +177,186 @@ make eval-compare ARGS="--report v1=A.json --report v2=B.json [--study v1=SA.jso
 Reports: `evals/reports/2026-10-19-bd7595a-e2-{v1,v2}-claims-merged-drafts.json` (recorded runs, merged with
 their re-runs), `evals/reports/2026-10-19-bd7595a-e2-{v1,v2}-none.json`, `…-bd7595a-e2-v1-deterministic.json` and `…-51d2a7a-e2-v2-deterministic.json` (derived arms),
 `evals/reports/2026-10-19-bd7595a-e2-*-qwen.json` (Qwen3 grades of golden).
+
+## M9: model comparison (E1), tree navigation (E3), languages (E5), 2026-10-20
+
+Setup: `navigator_v1` with the served verifier (deterministic checks, no claim
+checker) and the Model Armor input screen, golden 150. Each arm swaps only the
+agent model (`AGENT_MODEL`); everything else is the default profile. Gemini
+models through google-genai; open models on Model as a Service through LiteLLM
+(`set_model_response` for the answer, AGENTS.md §6). Judge
+`gemini-3.8-flash` (run on `eu` for most arms: `global` answered six 504s in a
+row and ended the first grading passes; same model) and Qwen3 235B as the
+cross-family judge. Decision and discussion: **ADR-035**.
+
+Caveats: Gemini on `global` was degraded during the night of 2026-10-19/20
+(Flash: a bare "Say OK" took 12 s on `global`, 1.7 s on `eu`; 50 of 150 Flash
+cases failed with 429/504/499). **Flash was therefore run again in full on
+`eu`**, the served endpoint; every other arm ran on `global` (Pro preview and
+the open models are only served there). Errored cases of the other arms were
+re-run once and merged (Pro 1, argon 17, DeepSeek 2, Qwen 23, mostly 429s and
+timeouts); what still failed counts as an error. Latencies compare endpoints as
+well as models.
+
+Candidates: gpt-oss-120b on MaaS returns reasoning without content or a tool
+call after its first tool result (ADK `MODEL_RETURNED_NO_CONTENT`, 3/3 probe
+cases, at any reasoning effort) and is out; GLM-5.2 works but costs CHF 0.075
+per answer on the probe and was left out; Claude has no quota (429, ADR-026).
+Apertus: below.
+
+### E1: models (golden, Flash judge)
+
+| config | n | errors | quote fidelity | halluc. | groundedness | key facts | must_not | behaviour | req. recall | CHF/answer | p50 / p95 s | model calls |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| flash | 150 | 0 | 99.6% (98.8–100.0) | 0 | 81.9 (77.9–85.4) | 95.4 (93.1–97.6) | 0 | 97.3 (94.7–99.3) | 96.5 (93.1–99.2) | 0.0389 | 39 / 109 | 7.4 |
+| lite | 150 | 0 | 99.3% (97.7–100.0) | 0 | 81.0 (76.6–85.4) | 82.3 (77.8–86.7) | 3 | 89.3 (84.0–94.0) | 90.5 (85.6–94.8) | 0.0052 | 5 / 10 | 4.0 |
+| pro | 150 | 0 | 98.6% (96.5–100.0) | 0 | 76.1 (71.3–80.6) | 93.9 (91.1–96.4) | 0 | 96.7 (93.3–99.3) | 96.1 (92.5–98.9) | 0.0714 | 51 / 134 | 3.9 |
+| argon | 150 | 5 | 100.0% (100.0–100.0) | 0 | 91.5 (88.5–94.1) | 97.4 (94.8–99.3) | 0 | 93.3 (89.3–97.3) | 97.1 (94.2–99.6) | 0.0493 | 46 / 147 | 5.1 |
+| deepseek | 150 | 0 | 100.0% (100.0–100.0) | 0 | 77.7 (73.9–81.1) | 82.9 (78.0–87.8) | 7 | 78.7 (72.0–84.7) | 88.0 (82.4–93.2) | 0.0187 | 85 / 169 | 6.8 |
+| qwen | 150 | 5 | 100.0% (100.0–100.0) | 0 | 70.9 (66.5–75.1) | 71.5 (65.9–76.9) | 6 | 85.3 (79.3–91.3) | 87.8 (82.0–93.0) | 0.0199 | 31 / 78 | 8.5 |
+
+Paired differences to **flash** (mean, 95% CI):
+
+| config | Δ groundedness | Δ key facts | Δ behaviour | Δ must_not | Δ CHF/answer | Δ latency s |
+|---|---|---|---|---|---|---|
+| lite | -1.8 (-6.5…+2.7), n=142 | -13.1 (-17.4…-8.7) | -8.0 (-12.7…-3.3) | +0.0 (+0.0…+0.0) | -0.0338 (-0.0389…-0.0296) | -39.9 (-45.3…-35.0) |
+| pro | -7.3 (-11.3…-3.5), n=140 | -1.4 (-4.4…+1.4) | -0.7 (-4.0…+2.7) | +0.0 (+0.0…+0.0) | +0.0324 (+0.0252…+0.0406) | +15.8 (+7.8…+25.3) |
+| argon | +7.4 (+3.7…+10.9), n=137 | +2.1 (-0.8…+4.9) | -4.0 (-8.0…+0.0) | +0.0 (+0.0…+0.0) | +0.0135 (+0.0094…+0.0176) | +17.7 (+8.3…+28.9) |
+| deepseek | -4.7 (-9.6…-0.1), n=137 | -12.5 (-17.8…-7.4) | -18.7 (-25.3…-12.0) | +0.0 (+0.0…+0.1) | -0.0203 (-0.0257…-0.0153) | +46.6 (+38.6…+54.8) |
+| qwen | -13.3 (-17.8…-8.9), n=134 | -23.7 (-29.5…-18.2) | -12.0 (-17.3…-6.7) | +0.0 (+0.0…+0.1) | -0.0191 (-0.0262…-0.0108) | -9.0 (-15.6…-2.5) |
+
+### E1: the same answers, Qwen3 judge
+
+| config | n | errors | quote fidelity | halluc. | groundedness | key facts | must_not | behaviour | req. recall | CHF/answer | p50 / p95 s | model calls |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| flash | 150 | 0 | 99.6% (98.8–100.0) | 0 | 91.9 (89.7–93.8) | 94.8 (91.7–97.4) | 3 | 96.7 (93.3–99.3) | 96.5 (93.1–99.2) | 0.0389 | 39 / 109 | 7.4 |
+| lite | 150 | 0 | 99.3% (97.7–100.0) | 0 | 88.4 (85.3–91.4) | 85.9 (81.3–90.4) | 5 | 90.7 (85.3–94.7) | 90.5 (85.6–94.8) | 0.0052 | 5 / 10 | 4.0 |
+| pro | 150 | 0 | 98.6% (96.5–100.0) | 0 | 87.3 (84.2–90.2) | 94.8 (92.1–97.1) | 1 | 95.3 (91.3–98.7) | 96.1 (92.5–98.9) | 0.0714 | 51 / 134 | 3.9 |
+| argon | 150 | 5 | 100.0% (100.0–100.0) | 0 | 96.7 (95.5–97.8) | 97.6 (95.2–99.4) | 1 | 92.7 (88.0–96.7) | 97.1 (94.2–99.6) | 0.0493 | 46 / 147 | 5.1 |
+| deepseek | 150 | 0 | 100.0% (100.0–100.0) | 0 | 89.0 (86.4–91.4) | 86.3 (81.2–91.0) | 4 | 79.3 (72.7–85.3) | 88.0 (82.4–93.2) | 0.0187 | 85 / 169 | 6.8 |
+| qwen | 150 | 5 | 100.0% (100.0–100.0) | 0 | 82.8 (79.6–86.0) | 73.9 (68.4–79.3) | 14 | 80.7 (74.0–86.7) | 87.8 (82.0–93.0) | 0.0199 | 31 / 78 | 8.5 |
+
+Paired differences to **flash** (mean, 95% CI):
+
+| config | Δ groundedness | Δ key facts | Δ behaviour | Δ must_not | Δ CHF/answer | Δ latency s |
+|---|---|---|---|---|---|---|
+| lite | -3.7 (-7.1…-0.2), n=135 | -8.9 (-13.6…-4.3) | -6.0 (-10.0…-2.0) | +0.0 (+0.0…+0.0) | -0.0338 (-0.0389…-0.0296) | -39.9 (-45.3…-35.0) |
+| pro | -4.4 (-7.1…-1.9), n=132 | -0.0 (-3.0…+3.1) | -1.3 (-5.3…+2.0) | -0.0 (-0.0…+0.0) | +0.0324 (+0.0252…+0.0406) | +15.8 (+7.8…+25.3) |
+| argon | +4.8 (+2.6…+7.1), n=132 | +2.2 (-0.9…+5.4) | -4.0 (-8.0…+0.0) | -0.0 (-0.0…+0.0) | +0.0135 (+0.0094…+0.0176) | +17.7 (+8.3…+28.9) |
+| deepseek | -2.7 (-5.9…+0.3), n=130 | -8.5 (-13.8…-3.6) | -17.3 (-24.0…-10.7) | +0.0 (-0.0…+0.0) | -0.0203 (-0.0257…-0.0153) | +46.6 (+38.6…+54.8) |
+| qwen | -9.1 (-12.6…-5.7), n=130 | -20.7 (-26.4…-15.3) | -16.0 (-22.7…-10.0) | +0.1 (+0.0…+0.1) | -0.0191 (-0.0262…-0.0108) | -9.0 (-15.6…-2.5) |
+
+Per category (behaviour, rule + Flash judge, % of n):
+
+| model | answerable (106) | clarification (6) | cantonal (15) | out of scope (13) | adversarial (10) |
+|---|---|---|---|---|---|
+| flash | 99 | 67 | 100 | 100 | 90 |
+| lite | 98 | 33 | 87 | 54 | 80 |
+| pro | 97 | 100 | 93 | 100 | 90 |
+| argon | 95 | 83 | 87 | 92 | 90 |
+| deepseek | 76 | 100 | 93 | 77 | 70 |
+| qwen | 94 | 0 | 87 | 46 | 90 |
+
+Verifier per model (first drafts → final): Flash sent back 8 of 150 drafts
+(quotes and paragraphs); Flash-Lite 20 (17 misquotes, 6 answers degraded);
+Pro 3; argon 27 (47 pinpoints: right article, wrong paragraph; 2 degraded);
+DeepSeek 47 (37 `[n]` markers without a citation, 23 misquotes; 9 degraded);
+Qwen 82 (57 drafts that were not the answer format; 13 degraded). Every final
+quote that survived is verbatim and no arm cites a non-existent article: the
+deterministic verifier holds the line for every model, at the price of
+redrafts.
+
+What the numbers say:
+- **gemini-4-argon is the only model better grounded than Flash, under both
+  judges:** +7.4 (CI +3.7…+10.9) with the Flash judge, +4.8 (+2.6…+7.1) with
+  Qwen; key facts +2.1/+2.2 (noise), must_not 0. It cites more (5.3 vs 3.7
+  citations per answer) and reads more articles. Its five errors are loops:
+  89-215 `get_article` calls (~100 model calls) until the 600 s case timeout
+  (two of them on the FZA annex, #6). Normal answers take at most 23 model
+  calls. Re-run, all five answered in 5-16 calls; the loop is intermittent.
+  Cost now CHF 0.049 per answer (+0.014), **CHF 0.099 from 2026-12-01** when
+  its introductory price ends (Flash: 0.039 now, 0.078 from 2027-01-01).
+- **Pro preview is less grounded than Flash** (−7.3 / −4.4) at 1.8× the cost:
+  it answers from fewer articles (3.4 tool calls vs 6.4), so more of its claims
+  rest on text it did not cite. Behaviour is as good as Flash's.
+- **Flash-Lite** is 7.5× cheaper and 8× faster with the same groundedness under
+  the Flash judge (−1.8, noise; −3.7 under Qwen), but it misses key facts
+  (−13.1 / −8.9) and mishandles clarification and out-of-scope questions.
+- **The open models** are cheaper (CHF 0.019-0.020) but clearly worse at the
+  job: DeepSeek V3.2 −4.7/−2.7 groundedness, −12.5 key facts, behaviour −18.7
+  (it answers where it should ask, refuse or point elsewhere), 7 must_not; Qwen3
+  235B −13.3/−9.1 groundedness, −23.7 key facts, never asks a clarifying
+  question. Qwen scores last under its own family's judge too.
+
+### argon's loops and the call budget
+
+argon's five E1 errors are loops (89-215 `get_article` calls, ~100 model
+calls, until the 600 s case timeout); re-run, the same five answered in 5-16
+calls. Since then the agent has a budget of 40 model calls per turn, after
+which it must answer from what it fetched (`agents/navigator/budget.py`,
+ADR-035). The 20 smoke cases on `eu` with the budget (2026-10-20 03:00, with
+`eu` degraded too: a bare call took 3.9 s):
+
+| run | n | errors | groundedness | behaviour | CHF/answer | p50 / p95 s |
+|---|---|---|---|---|---|---|
+| argon, `eu` | 20 | 3 | 95.4 | 85.0 | 0.0784 | 60 / 546 |
+| Flash + claim checker, `eu` | 20 | 5 | 90.7 | 75.0 | 0.0526 | 271 / 556 |
+
+argon looped twice in 20: social-04 reached the budget (87 `get_article`
+calls) and answered; housing-05 was at 33 calls when the case timed out. The
+other errors are the endpoint (499/504/429 and slow calls). The claim
+checker's latency question (ADR-034) stays open: this was not a healthy
+endpoint either.
+
+### E3: does tree navigation help?
+
+The agent can call `get_toc`, but the prompt never asks for it. How often each
+model browses an act's structure on golden: Flash 11/150 cases, Flash-Lite 1,
+Pro 1, argon 6 (of 88 in the first run), DeepSeek 2 (of 84), **Qwen 44/150**.
+
+Flash without `get_toc` on the 11 cases where it used it (paired; the other
+139 cases never called it, so the ablation cannot change them except by
+chance): groundedness −2.8 (−12.5…+6.3, n=11), key facts and behaviour
+unchanged; it finds the same articles through `search_law`.
+
+### E5: the same questions in four languages (Flash, `eu`)
+
+40 golden answerable questions, 10 per original language, translated into the
+other three (`crosslingual.jsonl`; Claude's translations, not verified, so not
+a headline number); the original-language answers are the E1 Flash run.
+
+40 questions, each answered in all four languages.
+
+| language | n | errors | groundedness | key facts | behaviour | req. recall | language | quotes in |
+|---|---|---|---|---|---|---|---|---|
+| DE | 40 | 0 | 86.1 (81.5–90.7) | 97.5 (95.0–100.0) | 100.0 (100.0–100.0) | 97.5 (92.5–100.0) | 100.0 (100.0–100.0) | de 100% |
+| EN | 40 | 0 | 86.8 (82.1–91.1) | 96.2 (91.2–100.0) | 100.0 (100.0–100.0) | 97.5 (92.5–100.0) | 100.0 (100.0–100.0) | de 100% |
+| FR | 40 | 0 | 87.7 (82.9–91.9) | 96.2 (92.5–99.2) | 100.0 (100.0–100.0) | 96.2 (90.0–100.0) | 100.0 (100.0–100.0) | fr 100% |
+| IT | 40 | 0 | 84.8 (78.2–90.4) | 92.9 (85.4–98.3) | 97.5 (92.5–100.0) | 95.0 (87.5–100.0) | 100.0 (100.0–100.0) | it 100% |
+
+Paired differences to **DE** (mean, 95% CI):
+
+| language | Δ groundedness | Δ key facts | Δ behaviour | Δ req. recall | Δ language |
+|---|---|---|---|---|---|
+| EN | +0.7 (-3.6…+4.9) | -1.2 (-5.0…+1.7) | +0.0 (+0.0…+0.0) | +0.0 (+0.0…+0.0) | +0.0 (+0.0…+0.0) |
+| FR | +1.5 (-2.7…+5.5) | -1.2 (-4.6…+1.7) | +0.0 (+0.0…+0.0) | -1.2 (-3.8…+0.0) | +0.0 (+0.0…+0.0) |
+| IT | -1.4 (-8.0…+3.2) | -4.6 (-11.7…+0.8) | -2.5 (-7.5…+0.0) | -2.5 (-7.5…+0.0) | +0.0 (+0.0…+0.0) |
+
+Original wording vs translations (paired by question, mean, 95% CI):
+
+| metric | original | translations | Δ translations − original |
+|---|---|---|---|
+| groundedness | 86.7 | 86.2 | -0.4 (-4.2…+3.1) |
+| key facts | 95.8 | 95.7 | -0.1 (-3.8…+3.3) |
+| behaviour | 100.0 | 99.2 | -0.8 (-2.5…+0.0) |
+| req. recall | 97.5 | 96.2 | -1.2 (-3.3…+0.0) |
+| language | 100.0 | 100.0 | +0.0 (+0.0…+0.0) |
+
+No language effect beyond noise. **English answers quote the German text**
+(Fedlex has no English version of most acts) and score the same as German
+ones. Italian is lowest on key facts (−4.6, CI −11.7…+0.8). Answers to the
+translations score like the originals, so the translations did not distort the
+questions.
 
 ## M10: Model Armor input screen (E7), 2026-10-19
 

@@ -64,3 +64,16 @@ models:
   openai/gpt-oss-120b-maas:
     input: 0.09
     output: 0.36
+# Self-hosted Apertus (M9, E1): Cloud Run GPU in europe-west4, instance-based billing, no
+# zonal redundancy; USD per hour from the Cloud Billing catalog (service 152E-C115-5142),
+# read 2026-10-20. Not token-priced: cost per answer = service uptime x hourly / answers.
+cloud_run_gpu:
+  nvidia-l4:
+    gpu: 0.672
+    vcpu: 0.0648
+    gib: 0.0072
+    note: infra/apertus_eval.sh runs 8 vCPU + 32 GiB, so USD 1.42/h
+  nvidia-rtx-pro-6000:
+    gpu: 1.315
+    vcpu: 0.0648
+    gib: 0.0072
