@@ -216,7 +216,7 @@ each experiment run.
 | Agent / orchestrator | `gemini-3.8-flash` (`eu`) | `gemini-3.5-flash-lite` (cheap), `gemini-3.1-pro-preview`, `gemini-4-argon` (GA); open models on MaaS (`deepseek-ai/deepseek-v3.2-maas`, `qwen/qwen3-235b-a22b-instruct-2507-maas`, `zai-org/glm-5.2-maas`; `global`) via LiteLLM (M9, E1) |
 | LLM judge (evals) | `gemini-3.8-flash` (`global`; ADR-023, ADR-026) | cross-family check `qwen/qwen3-235b-a22b-instruct-2507-maas` (`global`, MaaS); `gemini-3.1-pro-preview` |
 | Embeddings | `gemini-embedding-2` (`eu`) | `gemini-embedding-001` |
-| Sovereign answerer (M9) | `swiss-ai/Apertus-v1.5-8B` via LiteLLM → vLLM | 70B is out of budget (needs 4 GPUs) |
+| Sovereign answerer (M9) | `swiss-ai/Apertus-v1.5-8B` via LiteLLM → vLLM (E1: not viable as the agent, ADR-035) | 70B is out of budget (needs 4 GPUs) |
 
 ADK's own examples use `gemini-flash-latest`. Pin concrete IDs instead so eval
 results are reproducible, and record them in each eval report.
@@ -242,11 +242,18 @@ Thinking mode (`--reasoning-parser apertus`) can't call tools. Weights are
 Apache-2.0, but access requires accepting an Acceptable Use Policy on Hugging
 Face. Serving needs the **swiss-ai vLLM fork** (image
 `ghcr.io/swiss-ai/vllm_apertus_1.5_release`). Stock vLLM may not work yet.
-Try two configurations in M9: (a) Apertus as the full agent with tools, and
-(b) Apertus as the final answer writer over context that Gemini retrieved.
 **M9 serving (ADR-035):** `make eval-apertus` (Cloud Run L4 in europe-west4,
 online FP8 weights so a 32k context fits, the fork image through an Artifact
 Registry remote repo of ghcr.io; GCP.md §4).
+**Measured in E1 as the full agent with tools:** not viable. It calls ~2 tools
+per answer (Flash 6.4) and fetches an article in 69/150 cases; 144/150 first
+drafts don't match the answer schema (unconstrained, 0/9 valid). The
+verifier's redraft after an unparseable draft therefore offers only a forced
+`set_model_response` (vLLM decodes it against the schema): 149/150 then end
+with a valid answer, but 117 are `degraded` (citations to articles written as
+"Art. 273 OR", misquotes, wrong paragraphs). Groundedness 14 (Flash 82).
+Apertus as the answer writer over context that Gemini retrieved was not run
+(PLAN M9 follow-up).
 
 ## 7. Observability
 

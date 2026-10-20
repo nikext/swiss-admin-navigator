@@ -202,7 +202,7 @@ Candidates: gpt-oss-120b on MaaS returns reasoning without content or a tool
 call after its first tool result (ADK `MODEL_RETURNED_NO_CONTENT`, 3/3 probe
 cases, at any reasoning effort) and is out; GLM-5.2 works but costs CHF 0.075
 per answer on the probe and was left out; Claude has no quota (429, ADR-026).
-Apertus: below.
+Apertus (self-hosted): below.
 
 ### E1: models (golden, Flash judge)
 
@@ -214,6 +214,7 @@ Apertus: below.
 | argon | 150 | 5 | 100.0% (100.0–100.0) | 0 | 91.5 (88.5–94.1) | 97.4 (94.8–99.3) | 0 | 93.3 (89.3–97.3) | 97.1 (94.2–99.6) | 0.0493 | 46 / 147 | 5.1 |
 | deepseek | 150 | 0 | 100.0% (100.0–100.0) | 0 | 77.7 (73.9–81.1) | 82.9 (78.0–87.8) | 7 | 78.7 (72.0–84.7) | 88.0 (82.4–93.2) | 0.0187 | 85 / 169 | 6.8 |
 | qwen | 150 | 5 | 100.0% (100.0–100.0) | 0 | 70.9 (66.5–75.1) | 71.5 (65.9–76.9) | 6 | 85.3 (79.3–91.3) | 87.8 (82.0–93.0) | 0.0199 | 31 / 78 | 8.5 |
+| apertus | 150 | 1 | 100.0% (100.0–100.0) | 0 | 14.0 (10.2–18.1) | 34.3 (28.0–40.7) | 27 | 26.7 (20.0–34.0) | 38.0 (29.8–46.4) | 0.012 (GPU) | 67 / 167 | 3.9 |
 
 Paired differences to **flash** (mean, 95% CI):
 
@@ -224,6 +225,7 @@ Paired differences to **flash** (mean, 95% CI):
 | argon | +7.4 (+3.7…+10.9), n=137 | +2.1 (-0.8…+4.9) | -4.0 (-8.0…+0.0) | +0.0 (+0.0…+0.0) | +0.0135 (+0.0094…+0.0176) | +17.7 (+8.3…+28.9) |
 | deepseek | -4.7 (-9.6…-0.1), n=137 | -12.5 (-17.8…-7.4) | -18.7 (-25.3…-12.0) | +0.0 (+0.0…+0.1) | -0.0203 (-0.0257…-0.0153) | +46.6 (+38.6…+54.8) |
 | qwen | -13.3 (-17.8…-8.9), n=134 | -23.7 (-29.5…-18.2) | -12.0 (-17.3…-6.7) | +0.0 (+0.0…+0.1) | -0.0191 (-0.0262…-0.0108) | -9.0 (-15.6…-2.5) |
+| apertus | -68.0 (-73.1…-62.5), n=142 | -61.1 (-67.4…-54.5) | -70.7 (-78.0…-63.3) | +0.2 (+0.1…+0.3) | −0.027 (GPU) | +29.1 (+20.9…+37.6) |
 
 ### E1: the same answers, Qwen3 judge
 
@@ -235,6 +237,7 @@ Paired differences to **flash** (mean, 95% CI):
 | argon | 150 | 5 | 100.0% (100.0–100.0) | 0 | 96.7 (95.5–97.8) | 97.6 (95.2–99.4) | 1 | 92.7 (88.0–96.7) | 97.1 (94.2–99.6) | 0.0493 | 46 / 147 | 5.1 |
 | deepseek | 150 | 0 | 100.0% (100.0–100.0) | 0 | 89.0 (86.4–91.4) | 86.3 (81.2–91.0) | 4 | 79.3 (72.7–85.3) | 88.0 (82.4–93.2) | 0.0187 | 85 / 169 | 6.8 |
 | qwen | 150 | 5 | 100.0% (100.0–100.0) | 0 | 82.8 (79.6–86.0) | 73.9 (68.4–79.3) | 14 | 80.7 (74.0–86.7) | 87.8 (82.0–93.0) | 0.0199 | 31 / 78 | 8.5 |
+| apertus | 150 | 1 | 100.0% (100.0–100.0) | 0 | 34.6 (28.7–40.6) | 33.7 (27.6–40.6) | 34 | 25.3 (18.0–32.0) | 38.0 (29.8–46.4) | 0.012 (GPU) | 67 / 167 | 3.9 |
 
 Paired differences to **flash** (mean, 95% CI):
 
@@ -245,6 +248,7 @@ Paired differences to **flash** (mean, 95% CI):
 | argon | +4.8 (+2.6…+7.1), n=132 | +2.2 (-0.9…+5.4) | -4.0 (-8.0…+0.0) | -0.0 (-0.0…+0.0) | +0.0135 (+0.0094…+0.0176) | +17.7 (+8.3…+28.9) |
 | deepseek | -2.7 (-5.9…+0.3), n=130 | -8.5 (-13.8…-3.6) | -17.3 (-24.0…-10.7) | +0.0 (-0.0…+0.0) | -0.0203 (-0.0257…-0.0153) | +46.6 (+38.6…+54.8) |
 | qwen | -9.1 (-12.6…-5.7), n=130 | -20.7 (-26.4…-15.3) | -16.0 (-22.7…-10.0) | +0.1 (+0.0…+0.1) | -0.0191 (-0.0262…-0.0108) | -9.0 (-15.6…-2.5) |
+| apertus | -58.1 (-64.8…-51.6), n=119 | -61.1 (-67.5…-54.4) | -71.3 (-78.7…-63.3) | +0.2 (+0.1…+0.3) | −0.027 (GPU) | +29.1 (+20.9…+37.6) |
 
 Per category (behaviour, rule + Flash judge, % of n):
 
@@ -256,6 +260,7 @@ Per category (behaviour, rule + Flash judge, % of n):
 | argon | 95 | 83 | 87 | 92 | 90 |
 | deepseek | 76 | 100 | 93 | 77 | 70 |
 | qwen | 94 | 0 | 87 | 46 | 90 |
+| apertus | 26 | 0 | 0 | 38 | 70 |
 
 Verifier per model (first drafts → final): Flash sent back 8 of 150 drafts
 (quotes and paragraphs); Flash-Lite 20 (17 misquotes, 6 answers degraded);
@@ -287,6 +292,60 @@ What the numbers say:
   (it answers where it should ask, refuse or point elsewhere), 7 must_not; Qwen3
   235B −13.3/−9.1 groundedness, −23.7 key facts, never asks a clarifying
   question. Qwen scores last under its own family's judge too.
+
+### E1: Apertus 1.5 8B, self-hosted
+
+Setup: `swiss-ai/Apertus-v1.5-8B` on one L4 in europe-west4 (`make
+eval-apertus`, GCP.md §4): swiss-ai's vLLM fork, weights quantized to FP8 on
+load, 32k context, non-thinking with the `apertus` tool parser; the agent
+reaches it through LiteLLM and `gcloud run services proxy`, two cases at a
+time. Same agent, verifier and input screen as the other arms, with one change
+the other arms did not have: after an unparseable draft the verifier's redraft
+can only call `set_model_response`, forced (e8c7498; without it, 0 of the first
+9 cases ended with a valid answer, report `e8c7498-e1-apertus-unconstrained`).
+Flash had no unparseable drafts in E1, so its numbers are unaffected; the open
+models' (Qwen 57, DeepSeek 2) might be. Flash judge on `global` (healthy that
+afternoon), Qwen3 as the cross-family judge. Run in two parts (the proxy
+exited after 85 cases; the other 65 were re-run in a second deployment).
+
+Rows `apertus` in the E1 tables above.
+
+Paired differences to Flash: groundedness −68.0 (−73.1…−62.5, n=142), key
+facts −61.1 (−67.4…−54.5), behaviour −70.7 (−78.0…−63.3) with the Flash judge;
+−58.1 (−64.8…−51.6, n=119), −61.1 (−67.5…−54.4) and −71.3 (−78.7…−63.3)
+with Qwen.
+
+Behaviour per category (rule + Flash judge): answerable 26, clarification 0,
+cantonal 0, out of scope 38, adversarial 70 (Flash: 99, 67, 100, 100, 90).
+Language match 98.
+
+Why it fails as an agent:
+- **It reads too little.** 2.0 tool calls per answer (Flash 6.4); it fetches
+  an article in 69 of 150 cases (Flash 140) and calls no tool at all in 23.
+  The rest of what it writes comes from what it remembers about Swiss law.
+- **It can't hold the answer format.** 144/150 first drafts are JSON but not
+  a valid answer (citations without `sr` (60) or `quote_lang` (43), no
+  `language` (14), numeric `ref`s (13)). The forced redraft makes 149/150
+  valid, but its citations are mostly wrong: 75 to articles that don't exist
+  as written (mostly the act inside the article field, "Art. 273 OR"), 56
+  misquotes, 37 paragraphs the article doesn't have, 12 quotes from another
+  paragraph, 27 `[n]` markers without a citation, 11 addresses or web
+  addresses from memory. The verifier drops what it cannot fix: 117 answers
+  end `degraded`, 60 with no citation left. The 90 quotes that remain are
+  verbatim and no citation is invented, so the verifier holds here too.
+- **Latency:** p50 67 s for 3.9 model calls (~17 s per call at 21k prompt
+  tokens per answer; the fork's image lacks the fused xIELU kernel).
+- **Cost:** no token price, only GPU time. The 150 answers took 95 GPU-minutes
+  at concurrency 2 (0.6 min per answer): **CHF 0.012 per answer** while the
+  GPU is busy. All M9 Apertus GPU time (five deployments, two of which
+  failed to start; 13-27 min per start; grading while the service was up):
+  228 min ≈ CHF 4.4. Serving it would need
+  an always-on L4 (a cold start takes 13 min): ≈ CHF 850 per month, the price
+  of ~22,000 Flash answers.
+
+Not run: Apertus as the answer writer over articles that Gemini retrieved
+(the second configuration in PLAN M9). With tools the 8B model is far from
+usable; whether it can write a grounded answer from good context is open.
 
 ### argon's loops and the call budget
 

@@ -322,8 +322,9 @@ deploys, evaluates and tears down in one go:
   vLLM and Transformers can't serve Apertus 1.5 yet (model card, 2026-10), so
   **Model Garden's Hugging Face deploy is out** (it runs stock vLLM). Cloud Run
   pulls the image through an Artifact Registry **remote repository** of ghcr.io
-  (`swiss-nav-ghcr`, europe-west4): no local pull/push. Delete the repo after
-  M9 (cached layers bill as storage).
+  (`swiss-nav-ghcr`, europe-west4): no local pull/push. Cached layers bill as
+  storage (8.9 GB ≈ USD 0.9/month); delete the repo when no more Apertus runs
+  are planned (the script recreates it).
 - **Weights:** downloaded from Hugging Face on start with `HF_TOKEN` from
   Secret Manager (`swiss-nav-hf-token`, readable by `swiss-nav-apertus@`
   only; the model is gated: accept the license first). They land in the
@@ -342,17 +343,30 @@ deploys, evaluates and tears down in one go:
   sequences) ran out of GPU memory in the sampler warm-up. The image lacks the
   fused xIELU kernel, so vLLM falls back to a Python activation (slower decode).
 - **Startup:** image pull from the remote repo, 18 GB download, load and
-  compile took ~27 min on the first start, so the startup probe allows 40 min
-  (`httpGet /health`, 120 × 20 s).
+  compile took ~27 min on the first start and ~13 min once the remote repo had
+  cached the image (weights loaded in 316 s, 10.8 GiB in FP8; engine init and
+  CUDA graphs 189 s; 66k tokens of KV cache, 2× the 32k context). The startup
+  probe allows 40 min (`httpGet /health`, 120 × 20 s). The deploy is `--async`
+  and the script waits up to 45 min for `/v1/models` through the proxy: a
+  blocking `gcloud run deploy` gave up at 13 min ("Resource readiness deadline
+  exceeded") while the revision was still starting, and the trap deleted a
+  service that would have come up.
 - **Access:** `--no-allow-unauthenticated`; the eval reaches it through
   `gcloud run services proxy` on 127.0.0.1:8081 (component `cloud-run-proxy`,
   installed once), which adds and refreshes the identity token. The agent's
   profile location is that URL (`AGENT_LOCATION=http://127.0.0.1:8081/v1`), and
-  LiteLLM talks to it as `hosted_vllm/swiss-ai/Apertus-v1.5-8B`.
+  LiteLLM talks to it as `hosted_vllm/swiss-ai/Apertus-v1.5-8B`. The proxy
+  exited once after 85 cases (the next 65 failed with "Cannot connect"), so
+  the script runs it in a restart loop.
 - **Teardown:** a `trap` deletes the service on any exit and checks
   `gcloud run services list`. Rerunning resumes the eval from its traces file.
+  The service stays up while the judge grades (25 of the last run's 78 min);
+  grading from the traces after teardown would save that.
 - **Cost:** L4 + 8 vCPU + 32 GiB, instance-based, no zonal redundancy:
-  USD 1.42/h (billing catalog, 2026-10-20; `evals/pricing.yaml`).
+  USD 1.42/h (billing catalog, 2026-10-20; `evals/pricing.yaml`). Measured in
+  E1: 0.6 GPU-minutes per answer at concurrency 2 (CHF 0.012); all M9 GPU
+  time, failed starts included, 228 min ≈ CHF 4.4. Served, it would need an
+  always-on instance (13 min cold start): ≈ CHF 850/month.
 
 ### Claude via Model Garden (MaaS, for E1 and cross-family judging)
 
@@ -376,7 +390,7 @@ Quota refused on 2026-10-16 (§ above, ADR-026); kept for reference.
 | Embeddings | one-time corpus embed (~30k chunks) + per query | < 2 CHF build, negligible per query |
 | Cloud Run (MCP, web) | scale to zero | ~0–3 CHF |
 | Model Armor | ~150 tokens per screened question; 2M tokens/month free, then USD 0.10/1M (2026-10-19) | 0 CHF at demo traffic; the E7 eval used ~245k tokens |
-| Apertus GPU (L4) | per-second while the service exists (instance-based); the eval script deletes it | USD 1.42/h ≈ CHF 1.16/h while active; eval runs only |
+| Apertus GPU (L4) | per-second while the service exists (instance-based); the eval script deletes it | USD 1.42/h ≈ CHF 1.16/h while active; eval runs only (M9: ≈ CHF 4.4) |
 | Full eval matrix run | ~150 cases × 5 configs + judge | ~5–20 CHF per run |
 
 Put the real numbers in `evals/pricing.yaml` with a "checked on" date, and let

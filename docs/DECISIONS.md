@@ -1435,7 +1435,17 @@ sends back 8 drafts, argon 27, DeepSeek 47, Qwen 82).
   −3.6…+4.9; FR +1.5; IT −1.4, key facts −4.6, −11.7…+0.8); English answers
   quote the German text; answers to Claude's translations score like the
   originals (−0.4, −4.2…+3.1).
-- **Apertus:** APERTUS_PLACEHOLDER
+- **Apertus 1.5 8B** (self-hosted, one L4, FP8, as the full agent with tools)
+  is not viable: groundedness 14.0 (Flash judge; −68.0, −73.1…−62.5) and
+  −58.1 (−64.8…−51.6) with Qwen, key facts 34.3, behaviour 26.7, 27 must_not. It
+  calls ~2 tools per answer and fetches an article in 69/150 cases (Flash
+  140); 144/150 first drafts miss required answer fields, and unconstrained 0
+  of 9 cases ended valid. With a forced `set_model_response` redraft (below)
+  149/150 end valid, 117 `degraded` (citations dropped: "Art. 273 OR" as the
+  article, misquotes, wrong paragraphs). Quote fidelity stays 100% (90 quotes),
+  0 hallucinated. GPU time is CHF 0.012 per answer while busy, but serving it
+  needs an always-on L4 (13 min cold start), ≈ CHF 850/month. Apertus as the
+  answer writer over Gemini-retrieved context was not run.
 
 **Decision:**
 1. **gemini-3.8-flash stays the served model.** argon's grounding gain is real,
@@ -1459,8 +1469,23 @@ sends back 8 drafts, argon 27, DeepSeek 47, Qwen 82).
 6. Eval robustness: the judge runs on `eu` when `global` is degraded
    (`JUDGE_LOCATION`), and a run whose grading died resumes from its traces
    without repeating agent calls.
+7. **After an unparseable draft, the verifier's one redraft can only submit
+   the answer** (`set_model_response` forced, the same `answer_only` as the
+   budget; e8c7498). It made Apertus usable at all and ships with the served
+   agent; Flash had no unparseable draft in E1, so its numbers stand. The open
+   models ran without it (Qwen had 57 unparseable first drafts) and were not
+   re-measured.
+8. Apertus is not served and needs no further GPU runs for M9; the
+   answer-writer configuration stays a follow-up.
 
-**Consequences:** the budget needs a `make deploy-agent` (Nikola). PLAN's CV
-line becomes "chose Gemini 3.8 Flash at CHF 0.039 per answer over Gemini 4
-argon (+5 groundedness, 1.3-2.5× the cost, loops), Pro, Flash-Lite and two
-open models". Spend: SPEND_PLACEHOLDER
+**Consequences:** the budget and the answer-only redraft need a `make
+deploy-agent` (Nikola). PLAN's CV line becomes "chose Gemini 3.8 Flash at CHF
+0.039 per answer over Gemini 4 argon (+5 groundedness, 1.3-2.5× the cost,
+loops), Pro, Flash-Lite, two open models and self-hosted Apertus 8B (vLLM on
+Cloud Run GPU)". Spend ≈ CHF 63 (eval reports CHF 57.2, Apertus GPU ≈ 4.4,
+probes and grading passes that died ≈ 1.5) against a CHF 50 cap that Nikola
+made soft on 2026-10-20; the degraded endpoints cost ≈ CHF 10 of it (a second
+Flash arm, re-runs, re-grading). No GPU or endpoint is left running. The
+`swiss-nav-ghcr` remote repo (8.9 GB of cached image, ≈ USD 0.9/month) stays
+until the answer-writer follow-up is decided (with the cache a start takes 13
+min instead of 27); the script recreates it if it is gone.
