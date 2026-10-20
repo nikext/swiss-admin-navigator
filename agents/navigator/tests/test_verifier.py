@@ -121,6 +121,29 @@ async def test_check_tool_is_executable_but_not_declared(ctx: CallbackContext) -
     assert not request.config.tools  # no declaration: the model cannot call it
 
 
+async def test_redraft_after_a_parse_failure_can_only_submit(ctx: CallbackContext) -> None:
+    v = verifier()
+
+    def request() -> LlmRequest:
+        decls = [types.FunctionDeclaration(name=n) for n in ("search_law", "set_model_response")]
+        tools: types.ToolListUnion = [types.Tool(function_declarations=decls)]
+        return LlmRequest(config=types.GenerateContentConfig(tools=tools))
+
+    untouched = request()
+    await v.before_model(ctx, untouched)
+    assert untouched.config.tool_config is None
+    await v.after_model(ctx, text_response('{"language": "en"}'))  # parse problem -> sent back
+    forced = request()
+    await v.before_model(ctx, forced)
+    assert [d.name for t in forced.config.tools for d in t.function_declarations] == [  # type: ignore[union-attr]
+        "set_model_response"
+    ]
+    await v.after_model(ctx, text_response('{"language": "en"}'))  # retries used up
+    later = request()
+    await v.before_model(ctx, later)
+    assert later.config.tool_config is None  # no forcing beyond the requested redraft
+
+
 def test_compact_tool_result() -> None:
     structured = {"results": [1]}
     mcp = {"content": [{"type": "text", "text": "{...}"}], "structuredContent": structured}

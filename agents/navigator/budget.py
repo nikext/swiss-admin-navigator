@@ -45,25 +45,31 @@ class CallBudget:
     ) -> LlmResponse | None:
         if self.count(callback_context.invocation_id) < self.max_calls:
             return None
-        config = llm_request.config
-        tools: types.ToolListUnion = []
-        for tool in config.tools or []:
-            if not isinstance(tool, types.Tool):
-                continue
-            decls = [d for d in tool.function_declarations or [] if d.name in KEEP]
-            if decls:
-                tools.append(tool.model_copy(update={"function_declarations": decls}))
-        config.tools = tools or None
-        # The answer tool is then the only move (LiteLLM: tool_choice "required"); a model
-        # left to choose wrote plain text instead (DeepSeek V3.2, 2026-10-20).
-        config.tool_config = (
-            types.ToolConfig(
-                function_calling_config=types.FunctionCallingConfig(
-                    mode=types.FunctionCallingConfigMode.ANY, allowed_function_names=sorted(KEEP)
-                )
-            )
-            if tools
-            else None
-        )
+        answer_only(llm_request)
         llm_request.append_instructions([NOTICE])
         return None
+
+
+def answer_only(llm_request: LlmRequest) -> None:
+    """Leave the model one move: submit the answer. Keeps only `set_model_response`, forced
+    (`mode=ANY`; LiteLLM: tool_choice "required", which vLLM decodes against the tool's
+    schema), or no tool at all for native schema + tools. Left to choose, DeepSeek V3.2
+    answered in plain text (2026-10-20)."""
+    config = llm_request.config
+    tools: types.ToolListUnion = []
+    for tool in config.tools or []:
+        if not isinstance(tool, types.Tool):
+            continue
+        decls = [d for d in tool.function_declarations or [] if d.name in KEEP]
+        if decls:
+            tools.append(tool.model_copy(update={"function_declarations": decls}))
+    config.tools = tools or None
+    config.tool_config = (
+        types.ToolConfig(
+            function_calling_config=types.FunctionCallingConfig(
+                mode=types.FunctionCallingConfigMode.ANY, allowed_function_names=sorted(KEEP)
+            )
+        )
+        if tools
+        else None
+    )
